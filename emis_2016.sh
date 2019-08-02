@@ -16,18 +16,18 @@
 ProcessDir=$PWD
 echo "Directorio actual "$ProcessDir
 # Selecciona area de modelacion
-#  bajio     cdjuarez     colina      
+#  bajio     cdjuarez     colima      
 #  ecaim    guadalajara  mexicali
 #  mexico    monterrey    queretaro   tijuana
 #
-dominio=ecaim
+dominio=queretaro
 HacerArea=1
 #
 #  Build the fecha.txt file
 # Cambiar aqui la fecha
 mes=2
-dia=5
-dia2=5
+dia=8
+dia2=8
 dia1=$dia 
 #  Revisa que exista el dominio
 cd 01_datos
@@ -71,7 +71,8 @@ cd ../07_puntual
 ln -sf ../01_datos/$dominio/localiza.csv
 cd ../10_storage
 ln -sf ../01_datos/$dominio/localiza.csv
-
+cd ../12_cmaq
+ln -sf ../01_datos/$dominio/localiza.csv
 fi
 #
 # Inicia Loop de Tiempo
@@ -117,6 +118,7 @@ cd ../09_pm25spec
 ./spm25m.exe >> ../movil.log &
 ./spm25a.exe >> ../area.log&
 #
+wait
 echo 'Speciation distribution VOCs'
 #
 cd ../08_spec
@@ -158,12 +160,13 @@ echo 'Area '
 echo ' Guarda'
 
 cd ../10_storage
-./radm2019.exe  > ../radm2.log
+./radm2.exe  > ../radm2.log
 #./saprc.exe > ../saprc.log
 #./cbm5.exe  > ../cbm5.log
 #./racm2.exe > ../racm2.log
  let dia=dia+1
 done
+mv wrfchemi.d01* ../salida/$dominio/
 #ncrcat -O wrfchemi.d01.radm2.2019-0${mes}-1* wrfchemi_d01_2019-0${mes}-${dia}_00:00:00
 #mv wrfchemi_d01_2019-02-05_00:00:00 ../../DOMAIN/mecanismos/emisiones
 echo "DONE  guarda_RADM"
