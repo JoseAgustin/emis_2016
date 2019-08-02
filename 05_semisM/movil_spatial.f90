@@ -105,7 +105,7 @@ subroutine lee
     character(len=1):: st
 	character(len=10):: cdum
 	print *,'Starts reading emissions file in Mg/yr'
-	open(10,file='salida.csv',status='old',action='read')
+	open(10,file='emiss_2016.csv',status='old',action='read')
 	read(10,*) cdum,cdum,(pol(i),i=1,npol) !read header
 	i=0
 	do 
