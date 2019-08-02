@@ -1,7 +1,0 @@
-		:CEN_LAT = 20.71768f ;
-		:CEN_LON = -100.4736f ;
-		:TRUELAT1 = 17.5f ;
-		:TRUELAT2 = 29.5f ;
-		:MOAD_CEN_LAT = 24.02022f ;
-		:STAND_LON = -102.0364f ;
-		:POLE_LAT = 90.f ;

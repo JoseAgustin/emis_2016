@@ -20,11 +20,12 @@
 !
 !   modificado
 !   10/07/2017  Para 2014 
+!   30/07/2019  Para 2016
 !
 module var_spma
 integer :: nh     !number of hours in a day
 integer :: nclass !number the clasess in profiles_spc.txt
-integer lfa  ! line number in area file TPM252014.txt
+integer lfa  ! line number in area file TPM252016.txt
 integer,allocatable ::grid(:)   ! grid id from emissions file
 integer,allocatable ::grid2(:)   ! different grid id from emissions file
 integer,allocatable :: isp(:)   ! number of chemical species in profile j
@@ -61,7 +62,7 @@ subroutine lee
 	character(len=10) ::cdum
 	character(len=25):: fname
 	logical ::lfil
-	fname='TAPM2_2014.csv'
+	fname='TAPM2_2016.csv'
 	print *, 'Reading : ',trim(fname)
 	open (unit=10,file=fname,status='old',action='read')
 	read(10,*) cdum  ! header

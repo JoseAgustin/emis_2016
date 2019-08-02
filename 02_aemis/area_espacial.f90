@@ -11,10 +11,11 @@
 !
 !  4/03/2015  Correction in Terminasl 2801500002 and agricultural fires 2801500250
 !  8/07/2017  For 2014 from 57 to 58 categories (ladrilleras), 2457 Municipalidades
+!  4/06/2019  For 2016 59 categories, 2458 municipalities  
 !
 module land
     integer nl,nf,nm,nnscc,edo, mun
-    parameter (nm=2457,nf=10,nnscc=58)
+    parameter (nm=2458,nf=10,nnscc=59)
     integer,allocatable :: grib(:),idb(:)  ! Bosque
     integer,allocatable :: gria(:),ida(:)  ! Agricola
     integer,allocatable :: grip(:),idp(:)  ! Poblacion
@@ -41,15 +42,15 @@ module land
     character(len=25), allocatable :: desc(:)
     character(len=14),dimension(nf) ::efile,ofile
 !   Emissions Inventory files
-    data efile /'INH3_2014.csv','INOx_2014.csv','ISO2_2014.csv',&
-&           'IVOC_2014.csv','ICO__2014.csv','IPM10_2014.csv',&
-&           'IPM25_2014.csv','ICO2_2014.csv','IBC__2014.csv',&
-&           'imet__2014.csv'/
+    data efile /'INH3_2016.csv','INOx_2016.csv','ISO2_2016.csv',&
+&           'IVOC_2016.csv','ICO__2016.csv','IPM10_2016.csv',&
+&           'IPM25_2016.csv','ICO2_2016.csv','IBC__2016.csv',&
+&           'imet__2016.csv'/
 !            NH3          NO2         SO2    VOC    CO PM10 PM25
-    data ofile /'ANH3_2014.csv','ANOx_2014.csv','ASO2_2014.csv',&
-&           'AVOC_2014.csv','ACO__2014.csv','APM10_2014.csv',&
-&          'APM25_2014.csv','ACO2_2014.csv','ACN__2014.csv', &
-&          'ACH4_2014.csv'/
+    data ofile /'ANH3_2016.csv','ANOx_2016.csv','ASO2_2016.csv',&
+&           'AVOC_2016.csv','ACO__2016.csv','APM10_2016.csv',&
+&          'APM25_2016.csv','ACO2_2016.csv','ACN__2016.csv', &
+&          'ACH4_2016.csv'/
 end module land
 
 program area_espacial
@@ -242,7 +243,7 @@ implicit none
         print *,k,nscc(k)
         do i=1,nm
           read(10,*) edo,mun,iem(k,i),(emiss(i,j,k),j=1,nscc(k))
-       end do ! i
+      end do ! i
         close(10)
     end do! k
 end subroutine lee
@@ -418,7 +419,8 @@ subroutine calculos
     if(scc(k,l).eq.'2850000010') epob(j,k,l)=emiss(i,l,k)*fp3(j)*1e6  ! Esteri Hosp
     if(scc(k,l).eq.'3333333333') epob(j,k,l)=emiss(i,l,k)*fp3(j)*1e6  ! Dist_LPG
     if(scc(k,l).eq.'5555555555') epob(j,k,l)=emiss(i,l,k)*fp3(j)*1e6  ! Uso_domestico
-    if(scc(k,l).eq.'2296000000') epob(j,k,l)=emiss(i,l,k)*fp3(j)*1e6
+    if(scc(k,l).eq.'2296000000') epob(j,k,l)=emiss(i,l,k)*fp3(j)*1e6  ! Caminos terraceria
+    if(scc(k,l).eq.'2294000000') epob(j,k,l)=emiss(i,l,k)*fp3(j)*1e6  ! Caminos pavim
      end do
             exit invenp
         end if

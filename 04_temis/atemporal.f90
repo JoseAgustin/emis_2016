@@ -19,6 +19,7 @@
 !    2/11/2017  Huso horario se calcula con el estado
 !    5/11/2017  Actualizacion en numero de lineas totales en emiA
 !   15/11/2017  Seleccion de numero de linea mayor de los datos de entrada emiA
+!   30/07/2019  Para 2016, bisiesto febrero 29 dias
 !
 module variables
 integer :: month,daytype
@@ -46,14 +47,14 @@ character (len=19) :: current_date
 
 character(len=14),dimension(nf) ::efile,casn
 
- data efile/'ASO2_2014.csv','ANOx_2014.csv','ANH3_2014.csv',&
-&           'ACO__2014.csv','APM10_2014.csv','ACO2_2014.csv',&
-&           'ACN__2014.csv','ACH4_2014.csv','APM25_2014.csv',&
-&           'AVOC_2014.csv'/
- data casn /'TASO2_2014.csv','TANOx_2014.csv','TANH3_2014.csv',&
-&           'TACO__2014.csv','TAPM102014.csv','TACO2_2014.csv',&
-&           'TACN__2014.csv','TACH4_2014.csv','TAPM2_2014.csv',&
-&           'TAVOC_2014.csv'/
+ data efile/'ASO2_2016.csv','ANOx_2016.csv','ANH3_2016.csv',&
+&           'ACO__2016.csv','APM10_2016.csv','ACO2_2016.csv',&
+&           'ACN__2016.csv','ACH4_2016.csv','APM25_2016.csv',&
+&           'AVOC_2016.csv'/
+ data casn /'TASO2_2016.csv','TANOx_2016.csv','TANH3_2016.csv',&
+&           'TACO__2016.csv','TAPM102016.csv','TACO2_2016.csv',&
+&           'TACN__2016.csv','TACH4_2016.csv','TAPM2_2016.csv',&
+&           'TAVOC_2016.csv'/
 common /vars/ fweek,nscc,nm,lh,month,daytype,mes,dia,hora,current_date
 end module
 !
@@ -90,7 +91,7 @@ subroutine lee
 	character(len=18):: nfile,nfilep
 	! number of day in a month 
 	!          jan feb mar apr may jun jul aug sep oct nov dec
-	data daym /31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
+	data daym /31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
 
    print *,"READING fecha.txt file"
 	open (unit=10,file='fecha.txt',status='OLD',action='read')
@@ -108,9 +109,9 @@ subroutine lee
 	end if
 	close(10)
     if(month.lt.10) then
-        write(current_date,'(A6,I1,A12)')'2014-0',month,'-01_00:00:00'
+        write(current_date,'(A6,I1,A12)')'2016-0',month,'-01_00:00:00'
         else
-        write(current_date,'(A5,I2,A12)')'2014-',month,'-01_00:00:00'
+        write(current_date,'(A5,I2,A12)')'2016-',month,'-01_00:00:00'
     end if
     if(idia.lt.10) then
         write(current_date(10:10),'(I1)') idia
@@ -120,10 +121,10 @@ subroutine lee
     fweek= 7./daym(month)
     print *,'Done fecha.txt : ',current_date,month,idia,fweek
 !
-!   Days in 2014 year
+!   Days in 2016 year
 !
-    print *,"READING anio2014.csv file"
-    open (unit=10,file='anio2014.csv',status='OLD',action='read')
+    print *,"READING anio2016.csv file"
+    open (unit=10,file='anio2016.csv',status='OLD',action='read')
     daytype=0
     read(10,*)cdum
         do

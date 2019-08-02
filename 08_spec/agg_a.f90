@@ -18,7 +18,7 @@ module var_agga
 integer :: nh     !number of hours in a day
 integer :: nclass !number the clasess in profiles_spc.txt
 integer :: nspecies ! max number species in profile 0 (292)
-integer lfa  ! line number in area file TCOV_2014.txt
+integer lfa  ! line number in area file TCOV_2016.txt
 integer,allocatable ::grid(:)   ! grid id from emissions file
 integer,allocatable ::grid2(:)   ! different grid id from emissions file
 integer,allocatable :: isp(:)   ! number of chemical species in profile j
@@ -55,8 +55,8 @@ subroutine lee
 	character(len=10)::cdum
 	logical :: lfil
 	print *,"Inicia lectura"
-    print *,"  TAVOC_2014.csv"
-	open (unit=10,file='TAVOC_2014.csv',status='old',action='read')
+    print *,"  TAVOC_2016.csv"
+	open (unit=10,file='TAVOC_2016.csv',status='old',action='read')
 	read(10,*) cdum  ! header
 	read(10,*) lfa,current_date,cdia  ! header
 	i=0
@@ -65,7 +65,7 @@ subroutine lee
 	i=i+1
 	end do
 100 continue
-	print *,'  Number of rows in TAVOC_2014',i
+	print *,'  Number of rows in TAVOC_2016',i
 	lfa=i
 	allocate(grid(lfa),iscc(lfa),ea(lfa,nh),profile(lfa))
 	rewind(10)

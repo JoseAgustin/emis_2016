@@ -77,9 +77,9 @@ implicit none
 	end if
 	close(10)
 	if(month.lt.10) then
-	write(current_date,'(A6,I1,A12)')'2014-0',month,'-01_00:00:00'
+	write(current_date,'(A6,I1,A12)')'2016-0',month,'-01_00:00:00'
 	else
-	write(current_date,'(A5,I2,A12)')'2014-',month,'-01_00:00:00'
+	write(current_date,'(A5,I2,A12)')'2016-',month,'-01_00:00:00'
 	end if
     if(idia.lt.10) then
         write(current_date(10:10),'(I1)') idia
@@ -89,10 +89,10 @@ implicit none
 	print *,'Done fecha.txt ',current_date
       fweek=7.0/daym(month)! weeks per month
 !
-!   Days in 2014 year
+!   Days in 2016 year
 !
-    print *,"READING anio2014.csv file"
-    open (unit=10,file='anio2014.csv',status='OLD',action='read')
+    print *,"READING anio2016.csv file"
+    open (unit=10,file='anio2016.csv',status='OLD',action='read')
     daytype=0
     read(10,*)cdum
         do

@@ -20,16 +20,17 @@
 !
 !   modificado
 !   10/07/2017  Para 2014
+!   30/07/2019  Para 2016, scc como caracter
 !
 module var_spmm
 integer :: nh     !number of hours in a day
 integer :: nclass !number the clasess in profiles_spc.txt
-integer lfa  ! line number in area file TPM252014.txt
+integer lfa  ! line number in area file TPM252016.txt
 integer,allocatable ::grid(:)   ! grid id from emissions file
 integer,allocatable ::grid2(:)   ! different grid id from emissions file
 integer,allocatable :: isp(:)   ! number of chemical species in profile j
 integer,allocatable ::profile(:),prof2(:) ! profile ID from file scc-profiles
-integer*8, allocatable:: iscc(:) !SCC from emissions file
+character(len=10),allocatable:: iscc(:) !SCC from emissions file
 real,allocatable :: ea(:,:)      ! emissions en TPM25 file grid , nh
 real,allocatable :: emis(:,:,:)  ! emissions id cel, category, hours
 real,allocatable :: fclass(:,:)! aggregation factor by size(prof2), nclass
@@ -56,12 +57,12 @@ contains
 subroutine lee
 	implicit none
 	integer :: i,j,id,idun,l
-	integer*8 :: isccf
+	character(len=10) :: isccf
 	real,dimension(5):: fagg ! aggregation factor for 5 pm2.5 species
 	character(len=10) ::cdum
 	character(len=25):: fname
 	logical ::lfil
-	fname='TMPM2_2014.csv'
+	fname='TMPM2_2016.csv'
 	print *, 'Reading : ',trim(fname)
 	open (unit=10,file=fname,status='old',action='read')
 	read(10,*) cdum  ! header
@@ -95,7 +96,7 @@ subroutine lee
 	end do
 200 continue
 	do i=1,60
-	 if(profile(i).eq.0) print *,"profile=0",iscc(i),' ',i
+	 if(profile(i).eq.0) print *,"profile=0 scc=",iscc(i),' ',i
 	end do
 	close(15)
 	!print '(15I5)',(profile(i),i=1,lfa)

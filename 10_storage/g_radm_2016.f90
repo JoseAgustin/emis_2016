@@ -9,7 +9,7 @@
 !            Guarda los datos del inventario para el
 !            mecanismo RADM2 en formato netcdf y con NAMELIST
 !
-! ifort -O2 -axAVX -lnetcdff -L$NETCDF/lib -I$NETCDF/include g_radm_2016.f90 -o radmMERCI.exe
+! ifort g_radm_2016.f90 -O2 -axAVX -lnetcdff -L$NETCDF/lib -I$NETCDF/include  -o radm2.exe
 !
 !
 !   Actualizacion de xlat, xlon             26/08/2012
@@ -24,6 +24,7 @@
 !   Para anio 2018                          16/01/2018
 !   Se calcula el dia juliano                3/08/2018
 !   Para anio 2016                          23/10/2018
+!   SCC texto en PM2.5                      30/07/2019
 module vars
     integer :: nf    ! number of files antropogenic
     integer :: ns    ! number of compounds
@@ -90,26 +91,26 @@ subroutine lee
 	real,dimension(ns)::wtm
     real,dimension(nf)::scala,scalm,scalp
 	character(len=46) :: description
-	character(len=13) cdum
+	character(len=13) cdum,crdum
 	character(len=17),dimension(nf):: fnameA,fnameM,fnameP
-	data fnameA /'TACO__2014.csv','TANH3_2014.csv','TANOx_2014.csv','TANOx_2014.csv','TASO2_2014.csv',&
+	data fnameA /'TACO__2016.csv','TANH3_2016.csv','TANOx_2016.csv','TANOx_2016.csv','TASO2_2016.csv',&
 	& 'RADM-2_ALD_A.txt','RADM-2_CH4_A.txt','RADM-2_CSL_A.txt','RADM-2_ETH_A.txt',&
 	& 'RADM-2_GLY_A.txt','RADM-2_HC3_A.txt','RADM-2_HC5_A.txt','RADM-2_HC8_A.txt',&
 	& 'RADM-2_HCHO_A.txt','RADM-2_ISO_A.txt','RADM-2_KET_A.txt','RADM-2_MACR_A.txt',&
 	& 'RADM-2_MGLY_A.txt','RADM-2_MVK_A.txt','RADM-2_OL2_A.txt','RADM-2_OLI_A.txt',&
 	& 'RADM-2_OLT_A.txt','RADM-2_ORA1_A.txt','RADM-2_ORA2_A.txt','RADM-2_TOL_A.txt',&
-	& 'RADM-2_XYL_A.txt','TACO2_2014.csv','TAPM102014.csv','TAPM2_2014.csv', &
+	& 'RADM-2_XYL_A.txt','TACO2_2016.csv','TAPM102016.csv','TAPM2_2016.csv', &
 	& 'GSO4_A.txt','PNO3_A.txt','OTHE_M.txt','POA_A.txt','PEC_A.txt',&
-    & 'TACH4_2014.csv','TACN__2014.csv'/
-	data fnameM /'TMCO__2014.csv','TMNH3_2014.csv','TMNO_2014.csv','TMNO2_2014.csv','TMSO2_2014.csv',&
+    & 'TACH4_2016.csv','TACN__2016.csv'/
+	data fnameM /'TMCO__2016.csv','TMNH3_2016.csv','TMNO__2016.csv','TMNO2_2016.csv','TMSO2_2016.csv',&
 	& 'RADM-2_ALD_M.txt','RADM-2_CH4_M.txt','RADM-2_CSL_M.txt','RADM-2_ETH_M.txt',&
 	& 'RADM-2_GLY_M.txt','RADM-2_HC3_M.txt','RADM-2_HC5_M.txt','RADM-2_HC8_M.txt',&
 	& 'RADM-2_HCHO_M.txt','RADM-2_ISO_M.txt','RADM-2_KET_M.txt','RADM-2_MACR_M.txt',&
 	& 'RADM-2_MGLY_M.txt','RADM-2_MVK_M.txt','RADM-2_OL2_M.txt','RADM-2_OLI_M.txt',&
 	& 'RADM-2_OLT_M.txt','RADM-2_ORA1_M.txt','RADM-2_ORA2_M.txt','RADM-2_TOL_M.txt',&
-	& 'RADM-2_XYL_M.txt','TMCO2_2014.csv','TMPM102014.csv','TMPM2_2014.csv', &
+	& 'RADM-2_XYL_M.txt','TMCO2_2016.csv','TMPM102016.csv','TMPM2_2016.csv', &
     & 'GSO4_M.txt','PNO3_M.txt','OTHE_M.txt','POA_M.txt','PEC_M.txt',&
-    & 'TMCH4_2014.csv','TMCN__2014.csv'/
+    & 'TMCH4_2016.csv','TMCN__2016.csv'/
     data fnameP /'T_ANNCO.csv','T_ANNNH3.csv','T_ANNNOX.csv','T_ANNNOX.csv','T_ANNSO2.csv',&
     & 'RADM-2_ALD_P.txt','RADM-2_CH4_P.txt','RADM-2_CSL_P.txt','RADM-2_ETH_P.txt',&
     & 'RADM-2_GLY_P.txt','RADM-2_HC3_P.txt','RADM-2_HC5_P.txt','RADM-2_HC8_P.txt',&
@@ -229,7 +230,7 @@ subroutine lee
         write(6,'(i4,x,A,A,I3,I3)') ii,fnameM(ii),current_date
 		do 
 		 if(ii.eq.ipm) then !for PM2.5
-		 read(11,*,END=200) idcf,rdum,(edum(ih),ih=1,nh)
+		 read(11,*,END=200) idcf,crdum,(edum(ih),ih=1,nh)
 		 else
 		 read(11,*,END=200) idcf,(edum(ih),ih=1,nh)
 		 end if
@@ -367,7 +368,9 @@ subroutine store
 		  dim(5)=1!mkx
 		  dim(6)=zlev! !8
          if(.not.ALLOCATED(ea)) allocate (ea(dim(3),dim(4),dim(6),dim(1)))
+       print *, "dimensions definition ****"
 		 call check( nf90_def_dim(ncid,sdim(1), NF90_UNLIMITED, id_dim(1)) )
+
        do i=2,NDIMS
          call check( nf90_def_dim(ncid, sdim(i), dim(i), id_dim(i)) )
        end do
@@ -377,7 +380,7 @@ subroutine store
       dimids4 = (/id_dim(3),id_dim(4),id_dim(6),id_dim(1)/)
       print *,"Attributos Globales NF90_GLOBAL"
       !Attributos Globales NF90_GLOBAL
-      call check( nf90_put_att(ncid, NF90_GLOBAL, "TITLE",titulo//" V4.0"))
+      call check( nf90_put_att(ncid, NF90_GLOBAL, "TITLE",titulo))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "START_DATE",iTime))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "DAY ",cday))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "SIMULATION_START_DATE",iTime))
@@ -624,6 +627,14 @@ end subroutine check
           return
 
           end function
+!
+!
+!    _       _ _
+!   (_)_   _| (_) __ _ _ __   ___
+!   | | | | | | |/ _` | '_ \ / _ \
+!   | | |_| | | | (_| | | | | (_) |
+!  _/ |\__,_|_|_|\__,_|_| |_|\___/
+! |__/
 !
 integer function juliano(year,mes,day)
   character*4,intent(in) :: year

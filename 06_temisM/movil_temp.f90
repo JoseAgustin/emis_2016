@@ -15,6 +15,7 @@
 !   21/07/2017  Incluye CO2 y CH4
 !   01/11/2017  Incluye NO y NO2
 !   18/11/2017  Incluye GSO4, POA and OTHE
+!   30/07/2019  para 2016 con anio bisiesto
 !
 module variables
 integer :: month
@@ -47,10 +48,10 @@ character(len=14),dimension(nf) ::efile,casn
               'M_PM10.csv',&
               'M_PM25.csv','M_VOC.csv'/
 
- data casn /'TMCO__2014.csv','TMNH3_2014.csv','TMNO2_2014.csv', &
-            'TMNO__2014.csv','TMSO2_2014.csv','TMCN__2014.csv', &
-            'TMCO2_2014.csv','TMCH4_2014.csv','TMPM102014.csv', &
-            'TMPM2_2014.csv','TMCOV_2014.csv'/
+ data casn /'TMCO__2016.csv','TMNH3_2016.csv','TMNO2_2016.csv', &
+            'TMNO__2016.csv','TMSO2_2016.csv','TMCN__2016.csv', &
+            'TMCO2_2016.csv','TMCH4_2016.csv','TMPM102016.csv', &
+            'TMPM2_2016.csv','TMCOV_2016.csv'/
 
 common /vars/ fweek,nscc,nm,month,daytype,perfil,mes,dia,hora,current_date
 end module
@@ -84,7 +85,7 @@ subroutine lee
 	character(len=18):: nfile,nfilep
 	! number of day in a month 
 	!          jan feb mar apr may jun jul aug sep oct nov dec
-	data daym /31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
+	data daym /31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
 
 	print *,"READING fecha.txt file"
 	open (unit=10,file='fecha.txt',status='OLD',action='read')
@@ -103,9 +104,9 @@ subroutine lee
 	close(10)
 !
 	if(month.lt.10) then
-	write(current_date,'(A6,I1,A12)')'2014-0',month,'-01_00:00:00'
+	write(current_date,'(A6,I1,A12)')'2016-0',month,'-01_00:00:00'
 	else
-	write(current_date,'(A5,I2,A12)')'2014-0',month,'-01_00:00:00'	
+	write(current_date,'(A5,I2,A12)')'2016-0',month,'-01_00:00:00'
 	end if
     if(idia.lt.10) then
         write(current_date(10:10),'(I1)') idia
@@ -116,10 +117,10 @@ subroutine lee
     print *,'Done fecha.txt : ',current_date,month,idia,fweek
 
 !
-!   Days in 2014 year
+!   Days in 2016 year
 !
-    print *,"READING anio2014.csv file"
-    open (unit=10,file='anio2014.csv',status='OLD',action='read')
+    print *,"READING anio2016.csv file"
+    open (unit=10,file='anio2016.csv',status='OLD',action='read')
     daytype=0
     read(10,*)cdum
         do
@@ -424,6 +425,7 @@ subroutine compute
 subroutine storage
   implicit none
   integer i,j,k,l
+  real suma
   character(len=3):: cdia(7)
   data cdia/'MON','TUE','WND','THR','FRD','SAT','SUN'/
 
@@ -433,7 +435,11 @@ subroutine storage
    write(10,*)casn(k),',ID, Hr to Hr24,g/h'
    write(10,'(I8,4A)')size(emis,dim=1),",",current_date,', ',cdia(daytype)
    do i=1,size(emis,dim=1)
-     write(10,100)idcel2(i),(emis(i,k,l),l=1,nh)
+     suma=0
+     do l=1,nh
+     suma=suma+emis(i,k,l)
+     end do
+     if(suma.gt.0) write(10,100)idcel2(i),(emis(i,k,l),l=1,nh)
    end do
    close(unit=10)
   end do
@@ -446,7 +452,11 @@ subroutine storage
    write(10,'(I8,4A)')size(epm2,dim=1)*nscc(k),', ',current_date,', ',cdia(daytype)
    do i=1,size(epm2,dim=1)
      do j=1,nscc(k)
-     write(10,110)idcel2(i),iscc(j),(epm2(i,j,l),l=1,nh)
+        suma=0
+        do l=1,nh
+          suma=suma+epm2(i,j,l)
+        end do
+        if(suma.gt.0) write(10,110)idcel2(i),iscc(j),(epm2(i,j,l),l=1,nh)
      end do
    end do
 	close(10)
@@ -458,7 +468,11 @@ subroutine storage
    write(10,'(I8,4A)')size(evoc,dim=1)*nscc(k),', ',current_date,', ',cdia(daytype)
    do i=1,size(evoc,dim=1)
      do j=1,nscc(k)
-     write(10,110)idcel2(i),iscc(j),(evoc(i,j,l),l=1,nh)
+        suma=0
+        do l=1,nh
+        suma=suma+evoc(i,j,l)
+        end do
+        if(suma.gt.0)write(10,110)idcel2(i),iscc(j),(evoc(i,j,l),l=1,nh)
      end do
    end do
 	close(10)
