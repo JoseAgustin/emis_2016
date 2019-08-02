@@ -166,7 +166,7 @@ cd ../10_storage
 #./racm2.exe > ../racm2.log
  let dia=dia+1
 done
-mv wrfchemi.d01* ../salida/$dominio/
+mv wrfchemi.d01* ../inventario/$dominio/
 #ncrcat -O wrfchemi.d01.radm2.2019-0${mes}-1* wrfchemi_d01_2019-0${mes}-${dia}_00:00:00
 #mv wrfchemi_d01_2019-02-05_00:00:00 ../../DOMAIN/mecanismos/emisiones
 echo "DONE  guarda_RADM"
