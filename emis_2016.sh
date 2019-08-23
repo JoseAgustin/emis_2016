@@ -20,7 +20,7 @@ echo "Directorio actual "$ProcessDir
 #  ecaim    guadalajara  mexicali
 #  mexico    monterrey    queretaro   tijuana
 #
-dominio=queretaro
+dominio=bajio
 HacerArea=1
 #
 #  Build the fecha.txt file
@@ -66,6 +66,8 @@ echo "     Haciendo distribucion espacial en Fuentes de Moviles"
 ./vial.exe > ../movil.log
 ./carr.exe > ../movil.log
 ./agrega.exe > ../movil.log
+cd ../05_semisM
+./MSpatial.exe > ../movil.log
 fi
 cd ../07_puntual
 ln -sf ../01_datos/$dominio/localiza.csv
