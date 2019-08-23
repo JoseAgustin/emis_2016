@@ -12,7 +12,11 @@
 #  Modificaciones:
 #         14/08/2013 Actualizacion para IE del 2014
 #         14/10/2017 para bash
-#cd $PBS_O_WORKDIR
+#SBATCH -J emi_2016
+#SBATCH -o emi_2016%j.o
+#SBATCH -n 4
+#SBATCH --ntasks-per-node=24
+#SBATCH -p id
 ProcessDir=$PWD
 echo "Directorio actual "$ProcessDir
 # Selecciona area de modelacion
@@ -20,14 +24,14 @@ echo "Directorio actual "$ProcessDir
 #  ecaim    guadalajara  mexicali
 #  mexico    monterrey    queretaro   tijuana
 #
-dominio=bajio
+dominio=mexico
 HacerArea=1
 #
 #  Build the fecha.txt file
 # Cambiar aqui la fecha
 mes=2
 dia=8
-dia2=8
+dia2=14
 dia1=$dia 
 #  Revisa que exista el dominio
 cd 01_datos
@@ -56,16 +60,17 @@ ln -sf ../01_datos/$dominio/gri_ter.csv
 ln -sf ../01_datos/$dominio/puertos.csv
 if [ $HacerArea -eq 1 ]; then
 echo "     Haciendo distribucion espacial en Fuentes de area"
-./ASpatial.exe >../area.log
+./ASpatial.exe >../area.log &
 fi
 cd ../03_movilspatial
 ln -sf ../01_datos/$dominio/CARRETERAS.csv
 ln -sf ../01_datos/$dominio/VIALIDADES.csv
 if [ $HacerArea -eq 1 ]; then
 echo "     Haciendo distribucion espacial en Fuentes de Moviles"
-./vial.exe > ../movil.log
-./carr.exe > ../movil.log
-./agrega.exe > ../movil.log
+./vial.exe > ../movil.log &
+./carr.exe >> ../movil.log&
+wait
+./agrega.exe > ../movil.log 
 cd ../05_semisM
 ./MSpatial.exe > ../movil.log
 fi
