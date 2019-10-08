@@ -23,7 +23,9 @@
 !   Se incluyen NO y NO2 de moviles         01/11/2017
 !   Se lee CDIM y titulo de localiza.csv    19/11/2017
 !   Salidas preparadas para CMAQ            04/08/2018
-!   Se emplea namelist.saprc                04/08/2018
+!   Se emplea namelist.cbm05                04/08/2018
+!   Se actualiza las fechas y datos         21/06/2019
+!   Se incluye descripción de archivo        8/10/2019
 !
 module varsc
     integer ::ncel   ! number of cell in the grid
@@ -92,22 +94,22 @@ subroutine lee
     character(len=13) cdum
     character(len=17),dimension(nf):: fnameA,fnameM,fnameP
     data fnameA /&
-    & 'TACO__2016.csv'  ,'TANH3_2016.csv' ,'TANOx_2016.csv'  ,'TANOx_2016.csv','TASO2_2016.csv',&
+    & 'TACO__2014.csv'  ,'TANH3_2014.csv' ,'TANOx_2014.csv'  ,'TANOx_2014.csv','TASO2_2014.csv',&
 	& 'CBM05_ALD2_A.txt','CBM05_CH4_A.txt','CBM05_ALDX_A.txt','CBM05_ETH_A.txt',&
 	& 'CBM05_ETHA_A.txt','CBM05_ETOH_A.txt','CBM05_IOLE_A.txt','CBM05_MEOH_A.txt',&
 	& 'CBM05_FORM_A.txt','CBM05_ISOP_A.txt','CBM05_OLE_A.txt','CBM05_PAR_A.txt',&
 	& 'CBM05_TERP_A.txt','CBM05_TOL_A.txt', 'CBM05_XYL_A.txt',&
-	& 'TACO2_2016.csv' ,'TAPM102016.csv','TAPM2_2016.csv',&
+	& 'TACO2_2014.csv' ,'TAPM102014.csv','TAPM2_2014.csv',&
 	& 'GSO4_A.txt','PNO3_A.txt','OTHE_A.txt','POA_A.txt','PEC_A.txt',&
-    & 'TACH4_2016.csv','TACN__2016.csv'/
-	data fnameM /'TMCO__2016.csv','TMNH3_2016.csv','TMNO__2016.csv','TMNO2_2016.csv','TMSO2_2016.csv',&
+    & 'TACH4_2014.csv','TACN__2014.csv'/
+	data fnameM /'TMCO__2014.csv','TMNH3_2014.csv','TMNO_2014.csv','TMNO2_2014.csv','TMSO2_2014.csv',&
     & 'CBM05_ALD2_M.txt','CBM05_CH4_M.txt','CBM05_ALDX_M.txt' ,'CBM05_ETH_M.txt',&
     & 'CBM05_ETHA_M.txt','CBM05_ETOH_M.txt','CBM05_IOLE_M.txt','CBM05_MEOH_M.txt',&
     & 'CBM05_FORM_M.txt','CBM05_ISOP_M.txt','CBM05_OLE_M.txt','CBM05_PAR_M.txt',&
     & 'CBM05_TERP_M.txt','CBM05_TOL_M.txt','CBM05_XYL_M.txt',&
-    & 'TMCO2_2016.csv','TMPM102016.csv','TMPM2_2016.csv',&
+    & 'TMCO2_2014.csv','TMPM102014.csv','TMPM2_2014.csv',&
 	& 'GSO4_M.txt','PNO3_M.txt','OTHE_M.txt','POA_M.txt','PEC_M.txt',&
-    & 'TMCH4_2016.csv','TMCN__2016.csv'/
+    & 'TMCH4_2014.csv','TMCN__2014.csv'/
     data fnameP /'T_ANNCO.csv','T_ANNNH3.csv','T_ANNNOX.csv','T_ANNNOX.csv','T_ANNSO2.csv',&
     & 'CBM05_ALD2_P.txt','CBM05_CH4_P.txt','CBM05_ALDX_P.txt' ,'CBM05_ETH_P.txt',&
     & 'CBM05_ETHA_P.txt','CBM05_ETOH_P.txt','CBM05_IOLE_P.txt','CBM05_MEOH_P.txt',&
@@ -318,7 +320,7 @@ subroutine store
     integer :: id,iu
     integer :: julday
     integer :: isp(radm)
-    integer :: icdate,ictime
+    integer :: icdate,ictime,jcdate,jctime
     integer,dimension(NDIMS):: dim,id_dim
     integer,dimension(2,1,1)::TFLAG
     real,ALLOCATABLE :: ea(:,:,:,:)
@@ -381,11 +383,11 @@ subroutine store
 call check( nf90_put_att(ncid, NF90_GLOBAL, "IOAPI_VERSION","$Id: @(#) ioapi library version 3.0 OpenMP enabled $"))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "EXEC_ID","????????????????                                                                "))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "FTYPE ",1))
-      call check( nf90_put_att(ncid, NF90_GLOBAL, "CDATE ",icdate))!
-      call check( nf90_put_att(ncid, NF90_GLOBAL, "CTIME ",ictime))!
-      call check( nf90_put_att(ncid, NF90_GLOBAL, "WDATE ",icdate))!
-      call check( nf90_put_att(ncid, NF90_GLOBAL, "WTIME ",ictime))!
-      call check( nf90_put_att(ncid, NF90_GLOBAL, "SDATE ",icdate))!
+      call check( nf90_put_att(ncid, NF90_GLOBAL, "CDATE ",intc(current_date(1:4))*1000+julday))!
+      call check( nf90_put_att(ncid, NF90_GLOBAL, "CTIME ",0))!
+      call check( nf90_put_att(ncid, NF90_GLOBAL, "WDATE ",intc(current_date(1:4))*1000+julday))!
+      call check( nf90_put_att(ncid, NF90_GLOBAL, "WTIME ",0))!
+      call check( nf90_put_att(ncid, NF90_GLOBAL, "SDATE ",intc(current_date(1:4))*1000+julday))!
       call check( nf90_put_att(ncid, NF90_GLOBAL, "STIME ",0))!
       call check( nf90_put_att(ncid, NF90_GLOBAL, "TSTEP ",10000))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "NTHIK ",1))
@@ -396,7 +398,7 @@ call check( nf90_put_att(ncid, NF90_GLOBAL, "IOAPI_VERSION","$Id: @(#) ioapi lib
       call check( nf90_put_att(ncid, NF90_GLOBAL, "GDTYP ",2))!
       call check( nf90_put_att(ncid, NF90_GLOBAL, "P_ALP ",17.5))!
       call check( nf90_put_att(ncid, NF90_GLOBAL, "P_BET ",29.5))!
-      call check( nf90_put_att(ncid, NF90_GLOBAL, "P_GAM ",-100.5))!
+      call check( nf90_put_att(ncid, NF90_GLOBAL, "P_GAM ",xlon(nx/2,ny/2)))! -100.5
       call check( nf90_put_att(ncid, NF90_GLOBAL, "XCENT ",xlon(nx/2,ny/2)))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "YCENT ",xlat(nx/2,ny/2)))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "XORIG ",(-nx/2*CDIM*1000)))
@@ -408,13 +410,19 @@ call check( nf90_put_att(ncid, NF90_GLOBAL, "IOAPI_VERSION","$Id: @(#) ioapi lib
       call check( nf90_put_att(ncid, NF90_GLOBAL, "VGLVLS ","0,0"))!
       call check( nf90_put_att(ncid, NF90_GLOBAL, "GDNAM ","MEXICO_9"))!
       call check( nf90_put_att(ncid, NF90_GLOBAL, "UPNAM ","CREATESET"))!
-call check( nf90_put_att(ncid, NF90_GLOBAL, "VAR-LIST ","CO              NH3            NO              NO2             SO2             ALD2            CH4             ALDX            ETH             ETHA            ETOH            IOLE                 MEOH            FORM            ISOP            OLE             PAR             TERP            TOL             XYL             CO2             PM_10           PMFP            PSO4            PNO3            PM25I           POA             PEC                          "))
+      call check( nf90_put_att(ncid, NF90_GLOBAL, "VAR-LIST ","CO              NH3            NO              NO2             SO2             ALD2            CH4             ALDX            ETH             ETHA            ETOH            IOLE                 MEOH            FORM            ISOP            OLE             PAR             TERP            TOL             XYL             CO2             PM_10           PMFP            PSO4            PNO3            PM25I           POA             PEC                          "))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "FILEDESC","Area source emissions data                                                      /FROM/ CCAUNAM                                                                 /VERSION/ CIEM1.0_                                                                                                                                            /BASE YEAR/     2014                                                            /NUMBER OF FILES/   1                                                           /FILE POSITION/   1                                                             /NUMBER OF VARIABLES/  28"))
+      call check( nf90_put_att(ncid, NF90_GLOBAL, "HISTORY",""))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "MECHANISM",mecha))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "CREATION_DATE",hoy))
 
 	print *,"Define las variables"
 !  Define las variables
 	call check( nf90_def_var(ncid, "TFLAG", NF90_INT, dimids3,id_var(radm+1) ) )
+!      Assign  attributes
+      call check( nf90_put_att(ncid, id_var(radm+1), "units", "<YYYYDDD,HHMMSS>"  ) )
+      call check( nf90_put_att(ncid, id_var(radm+1), "long_name", "FLAG           "  ) )
+      call check( nf90_put_att(ncid, id_var(radm+1), "var_desc", "Timestep-valid flags:  (1) YYYYDDD or (2) HHMMSS                                "  ) )
 !  Attributos para cada variable 
 !    call check( nf90_def_var(ncid, "XLONG", NF90_REAL,(/id_dim(3),id_dim(4),id_dim(1)/),id_varlong ) )
 !       ! Assign  attributes
@@ -638,6 +646,7 @@ character(len=3) function mes(num)
     iyear=intc(year)
     imes=intc(mes)
     iday=intc(day)
+    print *,iyear,imes,iday
     if (mod(iyear,4)==0.and.mod(iyear,100)/=0) month(2)=29
     if (imes==1) then
       juliano=iday
