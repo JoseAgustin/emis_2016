@@ -24,7 +24,7 @@ echo "Directorio actual "$ProcessDir
 #  ecaim    guadalajara  mexicali
 #  mexico    monterrey    queretaro   tijuana
 #
-dominio=mexico
+dominio=ecaim
 HacerArea=1
 #
 #  Build the fecha.txt file
