@@ -45,26 +45,57 @@ default:
 	fi ; \
 	fi ; \
 
+pgi:
+	uname -a >  .tmpfile
+	grep Linux .tmpfile ; \
+	if [ $$? = 0 ]; then echo "Compiling for Linux PGI" ;               \
+	( $(MAKE) all                          \
+	"RM             = $(RM)"        "RM_LIST        = $(RM_LIST)"   \
+	"LN             = $(LN)"        "MACH           = PGI"          \
+	"MAKE           = $(MAKE)"      "CPP            = fpp"  \
+	"CPPFLAGS       = -I.  "      \
+	"FC             = pgf90"        "FCFLAGS        = -O3 -fastsse -Mfree" \
+	"LDOPTIONS      = -O3 -fastsse -Mfree " \
+	"CFLAGS         = -I."          \
+	"LOCAL_LIBRARIES=  " ) ; \
+	else \
+	grep Darwin .tmpfile ; \
+	if [ $$? = 0 ]; then echo "Compiling for Darwin PGI" ;              \
+	( $(MAKE) all                          \
+	"RM             = $(RM)"        "RM_LIST        = $(RM_LIST)"   \
+	"LN             = $(LN)"        "MACH           = PGI"          \
+	"MAKE           = $(MAKE)"      "CPP            = fpp"  \
+	"CPPFLAGS       =  "      \
+	"FC             = pgf90"        "FCFLAGS        = -O3 -fastsse -Mfree" \
+	"LDOPTIONS      = -O3 -fastsse -Mfree " \
+	"CFLAGS         = -I."          \
+ 	"LOCAL_LIBRARIES=  " ) ; \
+ 	else echo "Do not know how to compile for the `cat .tmpfile` machine." \
+	fi ; \
+	fi ; \
+	fi ; \
+
 # Ejecuta
+
 all :	carr.exe vial.exe agrega.exe
 
 carr.exe: $(objec1)
 	$(FC) -o $@ $(objec1) $(LDOPTIONS)
 
-suma_carretera.o: suma_carretera.f90
-	$(FC) -c $< $(FCFLAGS)
+suma_carretera.o: suma_carretera.F90
+	$(FC) -c $< $(FCFLAGS) -D$(MACH)
  
 vial.exe: $(objec2)
 	$(FC) -o $@ $(objec2) $(LDOPTIONS)
 
-suma_vialidades.o: suma_vialidades.f90
-	$(FC) -c $< $(FCFLAGS)
+suma_vialidades.o: suma_vialidades.F90
+	$(FC) -c $< $(FCFLAGS) -D$(MACH)
 
 agrega.exe: $(objec3)
-	$(FC) -o $@ $(objec3) $(LDOPTIONS)
+	$(FC) -o $@ $(objec3) $(LDOPTIONS) 
 
 agrega.o: agrega.f90
-	$(FC) -c $< $(FCFLAGS)
+	$(FC) -c $< $(FCFLAGS) -D$(MACH)
 
 
 clean:

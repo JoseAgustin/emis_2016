@@ -7,10 +7,10 @@ FIX01 =
 #######################
 
 
-objec1 = g_radm_2014.o
-objec2 = g_2014_racm.o
-objec3 = g_saprc_2014.o
-objec4 = g_cbm5_2014.o
+objec1 = g_radm_2016.o
+objec2 = g_2016_racm.o
+objec3 = g_saprc_2016.o
+objec4 = g_cbm5_2016.o
 
 RM_LIST = *.mod *.o core .tmpfile *.exe wrfchemi.*
 RM	=	/bin/rm -f 
@@ -46,31 +46,61 @@ default:
 	fi ; \
 	fi ; \
 
+pgi:
+	uname -a >  .tmpfile
+	grep Linux .tmpfile ; \
+	if [ $$? = 0 ]; then echo "Compiling for Linux PGI" ;               \
+	( $(MAKE) all                          \
+	"RM             = $(RM)"        "RM_LIST        = $(RM_LIST)"   \
+	"LN             = $(LN)"        "MACH           = PGI"          \
+	"MAKE           = $(MAKE)"      "CPP            = fpp"  \
+ 	"CPPFLAGS       = -I.  "      \
+	"FC             = pgf90"        "FCFLAGS        = -O3 -fastsse -Mfree" \
+	"LDOPTIONS      = -O3 -fastsse -Mfree -lnetcdff -L$(NETCDF)/lib" \
+	"FCFLAGS        = -O3 -fastsse -Mfree -I$(NETCDF)/include"          \
+	"LOCAL_LIBRARIES=  " ) ; \
+	else \
+	grep Darwin .tmpfile ; \
+	if [ $$? = 0 ]; then echo "Compiling for Darwin PGI" ;              \
+	( $(MAKE) all                          \
+	"RM             = $(RM)"        "RM_LIST        = $(RM_LIST)"   \
+	"LN             = $(LN)"        "MACH           = PGI"          \
+	"MAKE           = $(MAKE)"      "CPP            = fpp"  \
+	"CPPFLAGS       =  "      \
+	"FC             = pgf90"        "FCFLAGS        = -O3 -fastsse -Mfree" \
+	"LDOPTIONS      = -O3 -fastsse -Mfree -lnetcdff -L$(NETCDF)/lib" \
+	"FCFLAGS         = -O3 -fastsse -Mfree -I$(NETCDF)/include"          \
+	"LOCAL_LIBRARIES=  " ) ; \
+	else echo "Do not know how to compile for the `cat .tmpfile` machine." \
+	fi ; \
+	fi ; \
+	fi ; \
+
 # Ejecuta
 all :	radm2.exe racm2.exe saprc.exe cbm5.exe
 
 radm2.exe: $(objec1)
 	$(FC) -o $@ $(objec1) $(LDOPTIONS)
 
-g_radm_2014.o: g_radm_2014.f90
+g_radm_2016.o: g_radm_2016.f90
 	$(FC) -c $< $(FCFLAGS)
  
 racm2.exe: $(objec2)
 	$(FC) -o $@ $(objec2) $(LDOPTIONS)
 
-g_2014_racm.o: g_2014_racm.f90
+g_2016_racm.o: g_2016_racm.f90
 	$(FC) -c $< $(FCFLAGS)
 
 saprc.exe: $(objec3)
 	$(FC) -o $@ $(objec3) $(LDOPTIONS)
 
-g_saprc_2014.o: g_saprc_2014.f90
+g_saprc_2016.o: g_saprc_2016.f90
 	$(FC) -c $< $(FCFLAGS)
 
 cbm5.exe: $(objec4)
 	$(FC) -o $@ $(objec4) $(LDOPTIONS)
 
-g_cbm5_2014.o: g_cbm5_2014.f90
+g_cbm5_2016.o: g_cbm5_2016.f90
 	$(FC) -c $< $(FCFLAGS)
 
 clean:

@@ -243,7 +243,7 @@ implicit none
         print *,k,nscc(k)
         do i=1,nm
           read(10,*) edo,mun,iem(k,i),(emiss(i,j,k),j=1,nscc(k))
-      end do ! i
+        end do ! i
         close(10)
     end do! k
 end subroutine lee
@@ -444,7 +444,7 @@ subroutine guarda
                suma=suma+eagr(i,k,l)
             end do
             if (suma.gt.0) &
-&           write(10,310) gria(i),ida(i),0,fa(i),(eagr(i,k,l),l=1,nscc(k))
+&           write(10,310) gria(i),ida(i),0.,fa(i),(eagr(i,k,l),l=1,nscc(k))
         end do
         print *,"   Bosque"
         do i=1,size(fb)
@@ -453,7 +453,7 @@ subroutine guarda
             suma=suma+ebos(i,k,l)
             end do
             if (suma.gt.0) &
-&            write(10,310) grib(i),idb(i),0,fb(i),(ebos(i,k,l),l=1,nscc(k))
+&            write(10,310) grib(i),idb(i),0.,fb(i),(ebos(i,k,l),l=1,nscc(k))
         end do
         print *,"   Poblacion"
         do i=1,size(fp1)
@@ -471,7 +471,7 @@ subroutine guarda
             suma=suma+eaer(i,k,l)
             end do
             if (suma.gt.0) &
-&        write(10,310) grie(i),ide(i),fe(i),0,(eaer(i,k,l),l=1,nscc(k))
+&        write(10,310) grie(i),ide(i),fe(i),0.,(eaer(i,k,l),l=1,nscc(k))
         end do
         print *,"   Centrales Autobuses"
         do i=1,size(fu)
@@ -480,7 +480,7 @@ subroutine guarda
             suma=suma+ecen(i,k,l)
             end do
             if (suma.gt.0) &
-&        write(10,310) griu(i),idu(i),fu(i),0,(ecen(i,k,l),l=1,nscc(k))
+&        write(10,310) griu(i),idu(i),fu(i),0.,(ecen(i,k,l),l=1,nscc(k))
         end do
         print *,"   Puertos Maritimos"
         do i=1,size(fm)
@@ -489,7 +489,7 @@ subroutine guarda
             suma=suma+epue(i,k,l)
             end do
             if (suma.gt.0) &
-&        write(10,310) grim(i),idm(i),fm(i),0,(epue(i,k,l),l=1,nscc(k))
+&        write(10,310) grim(i),idm(i),fm(i),0.,(epue(i,k,l),l=1,nscc(k))
         end do
         print *,"   Ferrocarriles"
         do i=1,size(ft)
@@ -498,7 +498,7 @@ subroutine guarda
             suma=suma+etre(i,k,l)
             end do
             if (suma.gt.0) &
-&          write(10,310) grit(i),idt(i),ft(i),0,(etre(i,k,l),l=1,nscc(k))
+&          write(10,310) grit(i),idt(i),ft(i),0.,(etre(i,k,l),l=1,nscc(k))
         end do
     print *,"   Terraceria"
     do i=1,size(fr)
@@ -507,7 +507,7 @@ subroutine guarda
         suma=suma+eter(i,k,l)
         end do
         if (suma.gt.0) &
-&        write(10,310) grir(i),idr(i),fr(i),0,(eter(i,k,l),l=1,nscc(k))
+&        write(10,310) grir(i),idr(i),fr(i),0.,(eter(i,k,l),l=1,nscc(k))
         end do
     print *,"   Vialidades"
     do i=1,size(fv)
@@ -516,12 +516,18 @@ subroutine guarda
         suma=suma+evia(i,k,l)
         end do
         if (suma.gt.0) &
-&        write(10,310) griv(i),idv(i),fv(i),0,(evia(i,k,l),l=1,nscc(k))
+&        write(10,310) griv(i),idv(i),fv(i),0.,(evia(i,k,l),l=1,nscc(k))
         end do
     close(10)
     end do
+#ifndef PGI
 300 format(I3,", g_per_year",<nnscc>(",",A10))
 310 format(I9,",",I6,",",F,",",F,<nnscc>(",",ES12.5))
+#else
+300 format(I3,", g_per_year",60(",",A10))
+310 format(I9,",",I6,",",F,",",F,60(",",ES12.5))
+#endif
+
 end subroutine guarda
 end program area_espacial
 
