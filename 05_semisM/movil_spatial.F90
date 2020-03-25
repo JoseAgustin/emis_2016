@@ -66,13 +66,8 @@ subroutine imprime
 	close(10)
 	end do
     print *,"+++++   DONE SPATIAL MOVIL +++++"
-#ifndef PGI
 210 format(i8,",",<size(jscc)>(A11,","))
 220 format(i8,",",<size(jscc)>(ES12.4,","),I2)
-#else
-210 format(i8,",",30(A11,","))
-220 format(i8,",",30(ES12.4,","),I2)
-#endif
 end subroutine imprime
 !
 subroutine computations
@@ -296,10 +291,6 @@ real,dimension(npol):: mm
   deallocate(iest,iscc,ei,cventmun,frac)
   close(11)
   110 format(A,14(",",A),",",A)
-#ifndef PGI
   120 format(I6,",",A10,",",<npol-1>(F12.1,","),F12.1)
-#else
-  120 format(I6,",",A10,",",60(F12.1,","),F12.1)
-#endif
 end subroutine guarda
 end program
