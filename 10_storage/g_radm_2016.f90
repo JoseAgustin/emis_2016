@@ -346,11 +346,11 @@ subroutine store
     print *,hoy
     write(current_date(4:4),'(A1)')char(6+48) ! para 2016
     JULDAY=juliano(current_date(1:4),current_date(6:7),current_date(9:10))
-     do periodo=1,1 ! 2 1
+     do periodo=1,2 ! 2 1
 	  if(periodo.eq.1) then
         FILE_NAME='wrfchemi.d01.'//trim(mecha)//'.'//current_date(1:19)         !******
 	   iit= 0
-	   eit= 23 !11
+	   eit= 11 !23
 	   iTime=current_date
 	  else if(periodo.eq.2) then
 	   iit=12

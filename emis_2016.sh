@@ -24,14 +24,14 @@ echo "Directorio actual "$ProcessDir
 #  ecaim    guadalajara  mexicali
 #  mexico    monterrey    queretaro   tijuana
 #
-dominio=ecaim
+dominio=mexico
 HacerArea=1
 #
 #  Build the fecha.txt file
 # Cambiar aqui la fecha
 mes=2
-dia=8
-dia2=14
+dia=9
+dia2=9
 dia1=$dia 
 #  Revisa que exista el dominio
 cd 01_datos
