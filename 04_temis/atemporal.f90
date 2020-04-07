@@ -21,6 +21,7 @@
 !   15/11/2017  Seleccion de numero de linea mayor de los datos de entrada emiA
 !   30/07/2019  Para 2016, bisiesto febrero 29 dias
 !   16/12/2019  Actualizacion en indices
+!   06/04/2020  Incluye Horario de verano
 !
 module variables
 integer :: month,daytype
@@ -31,6 +32,7 @@ integer,parameter :: nh=24 ! number of hour per day
 integer :: nmax !number of max lines in emiA
 integer :: nm ! line number in emissions file
 integer :: lh ! line number in uso horario
+integer :: iverano  ! si es en periodo de verano
 integer,dimension(nf) :: nscc ! number of scc codes per file
 integer*8,dimension(nnscc) ::iscc 
 integer, allocatable :: idcel(:),idcel2(:),idcel3(:)
@@ -140,6 +142,8 @@ subroutine lee
 95  continue
     close(10)
 	if(daytype.eq.0) STOP 'Error in daytype=0'
+!Horario de verano Abril 3 a octubre 30 2016
+    iverano=kverano(idia,month)
 !
    call maxline(nmax)
 
@@ -256,18 +260,19 @@ subroutine lee
     inquire(18,opened=fil1)
 
     if(.not.fil1) then
-	  open(unit=18,file=nfile,status='OLD',action='read')
+open(unit=18,file=nfile,status='OLD',action='read')
 	else
 	  rewind(18)
 	end if
 !
 	read (18,'(A)') cdum
+
 !dir$ loop count min(256)
      do
 	    read(18,*,END=230)jscc,(itfrc(l),l=1,25)
     dias: do i=1,nscc(k)
 	      if(jscc.eq.profile(3,i,k)) then
-            m=4
+            m=4-iverano
             do l=1,nh
             if(m+l.gt.nh) then
               hEST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
@@ -275,7 +280,7 @@ subroutine lee
               hEST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
             end if
             end do
-		    m=5
+		    m=5-iverano
 		    do l=1,nh
 			if(m+l.gt.nh) then
               hCST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
@@ -283,7 +288,7 @@ subroutine lee
               hCST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
             end if
             end do
-            m=6
+          m=6-iverano
             do l=1,nh
             if(m+l.gt.nh) then
               hMST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
@@ -291,7 +296,7 @@ subroutine lee
               hMST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
             end if
             end do
-            m=7
+            m=7-iverano
             do l=1,nh
             if(m+l.gt.nh) then
               hPST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
@@ -318,7 +323,7 @@ print *,'   Done ',nfile,daytype,maxval(hCST)!,maxval(hPST),maxval(hMST)
         read(19,*,END=240)jscc,(itfrc(l),l=1,25)
     fds: do i=1,nscc(k)
          if(jscc.eq.profile(3,i,k)) then
-            m=4
+            m=4-iverano
             do l=1,nh
          if(daytype.eq.1 )then
             if(m+l.gt.nh) then
@@ -332,7 +337,7 @@ print *,'   Done ',nfile,daytype,maxval(hCST)!,maxval(hPST),maxval(hMST)
             end if
           end if  ! daytype
             end do
-           m=5
+           m=5-iverano
            do l=1,nh
            if(daytype.eq.1) then
              if(m+l.gt.nh) then
@@ -346,7 +351,7 @@ print *,'   Done ',nfile,daytype,maxval(hCST)!,maxval(hPST),maxval(hMST)
             end if
            end if !daytype
            end do
-           m=6
+           m=6-iverano
            do l=1,nh
             if(daytype.eq.1) then
              if(m+l.gt.nh) then
@@ -360,7 +365,7 @@ print *,'   Done ',nfile,daytype,maxval(hCST)!,maxval(hPST),maxval(hMST)
               end if
             end if !daytype
            end do
-           m=7
+           m=7-iverano
            do l=1,nh
              if(daytype.eq.1 )then
                  if(m+l.gt.nh) then
@@ -489,12 +494,12 @@ subroutine storage
    write(10,*)casn(k),'ID, Hr to Hr24'
    write(10,'(I8,4A)')size(emis,dim=1),",",current_date,", ",cdia(daytype)
    do i=1,size(emis,dim=1)
-     suma=0
-     do l=1,nh
-       suma=suma+emis(i,k,l)
-     end do
-     if(suma.gt.0) write(10,100)idcel2(i),(emis(i,k,l),l=1,nh)
-   end do
+    suma=0
+    do l=1,nh
+        suma=suma+emis(i,k,l)
+    end do
+        if(suma.gt.0) write(10,100)idcel2(i),(emis(i,k,l),l=1,nh)
+    end do
    close(unit=10)
   end do
 100 format(I7,",",23(ES12.3,","),ES12.3)
@@ -526,7 +531,7 @@ subroutine storage
      do l=1,nh
        suma=suma+evoc(i,j,l)
      end do
-     if(suma.gt.0)  write(10,110)idcel2(i),iscc(j),(evoc(i,j,l),l=1,nh)
+     if(suma.gt.0) write(10,110)idcel2(i),iscc(j),(evoc(i,j,l),l=1,nh)
      end do
    end do
 	close(10)
@@ -585,15 +590,15 @@ subroutine huso_horario
     print *,'Start uso horario'
     do k=1,nf
        do i=1,nm
-         iedo=int(idsm(k,i)/1000)
-         idsm(k,i)=6
-         if(iedo.eq.2 .or.iedo.eq.3) idsm(k,i)=8
-         if(iedo.eq.8 .or.iedo.eq.18 .and.iedo.eq.25 .and.iedo.eq.26)idsm(k,i)=7
-         if(iedo.eq.23) idsm(k,i)=5
+        iedo=int(idsm(k,i)/1000)
+        idsm(k,i)=6
+        if(iedo.eq.2 .or.iedo.eq.3) idsm(k,i)=8
+        if(iedo.eq.8 .or.iedo.eq.18 .and.iedo.eq.25 .and.iedo.eq.26)idsm(k,i)=7
+        if(iedo.eq.23) idsm(k,i)=5
        end do
     end do
     if(maxval(idsm).ge.9 ) then
-        print *,'Error item:', MAXLOC(idsm),'value:', maxval(idsm)
+        print *,'Error item:', MAXLOC(idsm),'value:',maxval(idsm)
         STOP 'Value must be less or equal to 8'
     end if
     if(minval(idsm).le. 4 ) then
@@ -676,15 +681,47 @@ subroutine piksrt(n)
 INTEGER n
 integer i,j
 real a
-do j=2,N
-a=idcel3(j)
-do i=j-1,1,-1
-if(idcel3(i).le.a) goto 10
-idcel3(i+1)=idcel3(i)
-end do
-i=0
-10 idcel3(i+1)=a
-end do
+  do j=2,N
+  a=idcel3(j)
+    do i=j-1,1,-1
+      if(idcel3(i).le.a) goto 10
+      idcel3(i+1)=idcel3(i)
+    end do
+  i=0
+  10 idcel3(i+1)=a
+  end do
 return
 end subroutine piksrt
+!  _  ____   _____ ___    _   _  _  ___
+! | |/ /\ \ / / __| _ \  /_\ | \| |/ _ \
+! | ' <  \ V /| _||   / / _ \| .` | (_) |
+! |_|\_\  \_/ |___|_|_\/_/ \_\_|\_|\___/
+!
+integer function kverano(ida,mes)
+    implicit none
+    integer, intent(in):: ida,mes
+
+    if (mes.lt.4  .or. mes .gt.10)then
+        kverano = 0
+        return
+    end if
+    if (mes.gt.4 .and. mes .lt.10) then
+        kverano = 1
+        write(6, 233)
+        return
+    end if
+    if (mes.eq.4 .and. ida .ge. 3) then
+      kverano = 1
+      write(6, 233)
+      return
+    elseif (mes.eq.10 .and. ida .le. 30) then
+      kverano = 1
+      write(6, 233)
+      return
+     else
+      kverano =0
+      return
+    end if
+233 format("******  HORARIO de VERANO *******")
+end function
 end program atemporal
