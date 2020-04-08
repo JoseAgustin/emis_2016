@@ -60,11 +60,14 @@ module vars
 	'E_TOL  ','E_XYL  ','E_CO2  ','E_PM_10','E_PM25 ','E_SO4I ','E_NO3I ','E_PM25I',&
 	'E_ORGI ','E_ECI  ','E_SO4J ','E_NO3J ','E_PM25J','E_ORGJ ','E_ECJ  '/)
     character(len=16),dimension(radm):: cname=(/'Carbon Monoxide ','NH3             ','NO              ', &
-	'NO2  ','SO2  ','ALDEHYDES  ','METHANE','CRESOL','Ethane','Glyoxal', &
-	'HC3  ','HC5  ','HC8  ','HCHO ','ISOPRENE','Acetone','Acrolein', &
-	'MGLY ','Methyl Vinil Ketone  ','Alkenes','alkenes   ','Terminal Alkynes','Formic Acid','Acetic Acid ', &
-	'TOLUENE  ','XYLENE  ','Carbon Dioxide','PM_10','PM_25 ','Sulfates ','Nitrates ','PM25I',&
-	'Organic ','Elemental Carbon  ','SulfatesJ','NitratesJ','PM25J','Organic','Elemental Carbon'/)
+	'NO2             ','SO2             ','ALDEHYDES       ','METHANE         ','CRESOL          ',&
+    'Ethane          ','Glyoxal         ','HC3             ','HC5             ','HC8             ',&
+    'HCHO            ','ISOPRENE        ','Acetone         ','Acrolein        ','MGLY            ',&
+    'Methyl Vinil Ket','Alkenes         ','alkenes         ','Terminal Alkynes','Formic Acid     ',&
+    'Acetic Acid     ','TOLUENE         ','XYLENE          ','Carbon Dioxide  ','PM_10           ',&
+    'PM_25           ','Sulfates        ','Nitrates        ','PM25I           ','Organic         ',&
+    'Elemental Carbon','SulfatesJ       ','NitratesJ       ','PM25J           ','Organic         ',&
+    'Elemental Carbon'/)
     character (len=19) :: current_date,current_datem,mecha
     character (len=40) :: titulo
     common /domain/ ncel,nl,nx,ny,zlev,CDIM
