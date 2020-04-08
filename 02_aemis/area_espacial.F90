@@ -62,11 +62,11 @@ use land
        call guarda
 
 contains
-!  L    EEEE EEEE
-!  L    E    E
-!  L    EEE  EEE
-!  L    E    E
-!  LLLL EEEE EEEE
+!  L     EEEEE EEEEE
+!  L     E     E
+!  L     EEE   EEE
+!  L     E     E
+!  LLLLL EEEEE EEEEE
 subroutine lee
 implicit none
     integer i,j,k
@@ -155,7 +155,7 @@ subroutine calculos
     etre=0.0
     eter=0.0
     evia=0.0
-    print *," Inicia Calculos"
+    print *," Inicia Calculos de Distribucion Espacial"
     Clase: do k=1,nf
     print *,"     Agricola  ", efile(k)
     agricola: do j=1,size(fa) ! grid
