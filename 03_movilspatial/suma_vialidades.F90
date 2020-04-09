@@ -3,7 +3,7 @@
 !
 !  Creado por Jose Agustin Garcia Reynoso el 12/05/2012
 !
-! ifort -O2 -axAVX suma_vialidades.f90 -o vial.exe
+! ifort -O2 -axAVX suma_vialidades.F90 -o vial.exe
 !
 ! Proposito:
 ! Este programa identifica las diferentes vialidades en la celda y las suma.
@@ -12,17 +12,22 @@
 !  Modificaciones
 !
 !   2/Ago/2012  se considera la vialidad en todo el municipio rlm
+!   9/Abr/2020  usa namelist global
 !
 module varsv
 integer ::nm
 integer,allocatable :: grid(:),icve(:),grid2(:),icve2(:),icve3(:)
 real,allocatable ::rc(:),rlm(:),rlc(:)
 real,allocatable :: sm(:),sc(:),sum(:)
+character(len=12):: zona
 
-common /vars1/ nm
+common /vars1/ nm,zona
 
 end module varsv
 program suma
+use varsv
+
+    call lee_namelist
 
     call lee
 
@@ -31,7 +36,6 @@ program suma
     call guarda
 contains
 subroutine lee
-use varsv
 implicit none
     integer i
     character(len=30) ::fname
@@ -150,4 +154,29 @@ subroutine count
     print *,'Number of different grids',j
     deallocate(xl)
 end subroutine count
+subroutine lee_namelist
+    NAMELIST /region_nml/ zona
+    integer unit_nml
+    logical existe
+    unit_nml = 9
+    existe = .FALSE.
+    write(6,*)' >>>> Reading file - namelist_emis.nml'
+    inquire ( FILE = '../namelist_emis.nml' , EXIST = existe )
+
+    if ( existe ) then
+    !  Opening the file.
+        open ( FILE   = '../namelist_emis.nml' ,      &
+        UNIT   =  unit_nml        ,      &
+        STATUS = 'OLD'            ,      &
+        FORM   = 'FORMATTED'      ,      &
+        ACTION = 'READ'           ,      &
+        ACCESS = 'SEQUENTIAL'     )
+        !  Reading the file
+        READ (unit_nml , NML = region_nml )
+        !WRITE (6    , NML = region_nml )
+        close(unit_nml)
+    else
+        stop '***** No namelist_emis.nml in .. directory'
+    end if
+end subroutine lee_namelist
 end program suma

@@ -501,8 +501,8 @@ subroutine lee_namelist
     close(unit_nml)
     else
     stop '***** No namelist_emis.nml in .. directory'
-    ENDIF
+    end if
 
-end subroutine
+end subroutine lee_namelist
 end program area_espacial
 

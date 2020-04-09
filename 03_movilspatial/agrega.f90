@@ -145,7 +145,7 @@ end do !i
 	implicit none
     integer i,var
     print *," Max number of lines after combining",nm3
-    open (unit=10,file='salida3.csv',action='write')
+    open (unit=10,file='gri_movil.csv',action='write')
     write(10,*)'GRID, CVE_ENT_MUN, Fv, Fc'
     write(10,*)nm3
     do i=1,nm3

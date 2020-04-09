@@ -3,7 +3,7 @@
 !
 !  Creado por Jose Agustin Garcia Reynoso el 12/05/2012
 !
-! ifort -O2 -axAVX suma_carretera.f90 -o carr.exe
+! ifort -O2 -axAVX suma_carretera.F90 -o carr.exe
 !
 ! Proposito:
 ! Este programa identifica las diferentes carreteras en la celda y las suma.
@@ -12,32 +12,36 @@
 !  Modificaciones
 !
 !   2/Ago/2012  se considera la vialidad en todo el municipio rlm
-
+!   9/Abr/2020  usa namelist global
 module vars
 integer ::nm
 integer,allocatable :: grid(:),icve(:),grid2(:),icve2(:),icve3(:)
 real,allocatable ::rc(:),rlm(:),rlc(:)
 real,allocatable :: sm(:),sc(:),sum(:)
+character(len=12):: zona
 
-common /vars1/ nm
+common /vars1/ nm,zona
 
 end module vars
 program suma
+use vars
+
+    call lee_namelist
 
     call lee
 
     call calculos
 
     call guarda
+
 contains
 subroutine lee
-use vars
 implicit none
     integer i
-    character(len=30) ::fname
+    character(len=50) ::fname
     character (len=10) ::cdum
 
-    fname= "CARRETERAS.csv"
+    fname= "../01_datos/"//trim(zona)//"/"//"CARRETERAS.csv"
     open (unit=10,file=fname,status='OLD')
     read(10,*) cdum
     i=0
@@ -59,17 +63,9 @@ implicit none
 end subroutine
 
 subroutine calculos
-use vars
 implicit none
     integer i,j,l    
     call count
-!    do i=1,nm
-!        do j=1,size(icve2)
-!     if(icve(i).eq.icve2(j)) then
-!        sc(j)= sc(j)+rlc(i)
-!     end if
-!        end do
-!    end do
 	rc=0
     do i=1,nm
         do j=1,size(grid2)
@@ -86,7 +82,6 @@ implicit none
 end subroutine calculos
 
 subroutine guarda
-use vars
 implicit none
 integer i,j
 open(unit=11,file='salida.csv',action='write')
@@ -150,4 +145,30 @@ subroutine count
     print *,'Number of different grids',j
     deallocate(xl)
 end subroutine count
+
+subroutine lee_namelist
+    NAMELIST /region_nml/ zona
+    integer unit_nml
+    logical existe
+    unit_nml = 9
+    existe = .FALSE.
+    write(6,*)' >>>> Reading file - namelist_emis.nml'
+    inquire ( FILE = '../namelist_emis.nml' , EXIST = existe )
+
+    if ( existe ) then
+    !  Opening the file.
+        open ( FILE   = '../namelist_emis.nml' ,      &
+        UNIT   =  unit_nml        ,      &
+        STATUS = 'OLD'            ,      &
+        FORM   = 'FORMATTED'      ,      &
+        ACTION = 'READ'           ,      &
+        ACCESS = 'SEQUENTIAL'     )
+        !  Reading the file
+        READ (unit_nml , NML = region_nml )
+        !WRITE (6    , NML = region_nml )
+        close(unit_nml)
+    else
+        stop '***** No namelist_emis.nml in .. directory'
+    end if
+end subroutine lee_namelist
 end program suma

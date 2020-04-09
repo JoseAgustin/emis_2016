@@ -125,7 +125,7 @@ subroutine lee
 	print *,'End reading file salida.csv '
 	close(10)
 !
-	open(10,file='gri_movil.csv',status='old',action='read')
+	open(10,file='../03_movilspatial/gri_movil.csv',status='old',action='read')
 	read(10,'(A)') cdum !read header line 1
 	read(10,'(A)') cdum !read header line 2
 	i=0

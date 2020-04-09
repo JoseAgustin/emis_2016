@@ -2,18 +2,19 @@
 !   Definicion de variables para calculo del Inventario
 !
 &region_nml
-zona="mexicali"
+zona ="mexicali"
 !
-! bajio     cdjuarez     colima 
+! bajio     cdjuarez     colima
 ! ecaim     guadalajara  mexicali
 ! mexico    monterrey    queretaro   tijuana
 /
 &fecha_nml
 ! Se indica el dia y el mes a calcular
 ! se proporciona el anio
-idia=2
-month=6
-lsummer=.true.
+! month jan =1 to dec=12
+! day in the month (from 1 to 28,30 or 31)
+idia=9
+month=5
 anio=2016
 /
 !Horario de verano
@@ -21,8 +22,12 @@ anio=2016
 ! .true. o .false. para considerar o no el horario de verano
 ! inicia  dia de inicio en abril del horario de verano 2016
 ! termina dia de termino en octubre del Horario de verano 2016
-verano=.true.  
-inicia=3   
-termina= 30 
+lsummer = .true.
+inicia  =  3
+termina = 30
 /
-
+! Quimica a utilizar
+&chem_nml
+mecha='radm2'
+! Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 sapc99
+/

@@ -1,14 +1,14 @@
 !
-!	atemporal.f90
+!	atemporal.F90
 !	
 !
 !   Creado por Jose Agustin Garcia Reynoso 12/07/2017.
 !
 ! Proposito:
 !          Realiza la distribucion temporal de las emisiones de area
-!   ifort -O3 -axAVX atemporal.f90 -o Atemporal.exe
+!   ifort -O3 -axAVX atemporal.F90 -o Atemporal.exe
 !   -c -parallel -guide
-!  -parallel -Dtest_gap -opt-report=1 -opt-report-phase=par -opt-report-file=stdout atemporal.f90
+!  -parallel -Dtest_gap -opt-report=1 -opt-report-phase=par -opt-report-file=stdout atemporal.F90
 !
 !
 !   modificado
@@ -33,10 +33,15 @@ integer :: nmax !number of max lines in emiA
 integer :: nm ! line number in emissions file
 integer :: lh ! line number in uso horario
 integer :: iverano  ! si es en periodo de verano
+integer :: idia     ! dia para el calculo de emisiones
+integer :: anio     ! anio de las emisiones 2016
+integer :: inicia   ! dia inicio horario verano
+integer :: termina  ! dia fin del horario de verano
 integer,dimension(nf) :: nscc ! number of scc codes per file
 integer*8,dimension(nnscc) ::iscc 
 integer, allocatable :: idcel(:),idcel2(:),idcel3(:)
 integer, allocatable :: idsm(:,:) ! state municipality IDs emiss and usoH
+integer,dimension(12) :: daym ! days in a month
 real ::fweek
 real,allocatable ::emiA(:,:,:) !Area emisions from files cel,ssc,file
 real,allocatable :: emis(:,:,:) ! Emission by cel,file and hour (inorganic)
@@ -48,7 +53,7 @@ integer,dimension(3,nnscc,nf):: profile  ! 1=mon 2=weekday 3=hourly
 integer,allocatable :: id5(:,:) ! index per file
 character(len=3),dimension(juliano):: cdia
 character (len=19) :: current_date
-
+logical :: lsummer
 character(len=14),dimension(nf) ::efile,casn
 
  data efile/'ASO2_2016.csv','ANOx_2016.csv','ANH3_2016.csv',&
@@ -59,16 +64,23 @@ character(len=14),dimension(nf) ::efile,casn
 &           'TACO__2016.csv','TAPM102016.csv','TACO2_2016.csv',&
 &           'TACN__2016.csv','TACH4_2016.csv','TAPM2_2016.csv',&
 &           'TAVOC_2016.csv'/
-common /vars/ fweek,nscc,nm,lh,month,daytype,mes,dia,hora,current_date
+! number of day in a month
+!          jan feb mar apr may jun jul aug sep oct nov dec
+ data daym /31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
+
+common /vars/ fweek,nscc,nm,lh,daytype,mes,dia,current_date
+common /nlm_vars/lsummer,month,idia,anio,inicia,termina
 end module
 !
-!  Progran  atemporal.f90
+!  Progran  atemporal.F90
 !
 !  Make the temporal distribution of emissions
 !
 program atemporal 
    use variables
-   
+
+   call lee_namelist
+
    call lee
    
    call compute
@@ -85,45 +97,27 @@ contains
 subroutine lee
 	implicit none 
 	integer i,j,k,l,m
-	integer idum,imon,iwk,ipdy,idia
+	integer idum,imon,iwk,ipdy
 	integer*8 jscc ! scc code from temporal file
 	integer,dimension(25) :: itfrc  !montly,weekely and hourly values and total
-	integer,dimension(12) :: daym ! days in a month
 	real rdum
-	logical fil1,fil2,lsummer
+	logical fil1,fil2
 	character(len=4):: cdum
 	character(len=18):: nfile,nfilep
-	! number of day in a month 
-	!          jan feb mar apr may jun jul aug sep oct nov dec
-	data daym /31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
-    nfile='fecha.txt'
-    print *,"READING ",trim(nfile)," file"
-	open (unit=10,file=nfile,status='OLD',action='read')
-	read (10,*)month  
-	read (10,*)idia
-    read (10,*)lsummer
-	month=abs(month)
-	idia=abs(idia)
-	if (month.lt.1 .or. month.gt.12) then
-	print '(A,I3)','Error in month (from 1 to 12) month= ',month
-	STOP
-	end if
-	if (idia.gt.daym(month))then
-	print '(A,I2.2,A,I2.2)','Error in day value: ',idia,' larger than days in month ',daym(month)
-	STOP
-	end if
-	close(10)
-    write(current_date,'(A5,I2.2,"-",I2.2,A9)')'2016-',month,idia,'_00:00:00'
+    character(len=35):: canio
+
+    write(current_date,'(I4,"-",I2.2,"-",I2.2,A9)')anio,month,idia,'_00:00:00'
     fweek= 7./daym(month)   !semanas en el mes
 !   Horario de verano Abril 3 a octubre 30 en 2016
      iverano=0
     if(lsummer) iverano=kverano(idia,month)
-    print *,'Done fecha.txt : ',current_date,month,idia,fweek
+    print *,'Current Date: ',current_date,month,idia!,fweek
 !
 !   Days in 2016 year
 !
-    print *,"READING anio2016.csv file"
-    open (unit=10,file='anio2016.csv',status='OLD',action='read')
+    write(canio,'("../01_datos/time/anio",I4,".csv")')anio
+    print *," READING FILE: ",canio
+    open (unit=10,file=canio,status='OLD',action='read')
     daytype=0
     read(10,*)cdum
         do
@@ -142,7 +136,7 @@ subroutine lee
    call maxline(nmax)
 
 	do k=1,nf
-	open (unit=10,file=efile(k),status='OLD',action='read')
+	open (unit=10,file="../02_aemis/"//efile(k),status='OLD',action='read')
 	read (10,'(A)') cdum
 	read (10,*) nscc(k),cdum,(iscc(i),i=1,nscc(k))
 	!print '(5(I10,x))',(iscc(i),i=1,nscc(k))
@@ -179,7 +173,8 @@ subroutine lee
 !  REading and findig monthly, week and houry code profiles
     inquire(15,opened=fil1)
     if(.not.fil1) then
-	  open(unit=15,file='temporal_01.txt',status='OLD',action='read')
+      canio="../01_datos/time/"//"temporal_01.txt"
+	  open(unit=15,file=canio,status='OLD',action='read')
 	else
 	  rewind(15)
 	end if
@@ -204,7 +199,8 @@ subroutine lee
 !  REading and findig monthly  profile
     inquire(16,opened=fil1)
     if(.not.fil1) then
-	  open(unit=16,file='temporal_mon.txt',status='OLD',action='read')
+       canio="../01_datos/time/"//"temporal_mon.txt"
+	  open(unit=16,file=canio,status='OLD',action='read')
 	else
 	  rewind(16)
 	end if
@@ -225,7 +221,8 @@ subroutine lee
 !  Reading and findig weekely  profile
     inquire(17,opened=fil1)
     if(.not.fil1) then
-	  open(unit=17,file='temporal_week.txt',status='OLD',action='read')
+      canio="../01_datos/time/"//"temporal_week.txt"
+	  open(unit=17,file=canio,status='OLD',action='read')
 	else
 	  rewind(17)
 	end if
@@ -254,7 +251,8 @@ subroutine lee
     inquire(18,opened=fil1)
 
     if(.not.fil1) then
-open(unit=18,file=nfile,status='OLD',action='read')
+        canio="../01_datos/time/"//nfile !"temporal_wkday.txt"
+        open(unit=18,file=canio,status='OLD',action='read')
 	else
 	  rewind(18)
 	end if
@@ -308,7 +306,8 @@ print *,'   Done ',nfile,daytype,maxval(hCST)!,maxval(hPST),maxval(hMST)
  if(daytype.eq.1 .or. daytype.ge.6) then !lunes, Sabado y Domingo
         inquire(19,opened=fil2)
         if(.not.fil2) then
-            open(unit=19,file=nfilep,status='OLD',action='read')
+            canio="../01_datos/time/"//nfilep
+            open(unit=19,file=canio,status='OLD',action='read')
         else
             rewind(19)
         end if
@@ -659,7 +658,7 @@ subroutine maxline(entero)
     character(len=14):: cdum
     entero=-1
     do k=1,nf
-      open(unit=14,file=efile(k),status='OLD')
+      open(unit=14,file="../02_aemis/"//efile(k),status='OLD')
        inum=0
       do
         read(14,*,end=100) cdum
@@ -701,21 +700,57 @@ integer function kverano(ida,mes)
     end if
     if (mes.gt.4 .and. mes .lt.10) then
         kverano = 1
-        write(6, 233)
+        write(6, 233) inicia,termina
         return
     end if
-    if (mes.eq.4 .and. ida .ge. 3) then !para 2016
+    if (mes.eq.4 .and. ida .ge. inicia) then !para 2016
       kverano = 1
-      write(6, 233)
+      write(6, 233)inicia,termina
       return
-    elseif (mes.eq.10 .and. ida .le. 30) then
+    elseif (mes.eq.10 .and. ida .le. termina) then
       kverano = 1
-      write(6, 233)
+      write(6, 233)inicia,termina
       return
      else
       kverano =0
       return
     end if
-233 format("******  HORARIO de VERANO *******")
+233 format("******  HORARIO de VERANO *******",/,3x,"Abril ",I2,x,"a Octubre ",I2)
 end function
+subroutine lee_namelist
+    NAMELIST /fecha_nml/ idia,month,anio
+    NAMELIST /verano_nml/ lsummer,inicia,termina
+    integer unit_nml
+    logical existe
+    unit_nml = 9
+    existe = .FALSE.
+    write(6,*)' >>>> Reading file - ../namelist_emis.nml'
+    inquire ( FILE = '../namelist_emis.nml' , EXIST = existe )
+
+    if ( existe ) then
+    !  Opening the file.
+        open ( FILE   = '../namelist_emis.nml' ,      &
+        UNIT   =  unit_nml        ,      &
+        STATUS = 'OLD'            ,      &
+        FORM   = 'FORMATTED'      ,      &
+        ACTION = 'READ'           ,      &
+        ACCESS = 'SEQUENTIAL'     )
+        !  Reading the file
+        READ (unit_nml , NML = fecha_nml )
+        READ (unit_nml , NML = verano_nml )
+        !WRITE (6    , NML = verano_nml )
+        close(unit_nml)
+    else
+        stop '***** No namelist_emis.nml in .. directory'
+    end if
+    if (month.lt.1 .or. month.gt.12) then
+        print '(A,I3)','Error in month (from 1 to 12) month= ',month
+        stop
+    end if
+    if (idia.gt.daym(month))then
+        print '(A,I2,A,I2)','Error in day value: ',idia,' larger than days in month ',daym(month)
+        Stop
+    end if
+
+end subroutine lee_namelist
 end program atemporal
