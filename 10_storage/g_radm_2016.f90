@@ -26,21 +26,21 @@
 !   Para anio 2016                          23/10/2018
 !   SCC texto en PM2.5                      30/07/2019
 module vars
-    integer :: nf    ! number of files antropogenic
-    integer :: ns    ! number of compounds
-    integer ::ncel   ! number of cell in the grid
-    integer ::nl     ! number of lines in files
-    integer ::radm   ! number of Mechanism classes
-    integer :: nh
-    integer :: nx,ny ! grid dimensions
-    integer :: ncty  ! number of point stations
-    integer*8 :: idcf  ! ID cell in file
-    integer :: zlev       ! Layer of emission (1 to 8) 8 lower 1 upper
+    integer,parameter :: nf=36    ! number of files antropogenic
+    integer,parameter :: ns=34    ! number of compounds
+    integer,parameter ::radm=ns+5 ! number of Mechanism classes
+    integer,parameter :: nh=24    !number hours day
     integer,parameter :: ipm=29  ! Posicion del archivo PM2.5
     integer,parameter :: icn=36    ! Posicion archivo CN del INEM
     integer,parameter :: jcn=34    ! Posicion archivo CN de especiacion
     integer,parameter :: imt=35    ! Posicion archivo CH4 del INEM
     integer,parameter :: jmt=7     ! Posicion archivo CH4 de especiacion
+    integer ::ncel   ! number of cell in the grid
+    integer ::nl     ! number of lines in files
+    integer :: nx,ny ! grid dimensions
+    integer :: ncty  ! number of point stations
+    integer*8 :: idcf  ! ID cell in file
+    integer :: zlev       ! Layer of emission (1 to 8) 8 lower 1 upper
     integer,allocatable :: idcg(:) ! ID cell in grid
     integer,allocatable:: utmz(:),utmzd(:,:)  !utmz
     real,allocatable:: eft(:,:,:,:,:)  ! emissions by nx,ny,file,nh,level
@@ -50,8 +50,6 @@ module vars
     real,allocatable :: utmxd(:,:),utmyd(:,:)
     real :: CDIM      ! celdimension in km
 
-	parameter(nf=36,ns=34,radm=ns+5,nh=24)
-	
     character(len=3) :: cday
     character(len=11),dimension(radm):: ename=(/'E_CO   ','E_NH3  ','E_NO   ', &
 	'E_NO2  ','E_SO2  ','E_ALD  ','E_CH4  ','E_CSL  ','E_ETH  ','E_GLY  ', &
