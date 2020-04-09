@@ -71,7 +71,12 @@ program atemporal
    call storage
    
 contains
-
+!  _
+! | | ___  ___
+! | |/ _ \/ _ \
+! | |  __/  __/
+! |_|\___|\___|
+!
 subroutine lee
 	implicit none 
 	integer i,j,k,l,m,iprof
@@ -79,7 +84,7 @@ subroutine lee
 	integer,dimension(25) :: itfrc  !montly,weekely and hourly values and total
 	integer,dimension(12) :: daym ! days in a month
 	real rdum
-	logical fil1,fil2
+	logical fil1,fil2,lsummer
     character (len=10):: jscc ! scc code from temporal file
 	character(len=4):: cdum
 	character(len=18):: nfile,nfilep
@@ -89,8 +94,9 @@ subroutine lee
 
 	print *,"READING fecha.txt file"
 	open (unit=10,file='fecha.txt',status='OLD',action='read')
-	read (10,*)month  
-	read (10,*)idia
+	read (10,*) month  
+	read (10,*) idia
+	read (10,*) lsummer
 	month=abs(month)
 	idia=abs(idia)
 	if (month.lt.1 .or. month.gt.12) then
@@ -102,22 +108,12 @@ subroutine lee
 	Stop
 	end if
 	close(10)
-!Horario de verano Abril 6 a octubre 26
-    iverano=kverano(idia,month)
-!
-	if(month.lt.10) then
-	write(current_date,'(A6,I1,A12)')'2016-0',month,'-01_00:00:00'
-	else
-	write(current_date,'(A5,I2,A12)')'2016-0',month,'-01_00:00:00'
-	end if
-    if(idia.lt.10) then
-        write(current_date(10:10),'(I1)') idia
-        else 
-        write(current_date( 9:10),'(I2)') idia
-    end if
+    write(current_date,'(A5,I2.2,"-",I2.2,A9)')'2016-',month,idia,'_00:00:00'
     fweek=7./daym(month) !weeks per month
+!Horario de verano Abril 6 a octubre 26
+    iverano=0
+    if(lsummer) iverano=kverano(idia,month)
     print *,'Done fecha.txt : ',current_date,month,idia,fweek
-
 !
 !   Days in 2016 year
 !

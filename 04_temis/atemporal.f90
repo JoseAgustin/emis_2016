@@ -96,9 +96,9 @@ subroutine lee
 	! number of day in a month 
 	!          jan feb mar apr may jun jul aug sep oct nov dec
 	data daym /31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
-
-    print *,"READING fecha.txt file"
-	open (unit=10,file='fecha.txt',status='OLD',action='read')
+    nfile='fecha.txt'
+    print *,"READING ",trim(nfile)," file"
+	open (unit=10,file=nfile,status='OLD',action='read')
 	read (10,*)month  
 	read (10,*)idia
     read (10,*)lsummer
@@ -114,8 +114,8 @@ subroutine lee
 	end if
 	close(10)
     write(current_date,'(A5,I2.2,"-",I2.2,A9)')'2016-',month,idia,'_00:00:00'
-    fweek= 7./daym(month)
-!Horario de verano Abril 3 a octubre 30 en 2016
+    fweek= 7./daym(month)   !semanas en el mes
+!   Horario de verano Abril 3 a octubre 30 en 2016
      iverano=0
     if(lsummer) iverano=kverano(idia,month)
     print *,'Done fecha.txt : ',current_date,month,idia,fweek
@@ -704,7 +704,7 @@ integer function kverano(ida,mes)
         write(6, 233)
         return
     end if
-    if (mes.eq.4 .and. ida .ge. 3) then
+    if (mes.eq.4 .and. ida .ge. 3) then !para 2016
       kverano = 1
       write(6, 233)
       return
