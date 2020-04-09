@@ -90,17 +90,18 @@ subroutine lee
 	integer,dimension(25) :: itfrc  !montly,weekely and hourly values and total
 	integer,dimension(12) :: daym ! days in a month
 	real rdum
-	logical fil1,fil2
+	logical fil1,fil2,lsummer
 	character(len=4):: cdum
 	character(len=18):: nfile,nfilep
 	! number of day in a month 
 	!          jan feb mar apr may jun jul aug sep oct nov dec
 	data daym /31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
 
-   print *,"READING fecha.txt file"
+    print *,"READING fecha.txt file"
 	open (unit=10,file='fecha.txt',status='OLD',action='read')
 	read (10,*)month  
 	read (10,*)idia
+    read (10,*)lsummer
 	month=abs(month)
 	idia=abs(idia)
 	if (month.lt.1 .or. month.gt.12) then
@@ -108,21 +109,15 @@ subroutine lee
 	STOP
 	end if
 	if (idia.gt.daym(month))then
-	print '(A,I2,A,I2)','Error in day value: ',idia,' larger than days in month ',daym(month)
+	print '(A,I2.2,A,I2.2)','Error in day value: ',idia,' larger than days in month ',daym(month)
 	STOP
 	end if
 	close(10)
-    if(month.lt.10) then
-        write(current_date,'(A6,I1,A12)')'2016-0',month,'-01_00:00:00'
-        else
-        write(current_date,'(A5,I2,A12)')'2016-',month,'-01_00:00:00'
-    end if
-    if(idia.lt.10) then
-        write(current_date(10:10),'(I1)') idia
-        else 
-        write(current_date( 9:10),'(I2)') idia
-    end if
+    write(current_date,'(A5,I2.2,"-",I2.2,A9)')'2016-',month,idia,'_00:00:00'
     fweek= 7./daym(month)
+!Horario de verano Abril 3 a octubre 30 en 2016
+     iverano=0
+    if(lsummer) iverano=kverano(idia,month)
     print *,'Done fecha.txt : ',current_date,month,idia,fweek
 !
 !   Days in 2016 year
@@ -142,8 +137,7 @@ subroutine lee
 95  continue
     close(10)
 	if(daytype.eq.0) STOP 'Error in daytype=0'
-!Horario de verano Abril 3 a octubre 30 2016
-    iverano=kverano(idia,month)
+
 !
    call maxline(nmax)
 

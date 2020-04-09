@@ -24,12 +24,12 @@ echo "Directorio actual "$ProcessDir
 #  ecaim    guadalajara  mexicali
 #  mexico    monterrey    queretaro   tijuana
 #
-dominio=mexico
+dominio=mexicali
 HacerArea=1
 #
 #  Build the fecha.txt file
 # Cambiar aqui la fecha
-mes=2
+mes=5
 dia=9
 dia2=9
 dia1=$dia 
@@ -94,11 +94,12 @@ rm fecha.txt
 fi
 #    Aqui cambiar el año a modelar
 #
-ln -sf anio2014.csv.org  anio2014.csv
+ln -sf anio2016.csv.org  anio2016.csv
 #
 cat << End_Of_File > fecha.txt
 $mes       ! month jan =1 to dec=12
 $dia       ! day in the month (from 1 to 28,30 or 31)
+.true.     ! .true. dayligth saving or .false.  not
 End_Of_File
 #
 echo ' '
@@ -177,3 +178,5 @@ mv wrfchemi.d01* ../inventario/$dominio/
 #ncrcat -O wrfchemi.d01.radm2.2019-0${mes}-1* wrfchemi_d01_2019-0${mes}-${dia}_00:00:00
 #mv wrfchemi_d01_2019-02-05_00:00:00 ../../DOMAIN/mecanismos/emisiones
 echo "DONE  guarda_RADM"
+exit
+
