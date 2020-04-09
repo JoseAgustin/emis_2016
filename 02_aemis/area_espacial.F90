@@ -39,8 +39,8 @@ module land
     real,allocatable :: eter(:,:,:),evia(:,:,:)
     real,dimension(nm,nnscc,nf):: emiss
     character(len=10),dimension(nf,nnscc) ::scc
-    character(len=25), allocatable :: desc(:)
     character(len=14),dimension(nf) ::efile,ofile
+    character(len=12):: zona
 !   Emissions Inventory files
     data efile /'INH3_2016.csv','INOx_2016.csv','ISO2_2016.csv',&
 &           'IVOC_2016.csv','ICO__2016.csv','IPM10_2016.csv',&
@@ -55,6 +55,9 @@ end module land
 
 program area_espacial
 use land
+
+       call lee_namelist
+
        call lee
 
        call calculos
@@ -70,56 +73,50 @@ contains
 subroutine lee
 implicit none
     integer i,j,k
-    character(len=14):: cdum,fname
-    fname="bosque.csv"
+    character(len=35):: cdum,fname
+    cdum="../01_datos/"//trim(zona)//"/"
+    fname=trim(cdum)//"bosque.csv"
       nl= cuenta_linea(fname)
       allocate (grib(nl),idb(nl),fb(nl))
       call lee_file (fname, grib,idb,fb)
-    fname="agricola.csv"
+    fname=trim(cdum)//"agricola.csv"
       nl=cuenta_linea(fname)
       allocate (gria(nl),ida(nl),fa(nl))
       call lee_file(fname, gria,ida,fa)
-    fname='aeropuerto.csv'
+    fname=trim(cdum)//'aeropuerto.csv'
       nl=cuenta_linea(fname)
       allocate (grie(nl),ide(nl),fe(nl))
       call lee_file(fname, grie,ide,fe)
-    fname='centrales.csv'
+    fname=trim(cdum)//'centrales.csv'
       nl=cuenta_linea(fname)
       allocate (griu(nl),idu(nl),fu(nl))
       call lee_file(fname, griu,idu,fu)
-    fname='puertos.csv'
+    fname=trim(cdum)//'puertos.csv'
       nl=cuenta_linea(fname)
       allocate (grim(nl),idm(nl),fm(nl))
       call lee_file(fname, grim,idm,fm)
-    fname='ffcc.csv'
+    fname=trim(cdum)//'ffcc.csv'
       nl=cuenta_linea(fname)
       allocate(grit(nl),idt(nl),ft(nl))
       call lee_file(fname, grit,idt,ft)
-    fname='gri_ter.csv'
+    fname=trim(cdum)//'gri_ter.csv'
       nl=cuenta_linea(fname)
       allocate(grir(nl),idr(nl),fr(nl))
       call lee_file(fname, grir,idr,fr)
-    fname='gri_pav.csv'
+    fname=trim(cdum)//'gri_pav.csv'
       nl=cuenta_linea(fname)
       allocate(griv(nl),idv(nl),fv(nl))
       call lee_file(fname, griv,idv,fv)
-    fname='gri_pob.csv'
+    fname=trim(cdum)//'gri_pob.csv'
       nl=cuenta_linea(fname)-1
       allocate(grip(nl),idp(nl),fp1(nl),fp2(nl),fp3(nl))
-      open(unit=10,file=fname,status='OLD',action='read')
-        read (10,*) cdum
-        read (10,*) cdum
-        do i=1,nl
-          read(10,*)grip(i),idp(i),fp1(i),fp2(i),fp3(i)
-          ! GRIDCODE ID urb,frural,fpob
-        end do
-      close(10)
+      call lee_file(fname,grip,idp,fp1,fp2,fp3)
 !
     do k=1,nf
         open (unit=10,file=efile(k),status='OLD',action='read')
         read (10,'(A)') cdum
         read (10,'(A)') cdum
-        print *,efile(k)
+        print *,zona,"  ",efile(k)
         read (10,*) nscc(k),cdum,(scc(k,i),i=1,nscc(k))
         print '(5(A10,x))',(scc(k,i),i=1,nscc(k))
         print *,k,nscc(k)
@@ -415,6 +412,15 @@ subroutine guarda
         end do
     close(10)
     end do
+    deallocate (gria,ida,fa,eagr)
+    deallocate (grib,idb,fb,ebos)
+    deallocate (grip,idp,fp1,fp2,epob)
+    deallocate (grie,ide,fe,eaer)
+    deallocate (griu,idu,fu,ecen)
+    deallocate (grim,idm,fm,epue)
+    deallocate (grit,idt,ft,etre)
+    deallocate (grir,idr,fr,eter)
+    deallocate (griv,idv,fv,evia)
 #ifndef PGI
 300 format(I3,", g_per_year",<nnscc>(",",A10))
 310 format(I9,",",I6,",",F,",",F,<nnscc>(",",ES12.5))
@@ -432,7 +438,7 @@ end subroutine guarda
 integer function cuenta_linea(archivo)
   implicit none
   character (len=*), intent(in)::archivo
-  character (len=18) ::cdum
+  character (len=24) ::cdum
   print *,'Lee ',archivo
   open(unit=10,file=archivo,status='OLD',action='read')
     read (10,*) cdum
@@ -450,19 +456,53 @@ end function
 ! L    E    E        F     I  L    E
 ! LLLL EEEE EEEE ____F    III LLLL EEEE
 !                ____
-subroutine lee_file(archivo,grid,id,frac)
-  implicit none
-  integer, dimension(:), intent(out)::grid,id
-  integer i,nl
-  real,dimension(:), intent(out)::frac
-  character (len=*), intent(in)::archivo
-  character (len=18):: cdum
-  open(unit=10,file=archivo,status='OLD',action='read')
+subroutine lee_file(archivo,grid,id,frac,frac2,frac3)
+    implicit none
+    integer, dimension(:), intent(inout)::grid,id
+    integer i,nl
+    real,dimension(:), intent(inout)::frac
+    real,dimension(:), optional,intent(inout)::frac2,frac3
+    character (len=*), intent(in)::archivo
+    character (len=18):: cdum
+    open(unit=10,file=archivo,status='OLD',action='read')
     read (10,*) cdum
-    do i=1,size(id)
-      read(10,*)grid(i),id(i),frac(i)
-    end do
-  close(10)
+    if (present(frac2).and.present(frac3))then
+        read (10,*) cdum
+        do i=1,size(id)
+            read(10,*)grid(i),id(i),frac(i),frac2(i),frac3(i)
+        end do
+    else
+        do i=1,size(id)
+            read(10,*)grid(i),id(i),frac(i)
+        end do
+    end if
+    close(10)
+end subroutine
+subroutine lee_namelist
+    NAMELIST /region_nml/ zona
+    integer unit_nml
+    logical existe
+    unit_nml = 9
+    existe = .FALSE.
+    write(6,*)' >>>> Reading file - namelist_emis.nml'
+    inquire ( FILE = '../namelist_emis.nml' , EXIST = existe )
+
+    if ( existe ) then
+    !  Opening the file.
+    open ( FILE   = '../namelist_emis.nml' ,      &
+    UNIT   =  unit_nml        ,      &
+    STATUS = 'OLD'            ,      &
+    FORM   = 'FORMATTED'      ,      &
+    ACTION = 'READ'           ,      &
+    ACCESS = 'SEQUENTIAL'     )
+    !  Reading the file
+    READ (unit_nml , NML = region_nml )
+    !WRITE (6    , NML = region_nml )
+    close(unit_nml)
+    else
+    stop '***** No namelist_emis.nml in .. directory'
+    ENDIF
+
 end subroutine
 end program area_espacial
 
