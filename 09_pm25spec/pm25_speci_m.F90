@@ -1,5 +1,5 @@
 !
-!	pm25_speci_m.f90
+!	pm25_speci_m.F90
 !	
 !
 !  Creado por Jose Agustin Garcia Reynoso el 11/06/12.
@@ -16,11 +16,12 @@
 ! GSO4	primary sulfate
 ! OTHER PMFINE, generally crustal
 !
-!  compile: ifort -O2 -axAVX  pm25_speci_m.f90 -o spm25m.exe
+!  compile: ifort -O2 -axAVX  pm25_speci_m.F90 -o spm25m.exe
 !
 !   modificado
-!   10/07/2017  Para 2014
-!   30/07/2019  Para 2016, scc como caracter
+!   10/07/2017     Para 2014
+!   30/07/2019     Para 2016, scc como caracter
+!   9/04/2020      namelist general
 !
 module var_spmm
 integer :: nh     !number of hours in a day
@@ -53,16 +54,21 @@ use var_spmm
 	call guarda
 
 contains
-
+!  _
+! | | ___  ___
+! | |/ _ \/ _ \
+! | |  __/  __/
+! |_|\___|\___|
+!
 subroutine lee
 	implicit none
 	integer :: i,j,id,idun,l
 	character(len=10) :: isccf
 	real,dimension(5):: fagg ! aggregation factor for 5 pm2.5 species
 	character(len=10) ::cdum
-	character(len=25):: fname
+	character(len=27):: fname
 	logical ::lfil
-	fname='TMPM2_2016.csv'
+	fname='../06_temisM/TMPM2_2016.csv'
 	print *, 'Reading : ',trim(fname)
 	open (unit=10,file=fname,status='old',action='read')
 	read(10,*) cdum  ! header
@@ -138,7 +144,12 @@ subroutine lee
 	close(16)
 	return
 end subroutine lee
-
+!            _            _
+!   ___ __ _| | ___ _   _| | ___  ___
+!  / __/ _` | |/ __| | | | |/ _ \/ __|
+! | (_| (_| | | (__| |_| | | (_) \__ \
+! \___\__,_|_|\___|\__,_|_|\___/|___/
+!
 subroutine calculos
 implicit none
 	integer i,j,k,l,ih
@@ -165,7 +176,13 @@ implicit none
 	end do
 
 end subroutine calculos
-
+!                            _
+!   __ _ _   _  __ _ _ __ __| | __ _
+!  / _` | | | |/ _` | '__/ _` |/ _` |
+! | (_| | |_| | (_| | | | (_| | (_| |
+! \__, |\__,_|\__,_|_|  \__,_|\__,_|
+! |___/
+!
 subroutine guarda
 implicit none
 	integer i,j,k
@@ -193,6 +210,12 @@ implicit none
 	end do
     print *,"***** DONE PM25 MOVIL SPECIATION *****"
 end subroutine guarda
+!                        _
+!   ___ ___  _   _ _ __ | |_
+!  / __/ _ \| | | | '_ \| __|
+! | (_| (_) | |_| | | | | |_
+!  \___\___/ \__,_|_| |_|\__|
+!
 subroutine count
 	integer i,j,nn
 	logical,allocatable::xl(:)

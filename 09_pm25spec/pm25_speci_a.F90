@@ -1,5 +1,5 @@
 !
-!                    pm25_speci_a.f90
+!                    pm25_speci_a.F90
 !	
 !
 !  Creado por Jose Agustin Garcia Reynoso el 11/06/12.
@@ -7,7 +7,7 @@
 ! Proposito:
 !          Especiacion de PM2.5 en diferentes categorias para
 !          fuentes de area
-! Speciation of pm2.5 in different categories
+! Speciation of PM 2.5 in different categories
 !
 !Profile #	Profile Name	SPEC	POA	PEC	GSO4	PNO3	OTHER
 ! POA Primary organic aerosol
@@ -16,11 +16,12 @@
 ! GSO4	primary sulfate
 ! OTHER PMFINE, generally crustal
 !
-!  compile: ifort -O2 -axAVX  pm25_speci_a.f90 -o spm25a.exe
+!  compile: ifort -O2 -axAVX  pm25_speci_a.F90 -o spm25a.exe
 !
 !   modificado
 !   10/07/2017  Para 2014 
 !   30/07/2019  Para 2016
+!   09/04/2020  sin ligas
 !
 module var_spma
 integer :: nh     !number of hours in a day
@@ -53,16 +54,21 @@ use var_spma
 	call guarda
 
 contains
-
+!  _
+! | | ___  ___
+! | |/ _ \/ _ \
+! | |  __/  __/
+! |_|\___|\___|
+!
 subroutine lee
 	implicit none
 	integer :: i,j,id,idun,l
 	integer*8 :: isccf
 	real,dimension(5):: fagg ! aggregation factor for 5 pm2.5 species
 	character(len=10) ::cdum
-	character(len=25):: fname
+	character(len=26):: fname
 	logical ::lfil
-	fname='TAPM2_2016.csv'
+	fname='../04_temis/TAPM2_2016.csv'
 	print *, 'Reading : ',trim(fname)
 	open (unit=10,file=fname,status='old',action='read')
 	read(10,*) cdum  ! header
@@ -139,7 +145,12 @@ subroutine lee
     323 format(2i,60F)
 #endif
 end subroutine lee
-
+!            _            _
+!   ___ __ _| | ___ _   _| | ___  ___
+!  / __/ _` | |/ __| | | | |/ _ \/ __|
+! | (_| (_| | | (__| |_| | | (_) \__ \
+! \___\__,_|_|\___|\__,_|_|\___/|___/
+!
 subroutine calculos
 implicit none
 	integer i,j,k,l,ih
@@ -166,7 +177,13 @@ implicit none
 	end do
 
 end subroutine calculos
-
+!                            _
+!   __ _ _   _  __ _ _ __ __| | __ _
+!  / _` | | | |/ _` | '__/ _` |/ _` |
+! | (_| | |_| | (_| | | | (_| | (_| |
+! \__, |\__,_|\__,_|_|  \__,_|\__,_|
+! |___/
+!
 subroutine guarda
 implicit none
 	integer i,j,k
@@ -194,7 +211,12 @@ implicit none
 	end do
     print *,"***** DONE PM2.5 AREA SPECIATION *****"
 end subroutine guarda
-
+!                        _
+!   ___ ___  _   _ _ __ | |_
+!  / __/ _ \| | | | '_ \| __|
+! | (_| (_) | |_| | | | | |_
+!  \___\___/ \__,_|_| |_|\__|
+!
 subroutine count
 	integer i,j,nn
 	logical,allocatable::xl(:)

@@ -1,5 +1,5 @@
 !
-!	pm25_speci_p.f90
+!	pm25_speci_p.F90
 !	
 !
 !  Creado por Jose Agustin Garcia Reynoso el 11/06/12.
@@ -16,7 +16,7 @@
 ! GSO4	primary sulfate
 ! OTHER PMFINE, generally crustal
 !
-!  compile: ifort -O2 -axAVX  pm25_speci_p.f90 -o spm25p.exe
+!  compile: ifort -O2 -axAVX  pm25_speci_p.F90 -o spm25p.exe
 !
 !  Modification
 !
@@ -54,16 +54,21 @@ use var_spmp
 	call guarda
 
 contains
-
+!  _
+! | | ___  ___
+! | |/ _ \/ _ \
+! | |  __/  __/
+! |_|\___|\___|
+!
 subroutine lee
 	implicit none
 	integer :: i,j,id,idun,l
 	integer*8 :: isccf
 	real,dimension(5):: fagg ! aggregation factor for 5 pm2.5 species
 	character(len=10) ::cdum
-	character(len=25):: fname
+	character(len=27):: fname
 	logical ::lfil
-	fname='T_ANNPM25.csv'
+	fname='../07_puntual/T_ANNPM25.csv'
 	print *, 'Reading : ',trim(fname)
 	open (unit=10,file=fname,status='old',action='read')
 	read(10,*) cdum  ! header
@@ -137,7 +142,12 @@ subroutine lee
 	close(16)
 	return
 end subroutine lee
-
+!            _            _
+!   ___ __ _| | ___ _   _| | ___  ___
+!  / __/ _` | |/ __| | | | |/ _ \/ __|
+! | (_| (_| | | (__| |_| | | (_) \__ \
+! \___\__,_|_|\___|\__,_|_|\___/|___/
+!
 subroutine calculos
 implicit none
 	integer i,j,k,l,ih
@@ -164,7 +174,13 @@ implicit none
 	end do
 
 end subroutine calculos
-
+!                            _
+!   __ _ _   _  __ _ _ __ __| | __ _
+!  / _` | | | |/ _` | '__/ _` |/ _` |
+! | (_| | |_| | (_| | | | (_| | (_| |
+! \__, |\__,_|\__,_|_|  \__,_|\__,_|
+! |___/
+!
 subroutine guarda
 implicit none
 	integer i,j,k
