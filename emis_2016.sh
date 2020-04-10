@@ -24,8 +24,8 @@ echo "Directorio actual "$ProcessDir
 #  ecaim    guadalajara  mexicali
 #  mexico    monterrey    queretaro   tijuana
 #
-dominio=mexicali
-HacerArea=0
+dominio=ecaim
+HacerArea=1
 #
 # Selecciona mecanismo
 # Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99
@@ -86,7 +86,7 @@ lsummer = .true.
 ! Quimica a utilizar
 &chem_nml
 mecha='$MECHA'
-! Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 sapc99
+! Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99
 /
 End_Of_File
 
