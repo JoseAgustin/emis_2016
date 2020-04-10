@@ -15,6 +15,7 @@ libnetcdf*
 index.csv
 03_movilspatial/CARRETERAS.csv
 03_movilspatial/VIALIDADES.csv
+03_movilspatial/gri_movil.csv
 04_temis/TA*csv
 05_semisM/M_*.csv
 06_temisM/TM*.csv
