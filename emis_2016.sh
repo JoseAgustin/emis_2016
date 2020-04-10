@@ -25,10 +25,11 @@ echo "Directorio actual "$ProcessDir
 #  mexico    monterrey    queretaro   tijuana
 #
 dominio=mexicali
-HacerArea=1
+HacerArea=0
 #
 # Selecciona mecanismo
-#Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 sapc99
+# Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99
+#
 MECHA=radm2
 #  Build the namelist_emis.nml file
 # Cambiar aqui la fecha
@@ -142,7 +143,7 @@ cd ../09_pm25spec
 ./spm25m.exe >> ../movil.log &
 ./spm25a.exe >> ../area.log&
 #
-wait
+
 echo 'Speciation distribution VOCs'
 #
 cd ../08_spec
@@ -153,45 +154,17 @@ echo 'Puntual'
 ./spp.exe >> ../puntual.log  &
 echo 'Area '
 ./spa.exe >> ../area.log
-#
-#echo '    CBM05 *****'
-#ln -sf profile_cbm05.csv profile_mech.csv
-#echo 'Movile'
-#./spm.exe >> ../movil.log &
-#echo 'Puntual'
-#./spp.exe >> ../puntual.log  &
-#echo 'Area '
-#./spa.exe >> ../area.log
-#echo '    SAPRC99 *****'
-#ln -sf profile_saprc99.csv profile_mech.csv
-#echo 'Movile'
-#./spm.exe >> ../movil.log &
-#echo 'Puntual'
-#./spp.exe >> ../puntual.log  &
-#echo 'Area '
-#./spa.exe >> ../area.log
-#
-#echo '    RACM2 *****'
-#ln -sf profile_racm2.csv profile_mech.csv
-#echo 'Movile'
-#./spm.exe >> ../movil.log &
-#echo 'Puntual'
-#./spp.exe >> ../puntual.log  &
-#echo 'Area '
-#./spa.exe >> ../area.log
+wait
 
 echo ' Guarda'
 
 cd ../10_storage
-./radm2.exe  > ../radm2.log
-#./saprc.exe > ../saprc.log
-#./cbm5.exe  > ../cbm5.log
-#./racm2.exe > ../racm2.log
+./emiss.exe  > ../${MECHA}.log
  let dia=dia+1
 done
 mv wrfchemi.d01* ../inventario/$dominio/
 #ncrcat -O wrfchemi.d01.radm2.2019-0${mes}-1* wrfchemi_d01_2019-0${mes}-${dia}_00:00:00
 #mv wrfchemi_d01_2019-02-05_00:00:00 ../../DOMAIN/mecanismos/emisiones
-echo "DONE  guarda_RADM"
+echo "DONE  Guarda "$MECHA
 exit
 

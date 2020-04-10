@@ -15,15 +15,18 @@
 !   09/04/2020   Version 1.1
 !
 module vars
-    integer,parameter :: nf=36    ! number of files antropogenic
-    integer,parameter :: ns=34    ! number of compounds
-    integer,parameter ::radm=ns+5 ! number of Mechanism classes
     integer,parameter :: nh=24    !number hours day
-    integer,parameter :: ipm=29  ! Posicion del archivo PM2.5
-    integer,parameter :: icn=36    ! Posicion archivo CN del INEM
-    integer,parameter :: jcn=34    ! Posicion archivo CN de especiacion
-    integer,parameter :: imt=35    ! Posicion archivo CH4 del INEM
-    integer,parameter :: jmt=7     ! Posicion archivo CH4 de especiacion
+    integer :: nf!=36    ! number of files antropogenic
+    integer :: ns!=34    ! number of compounds
+    integer ::radm!=ns+5 ! number of Mechanism classes
+    integer :: ipm!=29  ! Posicion del archivo PM2.5
+    integer :: icn!=36    ! Posicion archivo CN del INEM
+    integer :: jcn!=34    ! Posicion archivo CN de especiacion
+    integer :: imt!=35    ! Posicion archivo CH4 del INEM
+    integer :: jmt!=7     ! Posicion archivo CH4 de especiacion
+    integer :: idia     ! dia para el calculo de emisiones
+    integer :: anio     ! anio de las emisiones 2016
+    integer :: month    ! mes de la modelacio
     integer ::ncel   ! number of cell in the grid
     integer ::nl     ! number of lines in files
     integer :: nx,ny ! grid dimensions
@@ -32,44 +35,40 @@ module vars
     integer :: zlev       ! Layer of emission (1 to 8) 8 lower 1 upper
     integer,allocatable :: idcg(:) ! ID cell in grid
     integer,allocatable:: utmz(:),utmzd(:,:)  !utmz
+    integer,allocatable :: isp(:) ! storage
+    real,allocatable::wtm(:)  !storage
     real,allocatable:: eft(:,:,:,:,:)  ! emissions by nx,ny,file,nh,level
     real,allocatable :: utmx(:),utmy(:)
     real,allocatable :: lon(:),lat(:),pop(:)
     real,allocatable ::xlon(:,:),xlat(:,:),pob(:,:)
     real,allocatable :: utmxd(:,:),utmyd(:,:)
+    real,dimension(:), allocatable:: scala,scalm,scalp !Scaling factors
     real :: CDIM      ! cell dimension in km
-
     character(len=3) :: cday
-    character(len=11),dimension(radm):: ename=(/'E_CO   ','E_NH3  ','E_NO   ', &
-	'E_NO2  ','E_SO2  ','E_ALD  ','E_CH4  ','E_CSL  ','E_ETH  ','E_GLY  ', &
-	'E_HC3  ','E_HC5  ','E_HC8  ','E_HCHO ','E_ISO  ','E_KET  ','E_MACR ', &
-	'E_MGLY ','E_MVK  ','E_OL2  ','E_OLI  ','E_OLT  ','E_ORA1 ','E_ORA2 ', &
-	'E_TOL  ','E_XYL  ','E_CO2  ','E_PM_10','E_PM25 ','E_SO4I ','E_NO3I ','E_PM25I',&
-	'E_ORGI ','E_ECI  ','E_SO4J ','E_NO3J ','E_PM25J','E_ORGJ ','E_ECJ  '/)
-    character(len=16),dimension(radm):: cname=(/'Carbon Monoxide ','NH3             ','NO              ', &
-	'NO2             ','SO2             ','ALDEHYDES       ','METHANE         ','CRESOL          ',&
-    'Ethane          ','Glyoxal         ','HC3             ','HC5             ','HC8             ',&
-    'HCHO            ','ISOPRENE        ','Acetone         ','Acrolein        ','MGLY            ',&
-    'Methyl Vinil Ket','Alkenes         ','alkenes         ','Terminal Alkynes','Formic Acid     ',&
-    'Acetic Acid     ','TOLUENE         ','XYLENE          ','Carbon Dioxide  ','PM_10           ',&
-    'PM_25           ','Sulfates        ','Nitrates        ','PM25I           ','Organic         ',&
-    'Elemental Carbon','SulfatesJ       ','NitratesJ       ','PM25J           ','Organic         ',&
-    'Elemental Carbon'/)
-    character (len=19) :: current_date,current_datem,mecha
+    character(len=11),dimension(:),allocatable:: ename
+    character(len=16),dimension(:),allocatable:: cname
+    character(len=18),dimension(:),allocatable:: fnameA,fnameM,fnameP
+    character (len=19) :: current_date,mecha
     character (len=40) :: titulo
-    common /domain/ ncel,nl,nx,ny,zlev,CDIM
-    common /date/ current_date,cday,mecha,cname,titulo
+    character(len=12):: zona
+    common /quimicos/ nf,ns,radm,ipm,icn,jcn,imt,jmt
+    common /domain/ ncel,nl,nx,ny,zlev,CDIM,zona
+    common /date/ current_date,cday,mecha,titulo
+    common /nlm_vars/month,idia,anio
 end module vars
 
 program guarda_nc
 use vars
 use netcdf
 
+    call lee_namelist
+
+    call setup_mecha
+
 	call lee
-	
-	!call calculos
-	
+
 	call store
+
 contains
 !  _
 ! | | ___  ___
@@ -84,74 +83,12 @@ subroutine lee
 	integer :: iunit=14
 	real ::rdum
 	real,dimension(nh)::edum
-	real,dimension(ns)::wtm
-    real,dimension(nf)::scala,scalm,scalp
-	character(len=46) :: description
+	character(len=39) :: flocaliza
 	character(len=13) cdum,crdum
-	character(len=17),dimension(nf):: fnameA,fnameM,fnameP
-	data fnameA /'TACO__2016.csv','TANH3_2016.csv','TANOx_2016.csv','TANOx_2016.csv','TASO2_2016.csv',&
-	& 'RADM-2_ALD_A.txt','RADM-2_CH4_A.txt','RADM-2_CSL_A.txt','RADM-2_ETH_A.txt',&
-	& 'RADM-2_GLY_A.txt','RADM-2_HC3_A.txt','RADM-2_HC5_A.txt','RADM-2_HC8_A.txt',&
-	& 'RADM-2_HCHO_A.txt','RADM-2_ISO_A.txt','RADM-2_KET_A.txt','RADM-2_MACR_A.txt',&
-	& 'RADM-2_MGLY_A.txt','RADM-2_MVK_A.txt','RADM-2_OL2_A.txt','RADM-2_OLI_A.txt',&
-	& 'RADM-2_OLT_A.txt','RADM-2_ORA1_A.txt','RADM-2_ORA2_A.txt','RADM-2_TOL_A.txt',&
-	& 'RADM-2_XYL_A.txt','TACO2_2016.csv','TAPM102016.csv','TAPM2_2016.csv', &
-	& 'GSO4_A.txt','PNO3_A.txt','OTHE_M.txt','POA_A.txt','PEC_A.txt',&
-    & 'TACH4_2016.csv','TACN__2016.csv'/
-	data fnameM /'TMCO__2016.csv','TMNH3_2016.csv','TMNO__2016.csv','TMNO2_2016.csv','TMSO2_2016.csv',&
-	& 'RADM-2_ALD_M.txt','RADM-2_CH4_M.txt','RADM-2_CSL_M.txt','RADM-2_ETH_M.txt',&
-	& 'RADM-2_GLY_M.txt','RADM-2_HC3_M.txt','RADM-2_HC5_M.txt','RADM-2_HC8_M.txt',&
-	& 'RADM-2_HCHO_M.txt','RADM-2_ISO_M.txt','RADM-2_KET_M.txt','RADM-2_MACR_M.txt',&
-	& 'RADM-2_MGLY_M.txt','RADM-2_MVK_M.txt','RADM-2_OL2_M.txt','RADM-2_OLI_M.txt',&
-	& 'RADM-2_OLT_M.txt','RADM-2_ORA1_M.txt','RADM-2_ORA2_M.txt','RADM-2_TOL_M.txt',&
-	& 'RADM-2_XYL_M.txt','TMCO2_2016.csv','TMPM102016.csv','TMPM2_2016.csv', &
-    & 'GSO4_M.txt','PNO3_M.txt','OTHE_M.txt','POA_M.txt','PEC_M.txt',&
-    & 'TMCH4_2016.csv','TMCN__2016.csv'/
-    data fnameP /'T_ANNCO.csv','T_ANNNH3.csv','T_ANNNOX.csv','T_ANNNOX.csv','T_ANNSO2.csv',&
-    & 'RADM-2_ALD_P.txt','RADM-2_CH4_P.txt','RADM-2_CSL_P.txt','RADM-2_ETH_P.txt',&
-    & 'RADM-2_GLY_P.txt','RADM-2_HC3_P.txt','RADM-2_HC5_P.txt','RADM-2_HC8_P.txt',&
-    & 'RADM-2_HCHO_P.txt','RADM-2_ISO_P.txt','RADM-2_KET_P.txt','RADM-2_MACR_P.txt',&
-    & 'RADM-2_MGLY_P.txt','RADM-2_MVK_P.txt','RADM-2_OL2_P.txt','RADM-2_OLI_P.txt',&
-    & 'RADM-2_OLT_P.txt','RADM-2_ORA1_P.txt','RADM-2_ORA2_P.txt','RADM-2_TOL_P.txt',&
-    & 'RADM-2_XYL_P.txt','T_ANNCO2.csv','T_ANNPM10.csv','T_ANNPM25.csv', &
-    & 'GSO4_P.txt','PNO3_P.txt','OTHE_P.txt','POA_P.txt','PEC_P.txt',&
-    & 'T_ANNCH4.csv','T_ANNCN.csv'/
-    NAMELIST /SCALE/ scala,scalm,scalp
-    integer unit_nml
-    logical existe
 ! Mole weight
-  DATA WTM /28., 17., 30, 46., 64.,   44.,16.,108.,30.,58.,&   !
-  &    44., 72.,114., 30.,68., 72.,   70.,72., 70.,28.,56.,&
-  &    42., 46., 60., 92.,106.,44.,&
-  &   3600.,3600.,3600.,3600.,3600.,3600.,3600./! MW 3600 for unit conversion to ug/s
-!    SCALA      CO   NH3   NO  NO2  SO2    ALD  CH4 CLS ETH GLY
-!        HC3   HC5   HC8 HCHO ISOP  KET   MACR MGLY MVK OL2 OLI
-!        OLT   ORA1  ORA2  TOL  XYL  CO2
-!       PM10  PM2.5  PSO4 PNO3 OTHER POA   PEC  CH4   CN
-    unit_nml = 9
-    existe = .FALSE.
-    write(6,*)' >>>> Reading file - namelist.radm'
-    inquire ( FILE = 'namelist.radm' , EXIST = existe )
-
-    if ( existe ) then
-      !  Opening the file.
-      open ( FILE   = 'namelist.radm' ,      &
-      UNIT   =  unit_nml        ,      &
-      STATUS = 'OLD'            ,      &
-      FORM   = 'FORMATTED'      ,      &
-      ACTION = 'READ'           ,      &
-      ACCESS = 'SEQUENTIAL'     )
-      !  Reading the file
-      READ (unit_nml , NML = SCALE )
-      !WRITE (6    , NML = SCALE )
-    else
-      stop '***** No namelist.radm'
-    ENDIF
-
-       mecha="RADM2"
-	write(6,*)' >>>> Reading file -  localiza.csv ---------'
-
-  open (unit=10,file='localiza.csv',status='old',action='read')
+  flocaliza='../01_datos/'//trim(zona)//'/'//'localiza.csv'
+  write(6,*)' >>>> Reading file -',flocaliza,' ---------'
+  open (unit=10,file=flocaliza,status='old',action='read')
   read (10,*) cdum  !Header
   read (10,*) nx,ny,titulo  ! Dimensions and Title
   ncel=nx*ny
@@ -298,11 +235,419 @@ subroutine lee
 	return
 
 end subroutine lee
-
-subroutine calculos
+!           _                                      _
+!  ___  ___| |_ _   _ _ __     _ __ ___   ___  ___| |__   __ _
+! / __|/ _ \ __| | | | '_ \   | '_ ` _ \ / _ \/ __| '_ \ / _` |
+! \__ \  __/ |_| |_| | |_) |  | | | | | |  __/ (__| | | | (_| |
+! |___/\___|\__|\__,_| .__/___|_| |_| |_|\___|\___|_| |_|\__,_|
+!                    |_| |_____|
+subroutine setup_mecha
 	IMPLICIT NONE
+    select case (mecha)
+    case("cbm05")
+        print *,"Setup variables for ",mecha
+        nf=30    ! number of files antropogenic
+        ns=28    ! number of compounds
+        radm=ns+5 ! number of Mechanism classes
+        ipm=23  ! Posicion del archivo PM2.5
+        icn=30    ! Posicion archivo CN del INEM
+        jcn=28    ! Posicion archivo CN de especiacion
+        imt=29    ! Posicion archivo CH4 del INEM
+        jmt=7     ! Posicion archivo CH4 de especiacion
+        allocate(ename(radm),cname(radm))
+        allocate(isp(radm))
+        allocate(wtm(ns))
+        allocate(fnameA(nf),fnameM(nf),fnameP(nf))
+        allocate(scala(nf),scalm(nf),scalp(nf))
+ename=(/'E_CO       ','E_NH3      ','E_NO       ','E_NO2      ',&
+'E_SO2      ','E_ALD2     ','E_CH4      ','E_ALDX     ','E_ETH      ',&
+'E_ETHA     ','E_ETOH     ','E_IOLE     ','E_MEOH     ','E_HCHO     ',&
+'E_ISOP     ','E_OLE      ','E_PAR      ','E_TERP     ','E_TOL      ',&
+'E_XYL      ','E_CO2      ','E_PM_10    ','E_PM25     ','E_SO4I     ',&
+'E_NO3I     ','E_PM25I    ','E_ORGI     ','E_ECI      ','E_SO4J     ',&
+'E_NO3J     ','E_PM25J    ','E_ORGJ     ','E_ECJ      '/)
+cname=(/'Carbon Monoxide ','Ammonia NH3     ','NO              ', &
+'NO2             ','SO2             ','Acetaldehyde    ','METHANE         ',&
+'C3+Aldehydes    ','Ethene          ','Ethane          ','Ethanol         ',&
+'Internal OLE    ','Methanol        ','Formaldehyde    ','Isoprene        ',&
+'TOB (R-C=C)     ','Paraffin (C-C)  ','Terpenes        ','Toluene+others  ',&
+'Xylene+others   ','Carbon Dioxide  ','PM_10           ','PM_25           ',&
+'Sulfates        ','Nitrates        ','PM25I           ','Organic         ',&
+'Elemental Carbon','SulfatesJ       ','NitratesJ       ','PM25J           ',&
+'Organic Carbon  ','Elemental Carbon'/)
+fnameA=(/'TACO__2016.csv   '  ,&
+ 'TANH3_2016.csv   ','TANOx_2016.csv   ','TANOx_2016.csv   ','TASO2_2016.csv   ',&
+ 'CBM05_ALD2_A.txt ','CBM05_CH4_A.txt  ','CBM05_ALDX_A.txt ','CBM05_ETH_A.txt  ',&
+ 'CBM05_ETHA_A.txt ','CBM05_ETOH_A.txt ','CBM05_IOLE_A.txt ','CBM05_MEOH_A.txt ',&
+ 'CBM05_FORM_A.txt ','CBM05_ISOP_A.txt ','CBM05_OLE_A.txt  ','CBM05_PAR_A.txt  ',&
+ 'CBM05_TERP_A.txt ','CBM05_TOL_A.txt  ','CBM05_XYL_A.txt  ',&
+ 'TACO2_2016.csv   ','TAPM102016.csv   ','TAPM2_2016.csv   ',&
+ 'GSO4_A.txt       ','PNO3_A.txt       ','OTHE_A.txt       ','POA_A.txt        ',&
+ 'PEC_A.txt        ','TACH4_2016.csv   ','TACN__2016.csv   '/)
+ fnameM=(/'TMCO__2016.csv   ',&
+'TMNH3_2016.csv   ','TMNO__2016.csv   ','TMNO2_2016.csv   ','TMSO2_2016.csv   ',&
+'CBM05_ALD2_M.txt ','CBM05_CH4_M.txt  ','CBM05_ALDX_M.txt ','CBM05_ETH_M.txt  ',&
+'CBM05_ETHA_M.txt ','CBM05_ETOH_M.txt ','CBM05_IOLE_M.txt ','CBM05_MEOH_M.txt ',&
+'CBM05_FORM_M.txt ','CBM05_ISOP_M.txt ','CBM05_OLE_M.txt  ','CBM05_PAR_M.txt  ',&
+'CBM05_TERP_M.txt ','CBM05_TOL_M.txt  ','CBM05_XYL_M.txt  ',&
+'TMCO2_2016.csv   ','TMPM102016.csv   ','TMPM2_2016.csv   ',&
+'GSO4_M.txt       ','PNO3_M.txt       ','OTHE_M.txt       ','POA_M.txt        ',&
+'PEC_M.txt        ','TMCH4_2016.csv   ','TMCN__2016.csv   '/)
+ fnameP=(/'T_ANNCO.csv      ',&
+'T_ANNNH3.csv     ','T_ANNNOX.csv     ','T_ANNNOX.csv     ','T_ANNSO2.csv     ',&
+'CBM05_ALD2_P.txt ','CBM05_CH4_P.txt  ','CBM05_ALDX_P.txt ','CBM05_ETH_P.txt  ',&
+'CBM05_ETHA_P.txt ','CBM05_ETOH_P.txt ','CBM05_IOLE_P.txt ','CBM05_MEOH_P.txt ',&
+'CBM05_FORM_P.txt ','CBM05_ISOP_P.txt ','CBM05_OLE_P.txt  ','CBM05_PAR_P.txt  ',&
+'CBM05_TERP_P.txt ','CBM05_TOL_P.txt  ','CBM05_XYL_P.txt  ',&
+'T_ANNCO2.csv     ','T_ANNPM10.csv    ','T_ANNPM25.csv    ',&
+'GSO4_P.txt       ','PNO3_P.txt       ','OTHE_P.txt       ','POA_P.txt        ',&
+'PEC_P.txt        ','T_ANNCH4.csv     ','T_ANNCN.csv      '/)
+        isp=[ 1, 2, 3, 4, 5, 6, 7, 8, 9,10, &
+             11,12,13,14,15, 16,17,18,19,20, &
+             21,22,23,24,25, 26,27,28,29,30, &
+             31,32,33]
+        WTM=(/28., 17., 30., 46., 64.,32.,  16., 32., 32.,32.,32.,&   !
+             64., 16., 16., 80., 32.,16., 160.,112.,128., 44.,&
+             3600.,3600.,3600.,3600.,3600.,3600.,3600./)
+        call lee_namelist_mecha('cbm05  ')
+    case("mozart")
+        print *,"Setup variables for ",mecha
+        nf=39    ! number of files antropogenic
+        ns=37    ! number of compounds
+        radm=ns+5 ! number of Mechanism classes
+        ipm=32  ! Posicion del archivo PM2.5
+        icn=39    ! Posicion archivo CN del INEM
+        jcn=37    ! Posicion archivo CN de especiacion
+        imt=38    ! Posicion archivo CH4 del INEM
+        jmt=6     ! Posicion archivo CH4 de especiacion
+        allocate(ename(radm),cname(radm))
+        allocate(isp(radm))
+        allocate(wtm(ns))
+        allocate(fnameA(nf),fnameM(nf),fnameP(nf))
+        allocate(scala(nf),scalm(nf),scalp(nf))
+ename=(/'E_CO       ','E_NO       ','E_NO2      ','E_NH3      ','E_SO2      ','E_CH4      ',&
+'E_BENZENE  ','E_BIGALK   ','E_BIGENE   ','E_C10H16   ','E_C2H2     ','E_C2H4     ',&
+'E_C2H5OH   ','E_C2H6     ','E_C3H6     ','E_C3H8     ','E_CH2O     ','E_CH3CHO   ',&
+'E_CH3COCH3 ','E_GLY      ','E_HCOOH    ','E_ISOP     ','E_MACR     ','E_MEK      ',&
+'E_CH3OH    ','E_MGLY     ','E_MVK      ','E_TOLUENE  ','E_XYLENE   ',&
+'E_CO2      ','E_PM_10    ','E_PM25     ',&
+'E_SO4I     ','E_NO3I     ','E_PM25I    ','E_ORGI     ','E_ECI      ',&
+'E_SO4J     ','E_NO3J     ','E_PM25J    ','E_ORGJ     ','E_ECJ      '/)
+cname=(/'Carbon Monoxide ','Nitrogen Oxide  ','Nitrogen Dioxide',&
+'Ammonia         ','Sulfur Dioxide  ','Methane         ','Benzene         ',&
+'Lumped Alkan C>3','Lumped Alkanes  ','A Pinene        ','Ethyne          ',&
+'Ethene          ','Ethanol         ','Ethane          ','Propene         ',&
+'Propane         ','Formaldehyde    ','Acetaldehyde    ','Acetone         ',&
+'Glyoxal         ','Formic Acid     ','Isoprene        ','Methacrolein    ',&
+'Methyl Ethyl Ket','Methanol        ','Methyl Glyoxal  ','Methyl Vinyl Ket',&
+'Toluene         ','Xylenes         ','Carbon Dioxide  ','PM_10           ',&
+'PM_25           ','Sulfates        ','Nitrates        ','OTHER           ',&
+'Organic Carbon  ','Elemental Carbon','SulfatesJ       ','NitratesJ       ',&
+'OTHER           ','Organic Carbon  ','Elemental Carbon'/)
+fnameA=(/'TACO__2016.csv   ','TANOx_2016.csv   ','TANOx_2016.csv   ',&
+'TANH3_2016.csv   ','TASO2_2016.csv   ',&
+'MOZART_CH4_A.txt ','MOZART_BENZ_A.txt','MOZART_BIGA_A.txt','MOZART_BIGE_A.txt',&
+'MOZART_C10H_A.txt','MOZART_C2H2_A.txt','MOZART_C2H4_A.txt','MOZART_C2H5_A.txt',&
+'MOZART_C2H6_A.txt','MOZART_C3H6_A.txt','MOZART_C3H8_A.txt','MOZART_CH2O_A.txt',&
+'MOZART_CH3C_A.txt','MOZART_CH3O_A.txt','MOZART_GLYO_A.txt','MOZART_HCOO_A.txt',&
+'MOZART_ISOP_A.txt','MOZART_MACR_A.txt','MOZART_MEK_A.txt ','MOZART_METO_A.txt',&
+'MOZART_MGLY_A.txt','MOZART_MVK_A.txt ','MOZART_TOLU_A.txt','MOZART_XYLE_A.txt',&
+'TACO2_2016.csv   ','TAPM102016.csv   ','TAPM2_2016.csv   ', &
+'GSO4_A.txt       ','PNO3_A.txt       ','OTHE_M.txt       ','POA_A.txt        ',&
+'PEC_A.txt        ','TACH4_2016.csv   ','TACN__2016.csv   '/)
+ fnameM=(/'TMCO__2016.csv   ',&
+'TMNO__2016.csv   ','TMNO2_2016.csv   ','TMNH3_2016.csv   ','TMSO2_2016.csv   ',&
+'MOZART_CH4_M.txt ','MOZART_BENZ_M.txt','MOZART_BIGA_M.txt','MOZART_BIGE_M.txt',&
+'MOZART_C10H_M.txt','MOZART_C2H2_M.txt','MOZART_C2H4_M.txt','MOZART_C2H5_M.txt',&
+'MOZART_C2H6_M.txt','MOZART_C3H6_M.txt','MOZART_C3H8_M.txt','MOZART_CH2O_M.txt',&
+'MOZART_CH3C_M.txt','MOZART_CH3O_M.txt','MOZART_GLYO_M.txt','MOZART_HCOO_M.txt',&
+'MOZART_ISOP_M.txt','MOZART_MACR_M.txt','MOZART_MEK_M.txt ','MOZART_METO_M.txt',&
+'MOZART_MGLY_M.txt','MOZART_MVK_M.txt ','MOZART_TOLU_M.txt','MOZART_XYLE_M.txt',&
+'TMCO2_2016.csv   ','TMPM102016.csv   ','TMPM2_2016.csv   ', &
+'GSO4_M.txt       ','PNO3_M.txt       ','OTHE_M.txt       ','POA_M.txt        ',&
+'PEC_M.txt        ','TMCH4_2016.csv   ','TMCN__2016.csv   '/)
+ fnameP=(/'T_ANNCO.csv      ',&
+'T_ANNNOX.csv     ','T_ANNNOX.csv     ','T_ANNNH3.csv     ','T_ANNSO2.csv     ',&
+'MOZART_CH4_P.txt ','MOZART_BENZ_P.txt','MOZART_BIGA_P.txt','MOZART_BIGE_P.txt',&
+'MOZART_C10H_P.txt','MOZART_C2H2_P.txt','MOZART_C2H4_P.txt','MOZART_C2H5_P.txt',&
+'MOZART_C2H6_P.txt','MOZART_C3H6_P.txt','MOZART_C3H8_P.txt','MOZART_CH2O_P.txt',&
+'MOZART_CH3C_P.txt','MOZART_CH3O_P.txt','MOZART_GLYO_P.txt','MOZART_HCOO_P.txt',&
+'MOZART_ISOP_P.txt','MOZART_MACR_P.txt','MOZART_MEK_P.txt ','MOZART_METO_P.txt',&
+'MOZART_MGLY_P.txt','MOZART_MVK_P.txt ','MOZART_TOLU_P.txt','MOZART_XYLE_P.txt',&
+'T_ANNCO2.csv     ','T_ANNPM10.csv    ','T_ANNPM25.csv    ', &
+'GSO4_P.txt       ','PNO3_P.txt       ','OTHE_P.txt       ','POA_P.txt        ',&
+'PEC_P.txt        ','T_ANNCH4.csv     ','T_ANNCN.csv      '/)
+        isp=(/ 1, 2, 3, 4, 5, 6, 7, 8, 9,10, &
+        11,12,13,14,15, 16,17,18,19,20, &
+        21,22,23,24,25, 26,27,28,29,30, &
+        31,32,33,34,35, 36,37,38,39,40, &
+        41,42/)
+        WTM=(/ 28.0, 30.00, 46.00, 17.00, 64.0,  16.043,&
+        78.00, 72.00, 56.00,136.00,26.00, 28.00,&
+        46.00,30.00, 42.00, 44.00, 30.00, 44.00,&
+        56.00, 58.00, 46.00, 68.00, 70.00, 72.00,& !
+        32.00, 72.00, 70.00, 92.00, 106.00,&
+        44., 7*3600./)
+        call lee_namelist_mecha('mozart ')
 
-end subroutine calculos
+    case("racm2")
+        print *,"Setup variables for ",mecha
+        nf=55    ! number of files antropogenic
+        ns=53    ! number of compounds
+        radm=ns+5 ! number of Mechanism classes
+        ipm=48  ! Posicion del archivo PM2.5
+        icn=55    ! Posicion archivo CN del INEM
+        jcn=52    ! Posicion archivo CN de especiacion
+        imt=54    ! Posicion archivo CH4 del INEM
+        jmt=6     ! Posicion archivo CH4 de especiacion
+        allocate(ename(radm),cname(radm))
+        allocate(isp(radm))
+        allocate(wtm(ns))
+        allocate(fnameA(nf),fnameM(nf),fnameP(nf))
+        allocate(scala(nf),scalm(nf),scalp(nf))
+ename=(/'E_CO   ','E_NH3  ','E_NO   ', &
+'E_NO2  ','E_SO2  ','E_CH4  ','E_ETH  ','E_HC3  ','E_HC5  ','E_HC8  ',&
+'E_ETE  ','E_OLI  ','E_OLT  ','E_DIEN ','E_BEN  ','E_TOL  ','E_XYL  ',&
+'E_XYP  ','E_XYO  ','E_HCHO ','E_ALD  ','E_ACT  ','E_MEK  ','E_KET  ',&
+'E_ROH  ','E_HKET ','E_CSL  ','E_PHEN ','E_API  ','E_ISO  ','E_LIM  ',&
+'E_MVK  ','E_MACR ','E_ONIT ','E_GLY  ','E_MGLY ','E_UALD ','E_ACD  ',&
+'E_ORA2 ','E_ACE  ','E_BALD ','E_EOH  ','E_ETEG ','E_ORA1 ','E_MOH  ',&
+'E_CO2  ','E_PM_10','E_PM_25', &
+'E_SO4I ','E_NO3I ','E_PM25I','E_ORGI ','E_ECI  ',&
+'E_SO4J ','E_NO3J ','E_PM25J','E_ORGJ ','E_ECJ  '/)
+ cname=(/'Carbon Monoxide ','Ammonia NH3     ','Nitrogen Oxide  ', &
+'Nitrogen Dioxide','Sulfur Dioxide  ','Methane CH4     ','Ethane          ',&
+'Alkanes, alcohol','Alkanes, alcohol','Alkanes, alcohol','Ethene          ',&
+'Internal alkenes','Terminal alkenes','Butadiene and ot','Benzene         ',&
+'Toluene and less','m-Xylene        ','p-Xylene        ','o-xylene        ',&
+'Formaldehyde    ','C3 and higher al','Acetone         ','Methyl ethyl ket',&
+'Ketones         ','C3 and higher al','Hydroxy ketone  ','Cresol and other',&
+'Phenol          ','Alpha-pinenes an','Isoprene        ','d-limonene      ',&
+'Methyl vinyl ket','Methacrolein    ','Organic nitrate ','Glyoxal CHOCHO  ',&
+'Methylglyoxal an','Unsaturated alde','Acetaldehyde    ','Acetic acid and ',&
+'Acetylene       ','Benzaldehyde and','Ethanol         ','Ethylene glycol ',&
+'Formic acid     ','Methanol        ','Carbon Dioxide  ','PM_10           ',&
+'PM_25           ','Sulfates Particl','Nitrates Particl','OTHER PM25I     ',&
+'Organic Carbon  ','Elemental Carbon','SulfatesJ Partic','NitratesJ Partic',&
+'OTHER PM25J     ','OrganicJ Carbon ','Elemental CarboJ'/)
+fnameA=(/'TACO__2016.csv   ','TANH3_2016.csv   ','TANOx_2016.csv   ','TANOx_2016.csv   ',&
+'TASO2_2016.csv   ','RACM2_CH4_A.txt  ','RACM2_ETH_A.txt  ','RACM2_HC3_A.txt  ',&
+'RACM2_HC5_A.txt  ','RACM2_HC8_A.txt  ','RACM2_ETE_A.txt  ','RACM2_OLI_A.txt  ',&
+'RACM2_OLT_A.txt  ','RACM2_DIEN_A.txt ','RACM2_BEN_A.txt  ','RACM2_TOL_A.txt  ',&
+'RACM2_XYM_A.txt  ','RACM2_XYP_A.txt  ','RACM2_XYO_A.txt  ','RACM2_HCHO_A.txt ',&
+'RACM2_ALD_A.txt  ','RACM2_ACT_A.txt  ','RACM2_MEK_A.txt  ','RACM2_KET_A.txt  ',&
+'RACM2_ROH_A.txt  ','RACM2_HKET_A.txt ','RACM2_CSL_A.txt  ','RACM2_PHEN_A.txt ',&
+'RACM2_API_A.txt  ','RACM2_ISO_A.txt  ','RACM2_LIM_A.txt  ','RACM2_MVK_A.txt  ',&
+'RACM2_MACR_A.txt ','RACM2_ONIT_A.txt ','RACM2_GLY_A.txt  ','RACM2_MGLY_A.txt ',&
+'RACM2_UALD_A.txt ','RACM2_ACD_A.txt  ','RACM2_ORA2_A.txt ','RACM2_ACE_A.txt  ',&
+'RACM2_BALD_A.txt ','RACM2_EOH_A.txt  ','RACM2_ETEG_A.txt ','RACM2_ORA1_A.txt ',&
+'RACM2_MOH_A.txt  ','TACO2_2016.csv   ','TAPM102016.csv   ','TAPM2_2016.csv   ',&
+'GSO4_A.txt       ','PNO3_A.txt       ','OTHE_A.txt       ','POA_A.txt        ',&
+'PEC_A.txt        ','TACH4_2016.csv   ','TACN__2016.csv   '/)
+ fnameM=(/'TMCO__2016.csv   ','TMNH3_2016.csv   ','TMNO__2016.csv   ','TMNO2_2016.csv   ',&
+'TMSO2_2016.csv   ','RACM2_CH4_M.txt  ','RACM2_ETH_M.txt  ','RACM2_HC3_M.txt  ',&
+'RACM2_HC5_M.txt  ','RACM2_HC8_M.txt  ','RACM2_ETE_M.txt  ','RACM2_OLI_M.txt  ',&
+'RACM2_OLT_M.txt  ','RACM2_DIEN_M.txt ','RACM2_BEN_M.txt  ','RACM2_TOL_M.txt  ',&
+'RACM2_XYM_M.txt  ','RACM2_XYP_M.txt  ','RACM2_XYO_M.txt  ','RACM2_HCHO_M.txt ',&
+'RACM2_ALD_M.txt  ','RACM2_ACT_M.txt  ','RACM2_MEK_M.txt  ','RACM2_KET_M.txt  ',&
+'RACM2_ROH_M.txt  ','RACM2_HKET_M.txt ','RACM2_CSL_M.txt  ','RACM2_PHEN_M.txt ',&
+'RACM2_API_M.txt  ','RACM2_ISO_M.txt  ','RACM2_LIM_M.txt  ','RACM2_MVK_M.txt  ',&
+'RACM2_MACR_M.txt ','RACM2_ONIT_M.txt ','RACM2_GLY_M.txt  ','RACM2_MGLY_M.txt ',&
+'RACM2_UALD_M.txt ','RACM2_ACD_M.txt  ','RACM2_ORA2_M.txt ','RACM2_ACE_M.txt  ',&
+'RACM2_BALD_M.txt ','RACM2_EOH_M.txt  ','RACM2_ETEG_M.txt ','RACM2_ORA1_M.txt ',&
+'RACM2_MOH_M.txt  ','TMCO2_2016.csv   ','TMPM102016.csv   ','TMPM2_2016.csv   ', &
+'GSO4_M.txt       ','PNO3_M.txt       ','OTHE_M.txt       ','POA_M.txt        ',&
+'PEC_M.txt        ','TMCH4_2016.csv   ','TMCN__2016.csv   '/)
+ fnameP=(/'T_ANNCO.csv      ','T_ANNNH3.csv     ','T_ANNNOX.csv     ','T_ANNNOX.csv     ',&
+'T_ANNSO2.csv     ','RACM2_CH4_P.txt  ','RACM2_ETH_P.txt  ','RACM2_HC3_P.txt  ',&
+'RACM2_HC5_P.txt  ','RACM2_HC8_P.txt  ','RACM2_ETE_P.txt  ','RACM2_OLI_P.txt  ',&
+'RACM2_OLT_P.txt  ','RACM2_DIEN_P.txt ','RACM2_BEN_P.txt  ','RACM2_TOL_P.txt  ',&
+'RACM2_XYM_P.txt  ','RACM2_XYP_P.txt  ','RACM2_XYO_P.txt  ','RACM2_HCHO_P.txt ',&
+'RACM2_ALD_P.txt  ','RACM2_ACT_P.txt  ','RACM2_MEK_P.txt  ','RACM2_KET_P.txt  ',&
+'RACM2_ROH_P.txt  ','RACM2_HKET_P.txt ','RACM2_CSL_P.txt  ','RACM2_PHEN_P.txt ',&
+'RACM2_API_P.txt  ','RACM2_ISO_P.txt  ','RACM2_LIM_P.txt  ','RACM2_MVK_P.txt  ',&
+'RACM2_MACR_P.txt ','RACM2_ONIT_P.txt ','RACM2_GLY_P.txt  ','RACM2_MGLY_P.txt ',&
+'RACM2_UALD_P.txt ','RACM2_ACD_P.txt  ','RACM2_ORA2_P.txt ','RACM2_ACE_P.txt  ',&
+'RACM2_BALD_P.txt ','RACM2_EOH_P.txt  ','RACM2_ETEG_P.txt ','RACM2_ORA1_P.txt ',&
+'RACM2_MOH_P.txt  ','T_ANNCO2.csv     ','T_ANNPM10.csv    ','T_ANNPM25.csv    ',&
+'GSO4_P.txt       ','PNO3_P.txt       ','OTHE_P.txt       ','POA_P.txt        ',&
+'PEC_P.txt        ','T_ANNCH4.csv     ','T_ANNCN.csv      '/)
+        isp=(/ 1, 2, 3, 4, 5, 6, 7, 8, 9,10, &
+        11,12,13,14,15, 16,17,18,19,20, &
+        21,22,23,24,25, 26,27,28,29,30,&
+        31,32,33,34,35, 36,37,38,39,40,&
+        41,42,43,44,45, 46,47,48,49,50,&
+        51,52,53,54,55, 56,57,58/)
+        WTM=(/28., 17., 30., 46., 64.,   16., 30., 44., 72., 114.,&
+        28., 68., 42., 54., 78.,   92.,106.,106.,106., 30., &
+        58., 58., 72., 86., 60.,   74.,108., 94.,136., 68., &
+        136., 70., 70.,119., 58.,   72., 84., 44., 60., 26., &
+        106., 46., 62., 46., 32.,    44.,&
+        3600.,3600.,3600.,3600.,3600.,3600.,3600./)
+        call lee_namelist_mecha('racm   ')
+    case("radm2")
+        print *,"Setup variables for ",mecha
+        nf=36    ! number of files antropogenic
+        ns=34    ! number of compounds
+        radm=ns+5 ! number of Mechanism classes
+        ipm=29  ! Posicion del archivo PM2.5
+        icn=36    ! Posicion archivo CN del INEM
+        jcn=34    ! Posicion archivo CN de especiacion
+        imt=35    ! Posicion archivo CH4 del INEM
+        jmt=7     ! Posicion archivo CH4 de especiacion
+        allocate(ename(radm),cname(radm))
+        allocate(isp(radm))
+        allocate(wtm(ns))
+        allocate(fnameA(nf),fnameM(nf),fnameP(nf))
+        allocate(scala(nf),scalm(nf),scalp(nf))
+ename=(/'E_CO   ','E_NH3  ','E_NO   ', &
+'E_NO2  ','E_SO2  ','E_ALD  ','E_CH4  ','E_CSL  ','E_ETH  ','E_GLY  ', &
+'E_HC3  ','E_HC5  ','E_HC8  ','E_HCHO ','E_ISO  ','E_KET  ','E_MACR ', &
+'E_MGLY ','E_MVK  ','E_OL2  ','E_OLI  ','E_OLT  ','E_ORA1 ','E_ORA2 ', &
+'E_TOL  ','E_XYL  ','E_CO2  ','E_PM_10','E_PM25 ','E_SO4I ','E_NO3I ','E_PM25I',&
+'E_ORGI ','E_ECI  ','E_SO4J ','E_NO3J ','E_PM25J','E_ORGJ ','E_ECJ  '/)
+cname=(/'Carbon Monoxide ','NH3             ','NO              ', &
+'NO2             ','SO2             ','ALDEHYDES       ','METHANE         ','CRESOL          ',&
+'Ethane          ','Glyoxal         ','HC3             ','HC5             ','HC8             ',&
+'HCHO            ','ISOPRENE        ','Acetone         ','Acrolein        ','MGLY            ',&
+'Methyl Vinil Ket','Alkenes         ','alkenes         ','Terminal Alkynes','Formic Acid     ',&
+'Acetic Acid     ','TOLUENE         ','XYLENE          ','Carbon Dioxide  ','PM_10           ',&
+'PM_25           ','Sulfates        ','Nitrates        ','PM25I           ','Organic         ',&
+'Elemental Carbon','SulfatesJ       ','NitratesJ       ','PM25J           ','Organic         ',&
+'Elemental Carbon'/)
+ fnameA=['TACO__2016.csv   ',&
+& 'TANH3_2016.csv   ','TANOx_2016.csv   ','TANOx_2016.csv   ','TASO2_2016.csv   ',&
+& 'RADM-2_ALD_A.txt ','RADM-2_CH4_A.txt ','RADM-2_CSL_A.txt ','RADM-2_ETH_A.txt ',&
+& 'RADM-2_GLY_A.txt ','RADM-2_HC3_A.txt ','RADM-2_HC5_A.txt ','RADM-2_HC8_A.txt ',&
+& 'RADM-2_HCHO_A.txt','RADM-2_ISO_A.txt ','RADM-2_KET_A.txt ','RADM-2_MACR_A.txt',&
+& 'RADM-2_MGLY_A.txt','RADM-2_MVK_A.txt ','RADM-2_OL2_A.txt ','RADM-2_OLI_A.txt ',&
+& 'RADM-2_OLT_A.txt ','RADM-2_ORA1_A.txt','RADM-2_ORA2_A.txt','RADM-2_TOL_A.txt ',&
+& 'RADM-2_XYL_A.txt ','TACO2_2016.csv   ','TAPM102016.csv   ','TAPM2_2016.csv   ', &
+& 'GSO4_A.txt       ','PNO3_A.txt       ','OTHE_M.txt       ','POA_A.txt        ',&
+& 'PEC_A.txt        ','TACH4_2016.csv   ','TACN__2016.csv   ']
+ fnameM=['TMCO__2016.csv   ',&
+& 'TMNH3_2016.csv   ','TMNO__2016.csv   ','TMNO2_2016.csv   ','TMSO2_2016.csv   ',&
+& 'RADM-2_ALD_M.txt ','RADM-2_CH4_M.txt ','RADM-2_CSL_M.txt ','RADM-2_ETH_M.txt ',&
+& 'RADM-2_GLY_M.txt ','RADM-2_HC3_M.txt ','RADM-2_HC5_M.txt ','RADM-2_HC8_M.txt ',&
+& 'RADM-2_HCHO_M.txt','RADM-2_ISO_M.txt ','RADM-2_KET_M.txt ','RADM-2_MACR_M.txt',&
+& 'RADM-2_MGLY_M.txt','RADM-2_MVK_M.txt ','RADM-2_OL2_M.txt ','RADM-2_OLI_M.txt ',&
+& 'RADM-2_OLT_M.txt ','RADM-2_ORA1_M.txt','RADM-2_ORA2_M.txt','RADM-2_TOL_M.txt ',&
+& 'RADM-2_XYL_M.txt ','TMCO2_2016.csv   ','TMPM102016.csv   ','TMPM2_2016.csv   ', &
+& 'GSO4_M.txt       ','PNO3_M.txt       ','OTHE_M.txt       ','POA_M.txt        ',&
+& 'PEC_M.txt        ','TMCH4_2016.csv   ','TMCN__2016.csv   ']
+ fnameP=['T_ANNCO.csv      ',&
+& 'T_ANNNH3.csv     ','T_ANNNOX.csv     ','T_ANNNOX.csv     ','T_ANNSO2.csv     ',&
+& 'RADM-2_ALD_P.txt ','RADM-2_CH4_P.txt ','RADM-2_CSL_P.txt ','RADM-2_ETH_P.txt ',&
+& 'RADM-2_GLY_P.txt ','RADM-2_HC3_P.txt ','RADM-2_HC5_P.txt ','RADM-2_HC8_P.txt ',&
+& 'RADM-2_HCHO_P.txt','RADM-2_ISO_P.txt ','RADM-2_KET_P.txt ','RADM-2_MACR_P.txt',&
+& 'RADM-2_MGLY_P.txt','RADM-2_MVK_P.txt ','RADM-2_OL2_P.txt ','RADM-2_OLI_P.txt ',&
+& 'RADM-2_OLT_P.txt ','RADM-2_ORA1_P.txt','RADM-2_ORA2_P.txt','RADM-2_TOL_P.txt ',&
+& 'RADM-2_XYL_P.txt ','T_ANNCO2.csv     ','T_ANNPM10.csv    ','T_ANNPM25.csv    ', &
+& 'GSO4_P.txt       ','PNO3_P.txt       ','OTHE_P.txt       ','POA_P.txt        ',&
+& 'PEC_P.txt        ','T_ANNCH4.csv     ','T_ANNCN.csv      ']
+        isp=[ 1, 2, 3, 4, 5, 6, 7, 8, 9,10, &
+        11,12,13,14,15, 16,17,18,19,20, &
+        21,22,23,24,25, 26,27,28,29,30, &
+        31,32,33,34,35, 36,37,38,39]
+        WTM=[28., 17., 30., 46., 64.,   44.,16.,108.,30.,58.,&   !
+        &    44., 72.,114., 30.,68., 72.,   70.,72., 70.,28.,56.,&
+        &    42., 46., 60., 92.,106.,44.,&
+        &  7*3600.]! MW 3600 for unit conversion to ug/s
+        call lee_namelist_mecha('radm   ')
+    case("saprc99")
+        print *,"Setup variables for ",mecha
+        nf=47    ! number of files antropogenic
+        ns=45    ! number of compounds
+        radm=ns+5 ! number of Mechanism classes
+        ipm=40  ! Posicion del archivo PM2.5
+        icn=47    ! Posicion archivo CN del INEM
+        jcn=45    ! Posicion archivo CN de especiacion
+        imt=46    ! Posicion archivo CH4 del INEM
+        jmt=6     ! Posicion archivo CH4 de especiacion
+        allocate(ename(radm),cname(radm))
+        allocate(isp(radm))
+        allocate(wtm(ns))
+        allocate(fnameA(nf),fnameM(nf),fnameP(nf))
+        allocate(scala(nf),scalm(nf),scalp(nf))
+ename=['E_CO       ','E_NO       ','E_NO2      ','E_NH3      ','E_SO2      ',&
+'E_CH4      ','E_ACET     ','E_ALK3     ','E_ALK4     ','E_ALK5     ','E_ARO1     ',&
+'E_ARO2     ','E_BACL     ','E_BALD     ','E_C2H6     ','E_C3H8     ','E_CCHO     ',&
+'E_CCO_OH   ','E_CRES     ','E_ETHENE   ','E_GLY      ','E_HCHO     ','E_HCOOH    ',&
+'E_ISOPRENE ','E_ISOPROD  ','E_MEK      ','E_MEOH     ','E_METHACRO ','E_MGLY     ',&
+'E_MVK      ','E_OLE1     ','E_OLE2     ','E_PHEN     ','E_PROD2    ','E_RCHO     ',&
+'E_RCO_OH   ','E_TERP     ','E_CO2      ','E_PM_10    ','E_PM25     ','E_SO4I     ',&
+'E_NO3I     ','E_PM25I    ','E_ORGI     ','E_ECI      ','E_SO4J     ','E_NO3J     ',&
+'E_PM25J    ','E_ORGJ     ','E_ECJ      ']
+cname=['Carbon Monoxide ','Nitrogen Oxide  ','Nitrogen Dioxide','Ammonia         ',&
+'Sulfur Dioxide  ','Methane         ','Acetone         ','Alkanes 3       ',&
+'Alkanes 4       ','Alkanes 5       ','Aromatics 1     ','Aromatics 2     ',&
+'Biacetyl        ','Aromatic aldehyd','Alkanes 1       ','Alkanes 2       ',&
+'Acetaldehyde    ','Acetic Acid     ','Cresol          ','Ethene          ',&
+'Glyoxal         ','Formaldehyde    ','Formic Acid     ','Isoprene        ',&
+'Lumped isoprene ','Ketones and othe','Methanol        ','Methacrolein    ',&
+'Methyl Glyoxal  ','Methyl Vinyl Ket','Alkenes 1       ','Alkenes 2       ',&
+'Phenol          ','Ketones + other ','Lumped C3+ Aldeh','Higher Carboxyl ',&
+'Terpenes        ','Carbon Dioxide  ','PM_10           ','PM_25           ',&
+'Sulfates Particl','Nitrates Particl','OTHER Particles ','Organic C partic',&
+'Elemental Carbon','SulfatesJ       ','NitratesJ       ','OTHER           ',&
+'Organic Carbon  ','Elemental Carbon']
+fnameA=(/'TACO__2016.csv    ',&
+'TANOx_2016.csv    ','TANOx_2016.csv    ','TANH3_2016.csv    ','TASO2_2016.csv    ',&
+'SAPRC99_CH4_A.txt ','SAPRC99_ACET_A.txt','SAPRC99_ALK3_A.txt','SAPRC99_ALK4_A.txt',&
+'SAPRC99_ALK5_A.txt','SAPRC99_ARO1_A.txt','SAPRC99_ARO2_A.txt','SAPRC99_BACL_A.txt',&
+'SAPRC99_BALD_A.txt','SAPRC99_ALK1_A.txt','SAPRC99_ALK2_A.txt','SAPRC99_CCHO_A.txt',&
+'SAPRC99_AACD_M.txt','SAPRC99_CRES_A.txt','SAPRC99_ETHE_A.txt','SAPRC99_GLY_A.txt ',&
+'SAPRC99_HCHO_A.txt','SAPRC99_FACD_A.txt','SAPRC99_ISOP_A.txt','SAPRC99_IPRD_A.txt',&
+'SAPRC99_MEK_A.txt ','SAPRC99_MEOH_A.txt','SAPRC99_MACR_A.txt','SAPRC99_MGLY_A.txt',&
+'SAPRC99_MVK_A.txt ','SAPRC99_OLE1_A.txt','SAPRC99_OLE2_A.txt','SAPRC99_PHEN_A.txt',&
+'SAPRC99_PRD2_A.txt','SAPRC99_RCHO_A.txt','SAPRC99_PACD_A.txt','SAPRC99_TERP_A.txt',&
+'TACO2_2016.csv    ','TAPM102016.csv    ','TAPM2_2016.csv    ','GSO4_A.txt        ',&
+'PNO3_A.txt        ','OTHE_M.txt        ','POA_A.txt         ','PEC_A.txt         ',&
+'TACH4_2016.csv    ','TACN__2016.csv    '/)
+ fnameM =(/'TMCO__2016.csv    ',&
+'TMNO__2016.csv    ','TMNO2_2016.csv    ','TMNH3_2016.csv    ','TMSO2_2016.csv    ',&
+'SAPRC99_CH4_M.txt ','SAPRC99_ACET_M.txt','SAPRC99_ALK3_M.txt','SAPRC99_ALK4_M.txt',&
+'SAPRC99_ALK5_M.txt','SAPRC99_ARO1_M.txt','SAPRC99_ARO2_M.txt','SAPRC99_BACL_M.txt',&
+'SAPRC99_BALD_M.txt','SAPRC99_ALK1_M.txt','SAPRC99_ALK2_M.txt','SAPRC99_CCHO_M.txt',&
+'SAPRC99_AACD_M.txt','SAPRC99_CRES_M.txt','SAPRC99_ETHE_M.txt','SAPRC99_GLY_M.txt ',&
+'SAPRC99_HCHO_M.txt','SAPRC99_FACD_M.txt','SAPRC99_ISOP_M.txt','SAPRC99_IPRD_M.txt',&
+'SAPRC99_MEK_M.txt ','SAPRC99_MEOH_M.txt','SAPRC99_MACR_M.txt','SAPRC99_MGLY_M.txt',&
+'SAPRC99_MVK_M.txt ','SAPRC99_OLE1_M.txt','SAPRC99_OLE2_M.txt','SAPRC99_PHEN_M.txt',&
+'SAPRC99_PRD2_M.txt','SAPRC99_RCHO_M.txt','SAPRC99_PACD_M.txt','SAPRC99_TERP_M.txt',&
+'TMCO2_2016.csv    ','TMPM102016.csv    ','TMPM2_2016.csv    ','GSO4_M.txt        ',&
+'PNO3_M.txt        ','OTHE_M.txt        ','POA_M.txt         ','PEC_M.txt         ',&
+'TMCH4_2016.csv    ','TMCN__2016.csv    '/)
+fnameP=(/'T_ANNCO.csv       ',&
+'T_ANNNOX.csv      ','T_ANNNOX.csv      ','T_ANNNH3.csv      ','T_ANNSO2.csv      ',&
+'SAPRC99_CH4_P.txt ','SAPRC99_ACET_P.txt','SAPRC99_ALK3_P.txt','SAPRC99_ALK4_P.txt',&
+'SAPRC99_ALK5_P.txt','SAPRC99_ARO1_P.txt','SAPRC99_ARO2_P.txt','SAPRC99_BACL_P.txt',&
+'SAPRC99_BALD_P.txt','SAPRC99_ALK1_P.txt','SAPRC99_ALK2_P.txt','SAPRC99_CCHO_P.txt',&
+'SAPRC99_AACD_P.txt','SAPRC99_CRES_P.txt','SAPRC99_ETHE_P.txt','SAPRC99_GLY_P.txt ',&
+'SAPRC99_HCHO_P.txt','SAPRC99_FACD_P.txt','SAPRC99_ISOP_P.txt','SAPRC99_IPRD_P.txt',&
+'SAPRC99_MEK_P.txt ','SAPRC99_MEOH_P.txt','SAPRC99_MACR_P.txt','SAPRC99_MGLY_P.txt',&
+'SAPRC99_MVK_P.txt ','SAPRC99_OLE1_P.txt','SAPRC99_OLE2_P.txt','SAPRC99_PHEN_P.txt',&
+'SAPRC99_PRD2_P.txt','SAPRC99_RCHO_P.txt','SAPRC99_PACD_P.txt','SAPRC99_TERP_P.txt',&
+'T_ANNCO2.csv      ','T_ANNPM10.csv     ','T_ANNPM25.csv     ','GSO4_P.txt        ',&
+'PNO3_P.txt        ','OTHE_P.txt        ','POA_P.txt         ','PEC_P.txt         ',&
+'T_ANNCH4.csv      ','T_ANNCN.csv       '/)
+        isp=(/ 1, 2, 3, 4, 5, 6, 7, 8, 9,10, &
+        11,12,13,14,15, 16,17,18,19,20, &
+        21,22,23,24,25, 26,27,28,29,30, &
+        31,32,33,34,35, 36,37,38,39,40, &
+        41,42,43,44,45, 46,47,48,49,50/)
+        WTM=(/ 28.0, 30.00, 46.00, 17.00, 64.0,  16.043,&
+        58.08, 58.61, 77.60,118.89, 95.16,118.72,&
+        86.09,106.13, 30.07, 36.73, 44.05, 60.05,&
+        108.14, 28.05, 58.04, 30.03, 46.03, 68.12,& !
+        100.12, 72.11, 32.04, 70.09, 72.07, 70.09,&
+        72.34, 75.78, 94.11,116.16, 58.08, 74.08,&
+        136.238,44.,&
+        7*3600./)
+        call lee_namelist_mecha('saprc  ')
+    case default
+    print *,"Mechanism :",mecha," does not exists!!"
+    end select
+end subroutine setup_mecha
 !      _
 !  ___| |_ ___  _ __ ___
 ! / __| __/ _ \| '__/ _ \
@@ -322,7 +667,6 @@ subroutine store
     integer :: id_varlong,id_varlat,id_varpop
     integer :: id_utmx,id_utmy,id_utmz
     integer :: id,iu,JULDAY
-    integer :: isp(radm)
     integer,dimension(NDIMS):: dim,id_dim
     real,ALLOCATABLE :: ea(:,:,:,:)
     character (len=19),dimension(NDIMS) ::sdim
@@ -332,10 +676,7 @@ subroutine store
     character(8)  :: date
     character(10) :: time
     character(24) :: hoy
-  	   DATA isp / 1, 2, 3, 4, 5, 6, 7, 8, 9,10, &
-                 11,12,13,14,15, 16,17,18,19,20, &
-                 21,22,23,24,25, 26,27,28,29,30, &
-                 31,32,33,34,35, 36,37,38,39/
+
 
     data sdim /"Time               ","DateStrLen         ","west_east          ",&
 	&          "south_north        ","bottom_top         ","emissions_zdim_stag"/	
@@ -345,7 +686,9 @@ subroutine store
     call date_and_time(date,time)
      hoy=date(7:8)//'-'//mes(date(5:6))//'-'//date(1:4)//' '//time(1:2)//':'//time(3:4)//':'//time(5:10)
     print *,hoy
-    write(current_date(4:4),'(A1)')char(6+48) ! para 2016
+    write(current_date(1:4),'(I4)') anio
+    write(current_date(6:7),'(I2.2)') month
+    write(current_date(9:10),'(I2.2)') idia
     JULDAY=juliano(current_date(1:4),current_date(6:7),current_date(9:10))
      do periodo=1,2 ! 2 1
 	  if(periodo.eq.1) then
@@ -394,8 +737,8 @@ subroutine store
       call check( nf90_put_att(ncid, NF90_GLOBAL, "CEN_LON",xlon(nx/2,ny/2)))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "TRUELAT1",17.5))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "TRUELAT2",29.5))
-      call check( nf90_put_att(ncid, NF90_GLOBAL, "MOAD_CEN_LAT",24.020222))
-      call check( nf90_put_att(ncid, NF90_GLOBAL, "STAND_LON",-102.036352))
+      call check( nf90_put_att(ncid, NF90_GLOBAL, "MOAD_CEN_LAT",xlat(nx/2,ny/2)))
+      call check( nf90_put_att(ncid, NF90_GLOBAL, "STAND_LON",xlon(nx/2,ny/2)))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "POLE_LAT",90.))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "POLE_LON",0.))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "GRIDTYPE","C"))
@@ -530,6 +873,16 @@ tiempo: do it=iit,eit
         call check( nf90_close(ncid) )
 	 end do !periodo
     deallocate(ea)
+    deallocate(idcg,lon,lat,pop,pob)
+    deallocate(utmx,utmy,utmz)
+    deallocate(xlon,xlat)
+    deallocate(utmxd,utmyd,utmzd)
+    deallocate(eft)
+    deallocate(ename,cname)
+    deallocate(isp)
+    deallocate(wtm)
+    deallocate(fnameA,fnameM,fnameP)
+    deallocate(scala,scalm,scalp)
 
 end subroutine store
 
@@ -581,7 +934,7 @@ end subroutine check
 	  integer,INTENT(IN) ,dimension(idm):: dimids
 	  character(len=*),INTENT(IN) ::svar,cname
 	  character(len=50) :: cvar
-		cvar="EMISSIONS RATE OF "//trim(cname)
+		cvar="Emissions rate of "//trim(cname)
 	   call check( nf90_def_var(ncid, svar, NF90_REAL, dimids,id_var ) )
  ! Assign  attributes
         call check( nf90_put_att(ncid, id_var, "FieldType", 104 ) )
@@ -594,12 +947,12 @@ end subroutine check
 	  return
 	  end subroutine crea_attr2
 !
-! M      M EEEEE  SSSS
-! M M  M M E     S
-! M  M   M EEE    SSS
-! M      M E         S
-! M      M EEEEE SSSS
-         character(len=3)function mes(num)
+!  _ __ ___   ___  ___
+! | '_ ` _ \ / _ \/ __|
+! | | | | | |  __/\__ \
+! |_| |_| |_|\___||___/
+!
+character(len=3)function mes(num)
           character*2 num
           select case (num)
             case('01')
@@ -628,9 +981,7 @@ end subroutine check
              mes='Dec'
              end select
           return
-
           end function
-!
 !
 !    _       _ _
 !   (_)_   _| (_) __ _ _ __   ___
@@ -640,11 +991,12 @@ end subroutine check
 ! |__/
 !
 integer function juliano(year,mes,day)
+  implicit none
   character*4,intent(in) :: year
   character*2,intent(in) :: mes
   character*2,intent(in) :: day
   integer,dimension(12)::month=[31,28,31,30,31,30,31,31,30,31,30,31]
-  integer i
+  integer i,iyear,imes,iday
   iyear=intc(year)
   imes=intc(mes)
   iday=intc(day)
@@ -668,6 +1020,7 @@ end function
 ! |_|_| |_|\__\___|
 !
 integer function intc(char)
+  implicit none
   character(len=*),intent(in):: char
   integer :: i,l
   l=len(char)
@@ -681,4 +1034,78 @@ integer function intc(char)
   end do
   return
 end function
+!  _                                          _ _     _
+! | | ___  ___     _ __   __ _ _ __ ___   ___| (_)___| |_
+! | |/ _ \/ _ \   | '_ \ / _` | '_ ` _ \ / _ \ | / __| __|
+! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_
+! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|
+!            |_____|
+subroutine lee_namelist
+    implicit none
+    NAMELIST /region_nml/ zona
+    NAMELIST /fecha_nml/ idia,month,anio
+    NAMELIST /chem_nml/ mecha
+    integer unit_nml
+    logical existe
+    unit_nml = 9
+    existe = .FALSE.
+    write(6,*)' >>>> Reading file - ../namelist_emis.nml'
+    inquire ( FILE = '../namelist_emis.nml' , EXIST = existe )
+
+    if ( existe ) then
+    !  Opening the file.
+        open ( FILE   = '../namelist_emis.nml' ,      &
+        UNIT   =  unit_nml        ,      &
+        STATUS = 'OLD'            ,      &
+        FORM   = 'FORMATTED'      ,      &
+        ACTION = 'READ'           ,      &
+        ACCESS = 'SEQUENTIAL'     )
+        !  Reading the file
+        READ (unit_nml , NML = region_nml )
+        READ (unit_nml , NML = fecha_nml)
+        READ (unit_nml , NML = chem_nml )
+        !WRITE (6    , NML = chem_nml )
+        close(unit_nml)
+    else
+        stop '***** No namelist_emis.nml in .. directory'
+    end if
+end subroutine lee_namelist
+!  _                                          _ _     _                           _
+! | | ___  ___     _ __   __ _ _ __ ___   ___| (_)___| |_     _ __ ___   ___  ___| |__   __ _
+! | |/ _ \/ _ \   | '_ \ / _` | '_ ` _ \ / _ \ | / __| __|   | '_ ` _ \ / _ \/ __| '_ \ / _` |
+! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_    | | | | | |  __/ (__| | | | (_| |
+! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|___|_| |_| |_|\___|\___|_| |_|\__,_|
+!            |_____|                                    |_____|
+subroutine lee_namelist_mecha(mecanismo)
+implicit none
+    character(len=7),intent(in) :: mecanismo
+    character(len=15) ::cfile
+    NAMELIST /SCALE/ scala,scalm,scalp
+    integer unit_nml
+    logical existe
+
+    unit_nml = 9
+    existe = .FALSE.
+    cfile='namelist.'//trim(mecanismo)
+    write(6,*)' >>>> Reading file - ',cfile
+    inquire ( FILE = cfile , EXIST = existe )
+
+    if ( existe ) then
+    !  Opening the file.
+        open ( FILE   = cfile ,      &
+        UNIT   =  unit_nml        ,      &
+        STATUS = 'OLD'            ,      &
+        FORM   = 'FORMATTED'      ,      &
+        ACTION = 'READ'           ,      &
+        ACCESS = 'SEQUENTIAL'     )
+        !  Reading the file
+        READ (unit_nml , NML = SCALE )
+        !WRITE (6    , NML = SCALE )
+        close(unit_nml)
+    else
+        print *, cfile
+        stop '***** No namelist File exists   ******'
+    end if
+end subroutine lee_namelist_mecha
+
 end program guarda_nc
