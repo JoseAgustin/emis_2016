@@ -82,8 +82,6 @@ anio=$nyear
 ! inicia  dia de inicio en abril del horario de verano 2016
 ! termina dia de termino en octubre del Horario de verano 2016
 lsummer = .true.
-inicia  =  3
-termina = 30
 /
 ! Quimica a utilizar
 &chem_nml

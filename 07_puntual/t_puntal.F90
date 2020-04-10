@@ -29,8 +29,8 @@ integer :: nl,nx,ny
 integer :: iverano  ! si es en periodo de verano
 integer :: idia     ! dia para el calculo de emisiones
 integer :: anio     ! anio de las emisiones 2016
-integer :: inicia   ! dia inicio horario verano
-integer :: termina  ! dia fin del horario de verano
+integer,dimension(2014:2020) :: inicia   ! dia inicio horario verano
+integer,dimension(2014:2020) :: termina  ! dia fin del horario de verano
 integer,dimension(12) :: daym ! days in a month
 real :: fweek
 real,allocatable :: lat(:),lon(:),pf(:,:)
@@ -44,8 +44,9 @@ character (len=19) :: current_date
     ! number of day in a month
     !          jan feb mar apr may jun jul aug sep oct nov dec
     data daym /31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
-
-
+!              2014 2015 2016 2017 2018 2019 2020
+    data inicia  /6,  5,  3,   2,   1,   7,   5/
+    data termina /26,25, 30,  29,  28,  27,  25/
 common /dat/ nl,nx,ny,daytype,fweek,cvar,current_date
 common /nlm_vars/lsummer,zona,month,idia,anio,inicia,termina
 
@@ -448,16 +449,16 @@ integer function kverano(ida,mes)
     end if
     if (mes.gt.4 .and. mes .lt.10) then
       kverano = 1
-      write(6, 233) inicia,termina
+      write(6, 233) inicia(anio),termina(anio)
       return
     end if
-    if (mes.eq.4 .and. ida .ge. 3) then
+    if (mes.eq.4 .and. ida .ge. inicia(anio)) then
       kverano = 1
-      write(6, 233) inicia,termina
+      write(6, 233) inicia(anio),termina(anio)
       return
-      elseif (mes.eq.10 .and. ida .le. 30) then
+      elseif (mes.eq.10 .and. ida .le.termina(anio)) then
         kverano = 1
-        write(6, 233) inicia,termina
+        write(6, 233) inicia(anio),termina(anio)
         return
       else
         kverano =0

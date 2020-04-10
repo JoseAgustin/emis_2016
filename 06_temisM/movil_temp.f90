@@ -29,8 +29,8 @@ integer :: nm ! line number in emissions file
 integer :: iverano  ! si es en periodo de verano
 integer :: idia     ! dia para el calculo de emisiones
 integer :: anio     ! anio de las emisiones 2016
-integer :: inicia   ! dia inicio horario verano
-integer :: termina  ! dia fin del horario de verano
+integer,dimension(2014:2020) :: inicia   ! dia inicio horario verano
+integer,dimension(2014:2020) :: termina  ! dia fin del horario de verano
 integer,dimension(nf) :: nscc ! number of scc codes per file
 integer, allocatable :: idcel(:),idcel2(:)
 integer, allocatable :: mst(:)  ! Difference in number of hours (CST, PST, MST)
@@ -59,8 +59,10 @@ character(len=14),dimension(nf) ::efile,casn
             'TMPM2_2016.csv','TMCOV_2016.csv'/
 ! number of day in a month
 !          jan feb mar apr may jun jul aug sep oct nov dec
- data daym /31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
-
+    data daym /31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
+!              2014 2015 2016 2017 2018 2019 2020
+    data inicia  /6,  5,   3,   2,   1,  7,   5/
+    data termina /26,25,  30,  29,  28, 27,  25/
 common /vars/ fweek,nscc,nm,daytype,perfil,mes,dia,hora,current_date
 common /nlm_vars/lsummer,month,idia,anio,inicia,termina
 
@@ -519,16 +521,16 @@ integer function kverano(ida,mes)
     end if
     if (mes.gt.4 .and. mes .lt.10) then
       kverano = 1
-      write(6, 233) inicia,termina
+      write(6, 233) inicia(anio),termina(anio)
       return
     end if
-    if (mes.eq.4 .and. ida .ge. inicia) then
+    if (mes.eq.4 .and. ida .ge. inicia(anio)) then
       kverano = 1
-      write(6, 233) inicia,termina
+      write(6, 233) inicia(anio),termina(anio)
       return
-      elseif (mes.eq.10 .and. ida .le. termina) then
+      elseif (mes.eq.10 .and. ida .le. termina(anio)) then
         kverano = 1
-        write(6, 233) inicia,termina
+        write(6, 233) inicia(anio),termina(anio)
         return
       else
         kverano =0
@@ -539,7 +541,7 @@ end function
 subroutine lee_namelist
     implicit none
     NAMELIST /fecha_nml/ idia,month,anio
-    NAMELIST /verano_nml/ lsummer,inicia,termina
+    NAMELIST /verano_nml/ lsummer
     integer unit_nml
     logical existe
     unit_nml = 9

@@ -20,11 +20,8 @@ anio=2016
 !Horario de verano
 &verano_nml
 ! .true. o .false. para considerar o no el horario de verano
-! inicia  dia de inicio en abril del horario de verano 2016
-! termina dia de termino en octubre del Horario de verano 2016
+!       cuando hay horario de verano
 lsummer = .true.
-inicia  =  3
-termina = 30
 /
 ! Quimica a utilizar
 &chem_nml

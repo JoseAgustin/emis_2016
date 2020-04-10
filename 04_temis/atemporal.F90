@@ -35,13 +35,13 @@ integer :: lh ! line number in uso horario
 integer :: iverano  ! si es en periodo de verano
 integer :: idia     ! dia para el calculo de emisiones
 integer :: anio     ! anio de las emisiones 2016
-integer :: inicia   ! dia inicio horario verano
-integer :: termina  ! dia fin del horario de verano
 integer,dimension(nf) :: nscc ! number of scc codes per file
 integer*8,dimension(nnscc) ::iscc 
 integer, allocatable :: idcel(:),idcel2(:),idcel3(:)
 integer, allocatable :: idsm(:,:) ! state municipality IDs emiss and usoH
 integer,dimension(12) :: daym ! days in a month
+integer,dimension(2014:2020) :: inicia   ! dia inicio horario verano
+integer,dimension(2014:2020) :: termina  ! dia fin del horario de verano
 real ::fweek
 real,allocatable ::emiA(:,:,:) !Area emisions from files cel,ssc,file
 real,allocatable :: emis(:,:,:) ! Emission by cel,file and hour (inorganic)
@@ -67,7 +67,9 @@ character(len=14),dimension(nf) ::efile,casn
 ! number of day in a month
 !          jan feb mar apr may jun jul aug sep oct nov dec
  data daym /31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
-
+!              2014 2015 2016 2017 2018 2019 2020
+     data inicia  /6,  5,  3,   2,   1,   7,   5/
+     data termina /26,25, 30,  29,  28,  27,  25/
 common /vars/ fweek,nscc,nm,lh,daytype,mes,dia,current_date
 common /nlm_vars/lsummer,month,idia,anio,inicia,termina
 end module
@@ -700,16 +702,16 @@ integer function kverano(ida,mes)
     end if
     if (mes.gt.4 .and. mes .lt.10) then
         kverano = 1
-        write(6, 233) inicia,termina
+        write(6, 233) inicia(anio),termina(anio)
         return
     end if
-    if (mes.eq.4 .and. ida .ge. inicia) then !para 2016
+    if (mes.eq.4 .and. ida .ge. inicia(anio)) then !para 2016
       kverano = 1
-      write(6, 233)inicia,termina
+      write(6, 233) inicia(anio),termina(anio)
       return
-    elseif (mes.eq.10 .and. ida .le. termina) then
+    elseif (mes.eq.10 .and. ida .le. termina(anio)) then
       kverano = 1
-      write(6, 233)inicia,termina
+      write(6, 233) inicia(anio),termina(anio)
       return
      else
       kverano =0
@@ -719,7 +721,7 @@ integer function kverano(ida,mes)
 end function
 subroutine lee_namelist
     NAMELIST /fecha_nml/ idia,month,anio
-    NAMELIST /verano_nml/ lsummer,inicia,termina
+    NAMELIST /verano_nml/ lsummer
     integer unit_nml
     logical existe
     unit_nml = 9
