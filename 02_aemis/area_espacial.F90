@@ -261,6 +261,7 @@ subroutine calculos
     poblacion: do j=1,size(grip)! grid
     invenp: do i=1,nm       ! municipality
         if(idp(j).eq.iem(k,i)) then
+!dir$ loop count min(16)
             do l=1,nscc(k)
     if(scc(k,l).eq.'2104007000') epob(j,k,l)=emiss(i,l,k)*(fp2(j)*0.2+fp1(j)*0.8)*1e6!Comb_res_LPG
     if(scc(k,l).eq.  '30500304') epob(j,k,l)=emiss(i,l,k)*fp2(j)*1e6  ! Ladrillera

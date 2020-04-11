@@ -1,1 +1,0 @@
-../08_spec/MOZART_ISOP_P.txt

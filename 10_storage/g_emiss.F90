@@ -85,6 +85,7 @@ subroutine lee
 	real,dimension(nh)::edum
 	character(len=39) :: flocaliza
 	character(len=13) cdum,crdum
+    character (len=15)::ruta
 ! Mole weight
   flocaliza='../01_datos/'//trim(zona)//'/'//'localiza.csv'
   write(6,*)' >>>> Reading file -',flocaliza,' ---------'
@@ -120,7 +121,11 @@ subroutine lee
 
   do ii=1,nf
   !write(6,*)' >>>> Reading emissions file -',fnameA(i),fnameM(i)
-    open(11,file=fnameA(ii),status='OLD',action='READ')
+    if (ii.le.5 .or. (ii.ge.ipm-2 .and. ii.le.ipm).or.ii.eq.icn .or. ii .eq.imt)then
+        ruta="../04_temis/"
+    else if( ii.gt. ipm) then; ruta="../09_pm25spec/"
+    else;     ruta="../08_spec/"; end if
+    open(11,file=trim(ruta)//fnameA(ii),status='OLD',action='READ')
     read(11,*)cdum
     if (ii.eq.1)then
       read(11,*)j,current_date,cday  !j number of lines in file
@@ -131,7 +136,7 @@ subroutine lee
     is= ii
     if(ii.eq.icn) is=jcn  ! suma todo el Carbono Negro
     if(ii.eq.imt) is=jmt   ! suma todo el Metano
-    write(6,'(i4,x,A,A,I3,I3)') ii,fnameA(ii),current_date,is
+    write(6,'(i4,x,A,A,I3,I3)') ii,ruta//fnameA(ii),current_date,is
     do
       if(ii.eq.ipm) then
         read(11,*,END=100) idcf,rdum,(edum(ih),ih=1,nh)
@@ -152,7 +157,11 @@ subroutine lee
       end do busca
     end do
  100 close(11)
- 		open(11,file=fnameM(ii),status='OLD',action='READ')
+        if (ii.le.5 .or. (ii.ge.ipm-2 .and. ii.le.ipm).or.ii.eq.icn .or. ii .eq.imt)then
+        ruta="../06_temisM/"
+        else if( ii.gt. ipm) then; ruta="../09_pm25spec/"
+        else;     ruta="../08_spec/"; end if
+ 		open(11,file=trim(ruta)//fnameM(ii),status='OLD',action='READ')
 		read(11,*)cdum
 		if (ii.eq.1)then
             read(11,*)j,current_date,cday  !j number of lines in file
@@ -160,7 +169,7 @@ subroutine lee
         else    
             read(11,*)j,current_date
         end if
-        write(6,'(i4,x,A,A,I3,I3)') ii,fnameM(ii),current_date
+        write(6,'(i4,x,A,A,I3,I3)') ii,ruta//fnameM(ii),current_date
 		do 
 		 if(ii.eq.ipm) then !for PM2.5
 		 read(11,*,END=200) idcf,crdum,(edum(ih),ih=1,nh)
@@ -184,7 +193,11 @@ subroutine lee
  200 close(11)
 !  For point sources
 !	if (ii.ne.2) then
-		open(11,file=fnameP(ii),status='OLD',action='READ')
+        if (ii.le.5 .or. (ii.ge.ipm-2 .and. ii.le.ipm).or.ii.eq.icn .or. ii .eq.imt)then
+        ruta="../07_puntual/"
+        else if( ii.gt. ipm) then; ruta="../09_pm25spec/"
+        else;     ruta="../08_spec/"; end if
+		open(11,file=trim(ruta)//fnameP(ii),status='OLD',action='READ')
 		read(11,*)cdum
 		if (ii.eq.1)then
             read(11,*)j,current_date,cday  !j number of lines in file
@@ -192,7 +205,7 @@ subroutine lee
         else    
             read(11,*)j,current_date
         end if
-        write(6,'(i4,x,A,A,I3,I3)') ii,fnameP(ii),current_date
+        write(6,'(i4,x,A,A,I3,I3)') ii,ruta//fnameP(ii),current_date
 		do 
 		 if(ii.eq.ipm) then   !for PM2.5
 		 read(11,*,END=300) idcf,rdum,levl,(edum(ih),ih=1,nh),levld
@@ -545,10 +558,10 @@ cname=(/'Carbon Monoxide ','NH3             ','NO              ', &
 & 'RADM-2_XYL_P.txt ','T_ANNCO2.csv     ','T_ANNPM10.csv    ','T_ANNPM25.csv    ', &
 & 'GSO4_P.txt       ','PNO3_P.txt       ','OTHE_P.txt       ','POA_P.txt        ',&
 & 'PEC_P.txt        ','T_ANNCH4.csv     ','T_ANNCN.csv      ']
-        isp=[ 1, 2, 3, 4, 5, 6, 7, 8, 9,10, &
-        11,12,13,14,15, 16,17,18,19,20, &
-        21,22,23,24,25, 26,27,28,29,30, &
-        31,32,33,34,35, 36,37,38,39]
+        isp=[ 1, 2, 3, 4, 5,  6, 7, 8, 9,10, &
+             11,12,13,14,15, 16,17,18,19,20, &
+             21,22,23,24,25, 26,27,28,29,30, &
+             31,32,33,34,35, 36,37,38,39]
         WTM=[28., 17., 30., 46., 64.,   44.,16.,108.,30.,58.,&   !
         &    44., 72.,114., 30.,68., 72.,   70.,72., 70.,28.,56.,&
         &    42., 46., 60., 92.,106.,44.,&
@@ -631,17 +644,17 @@ fnameP=(/'T_ANNCO.csv       ',&
 'PNO3_P.txt        ','OTHE_P.txt        ','POA_P.txt         ','PEC_P.txt         ',&
 'T_ANNCH4.csv      ','T_ANNCN.csv       '/)
         isp=(/ 1, 2, 3, 4, 5, 6, 7, 8, 9,10, &
-        11,12,13,14,15, 16,17,18,19,20, &
-        21,22,23,24,25, 26,27,28,29,30, &
-        31,32,33,34,35, 36,37,38,39,40, &
-        41,42,43,44,45, 46,47,48,49,50/)
+              11,12,13,14,15, 16,17,18,19,20, &
+              21,22,23,24,25, 26,27,28,29,30, &
+              31,32,33,34,35, 36,37,38,39,40, &
+              41,42,43,44,45, 46,47,48,49,50/)
         WTM=(/ 28.0, 30.00, 46.00, 17.00, 64.0,  16.043,&
-        58.08, 58.61, 77.60,118.89, 95.16,118.72,&
-        86.09,106.13, 30.07, 36.73, 44.05, 60.05,&
-        108.14, 28.05, 58.04, 30.03, 46.03, 68.12,& !
-        100.12, 72.11, 32.04, 70.09, 72.07, 70.09,&
-        72.34, 75.78, 94.11,116.16, 58.08, 74.08,&
-        136.238,44.,&
+              58.08, 58.61, 77.60,118.89, 95.16,118.72,&
+              86.09,106.13, 30.07, 36.73, 44.05, 60.05,&
+             108.14, 28.05, 58.04, 30.03, 46.03, 68.12,& !
+             100.12, 72.11, 32.04, 70.09, 72.07, 70.09,&
+              72.34, 75.78, 94.11,116.16, 58.08, 74.08,&
+             136.238,44.,&
         7*3600./)
         call lee_namelist_mecha('saprc  ')
     case default
@@ -670,7 +683,7 @@ subroutine store
     integer,dimension(NDIMS):: dim,id_dim
     real,ALLOCATABLE :: ea(:,:,:,:)
     character (len=19),dimension(NDIMS) ::sdim
-    character(len=39):: FILE_NAME
+    character(len=44):: FILE_NAME
     character(len=19),dimension(1,1)::Times
     character(len=19):: iTime
     character(8)  :: date
@@ -692,7 +705,7 @@ subroutine store
     JULDAY=juliano(current_date(1:4),current_date(6:7),current_date(9:10))
      do periodo=1,2 ! 2 1
 	  if(periodo.eq.1) then
-        FILE_NAME='wrfchemi.d01.'//trim(mecha)//'.'//current_date(1:19)         !******
+        FILE_NAME='wrfchemi.d01.'//trim(mecha)//'.'//trim(zona)//'.'//current_date(1:19)         !******
 	   iit= 0
 	   eit= 11 !23
 	   iTime=current_date
@@ -700,7 +713,7 @@ subroutine store
 	   iit=12
 	   eit=23
        write(iTime(12:13),'(I2)') iit
-        FILE_NAME='wrfchemi.d01.'//trim(mecha)//'.'//iTime
+        FILE_NAME='wrfchemi.d01.'//trim(mecha)//'.'//trim(zona)//'.'//iTime
 	 end if
 	  ! Open NETCDF emissions file	
        call check( nf90_create(FILE_NAME, nf90_clobber, ncid) )

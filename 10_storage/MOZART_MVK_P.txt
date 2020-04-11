@@ -1,1 +1,0 @@
-../08_spec/MOZART_MVK_P.txt

@@ -7,7 +7,8 @@ FIX01 =
 #######################
 
 
-objec1 = g_radm_2016.o
+objec  = g_radm_2016.o
+objec1 = g_emiss.o
 objec2 = g_2016_racm.o
 objec3 = g_saprc_2016.o
 objec4 = g_cbm5_2016.o
@@ -79,12 +80,17 @@ pgi:
 # Ejecuta
 all :	radm2.exe racm2.exe saprc.exe cbm5.exe
 
-radm2.exe: $(objec1)
-	$(FC) -o $@ $(objec1) $(LDOPTIONS)
+radm2.exe: $(objec)
+	$(FC) -o $@ $(objec) $(LDOPTIONS)
 
 g_radm_2016.o: g_radm_2016.f90
 	$(FC) -c $< $(FCFLAGS)
- 
+
+emis.exe: $(objec1)
+	$(FC) -o $@ $(objec1) $(LDOPTIONS)
+
+g_emiss.o: g_emiss.F90
+	$(FC) -c $< $(FCFLAGS) 
 racm2.exe: $(objec2)
 	$(FC) -o $@ $(objec2) $(LDOPTIONS)
 

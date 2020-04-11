@@ -20,11 +20,12 @@ anio=2016
 !Horario de verano
 &verano_nml
 ! .true. o .false. para considerar o no el horario de verano
-!       cuando hay horario de verano
+! inicia  dia de inicio en abril del horario de verano 2016
+! termina dia de termino en octubre del Horario de verano 2016
 lsummer = .true.
 /
 ! Quimica a utilizar
 &chem_nml
 mecha='radm2'
-! Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 sapc99
+! Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99
 /
