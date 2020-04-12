@@ -56,7 +56,11 @@ module vars
     common /date/ current_date,cday,mecha,titulo
     common /nlm_vars/month,idia,anio
 end module vars
-
+!   __ _ _   _  __ _ _ __ __| | __ _     _ __   ___
+!  / _` | | | |/ _` | '__/ _` |/ _` |   | '_ \ / __|
+! | (_| | |_| | (_| | | | (_| | (_| |   | | | | (__
+!  \__, |\__,_|\__,_|_|  \__,_|\__,_|___|_| |_|\___|
+!  |___/                           |_____|          
 program guarda_nc
 use vars
 use netcdf
