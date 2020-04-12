@@ -676,9 +676,9 @@ subroutine store
     integer :: periodo,iit,eit,it
     integer :: ikk
     integer :: dimids2(2),dimids3(3),dimids4(4)
-    integer,dimension(radm+1):: id_var
+    integer,dimension(radm):: id_var
     integer :: id_varlong,id_varlat,id_varpop
-    integer :: id_utmx,id_utmy,id_utmz
+    integer :: id_unlimit,id_utmx,id_utmy,id_utmz
     integer :: id,iu,JULDAY
     integer,dimension(NDIMS):: dim,id_dim
     real,ALLOCATABLE :: ea(:,:,:,:)
@@ -703,11 +703,11 @@ subroutine store
     write(current_date(6:7),'(I2.2)') month
     write(current_date(9:10),'(I2.2)') idia
     JULDAY=juliano(current_date(1:4),current_date(6:7),current_date(9:10))
-     do periodo=1,2 ! 2 1
+     do periodo=1,1! 2
 	  if(periodo.eq.1) then
         FILE_NAME='wrfchemi.d01.'//trim(mecha)//'.'//trim(zona)//'.'//current_date(1:19)         !******
 	   iit= 0
-	   eit= 11 !23
+	   eit= 23 !11
 	   iTime=current_date
 	  else if(periodo.eq.2) then
 	   iit=12
@@ -716,7 +716,8 @@ subroutine store
         FILE_NAME='wrfchemi.d01.'//trim(mecha)//'.'//trim(zona)//'.'//iTime
 	 end if
 	  ! Open NETCDF emissions file	
-       call check( nf90_create(FILE_NAME, nf90_clobber, ncid) )
+       call check( nf90_create(path =FILE_NAME,cmode = NF90_CLOBBER, ncid = ncid) )
+!        call check( nf90_create(path =FILE_NAME,cmode = NF90_NETCDF4,ncid = ncid) )
 !     Define dimensiones
 		  dim(1)=1
 		  dim(2)=19
@@ -756,7 +757,7 @@ subroutine store
       call check( nf90_put_att(ncid, NF90_GLOBAL, "POLE_LON",0.))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "GRIDTYPE","C"))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "GMT",12.))
-      call check( nf90_put_att(ncid, NF90_GLOBAL, "JULYR",intc(current_date(1:4))))
+      call check( nf90_put_att(ncid, NF90_GLOBAL, "JULYR",int2char(current_date(1:4))))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "JULDAY",JULDAY))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "MAP_PROJ",1))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "MMINLU","USGS"))
@@ -765,7 +766,7 @@ subroutine store
 
 	print *,"Define las variables"
 !  Define las variables
-	call check( nf90_def_var(ncid, "Times", NF90_CHAR, dimids2,id_var(radm+1) ) )
+	call check( nf90_def_var(ncid, "Times", NF90_CHAR, dimids2,id_unlimit ) )
 !  Attributos para cada variable 
       call check( nf90_def_var(ncid, "XLONG", NF90_REAL,(/id_dim(3),id_dim(4),id_dim(1)/),id_varlong ) )
 	        ! Assign  attributes
@@ -830,22 +831,15 @@ tiempo: do it=iit,eit
         gases: do ikk=1,ipm-2!for gases
 			ea=0.0
 		if(ikk.eq.1) then
-		      if (it.lt.10) then
-			  write(current_date(13:13),'(A1)')char(it+48)
-			    else
-		        id = int((it)/10)+48 !  Decenas
-                iu = it-10*int((it)/10)+48 ! unidades
-			  write(current_date(12:13),'(A1,A1)')char(id),char(iu)
-			  end if 
-
+          write(current_date(12:13),'(I2.2)') it
   	      Times(1,1)=current_date(1:19)
 			  if (periodo.eq. 1) then
-              call check( nf90_put_var(ncid,id_var(radm+1),Times,start=(/1,it+1/)) )
+              call check( nf90_put_var(ncid, id_unlimit,Times,start=(/1,it+1/)) )
               call check( nf90_put_var(ncid, id_varlong,xlon,start=(/1,1,it+1/)) )
               call check( nf90_put_var(ncid, id_varlat,xlat,start=(/1,1,it+1/)) )
               call check( nf90_put_var(ncid, id_varpop,pob,  start=(/1,1,it+1/)) )
 			  else
-              call check( nf90_put_var(ncid,id_var(radm+1),Times,start=(/1,it-11/)) )
+              call check( nf90_put_var(ncid, id_unlimit,Times,start=(/1,it-11/)) )
               call check( nf90_put_var(ncid, id_varlong,xlon,start=(/1,1,it-11/)) )
               call check( nf90_put_var(ncid, id_varlat,xlat,start=(/1,1,it-11/)) )
               call check( nf90_put_var(ncid, id_varpop,pob,start=(/1,1,it-11/)) )
@@ -1010,9 +1004,9 @@ integer function juliano(year,mes,day)
   character*2,intent(in) :: day
   integer,dimension(12)::month=[31,28,31,30,31,30,31,31,30,31,30,31]
   integer i,iyear,imes,iday
-  iyear=intc(year)
-  imes=intc(mes)
-  iday=intc(day)
+  iyear=int2char(year)
+  imes=int2char(mes)
+  iday=int2char(day)
   if (mod(iyear,4)==0.and.mod(iyear,100)/=0) month(2)=29
   if (imes==1) then
     juliano=iday
@@ -1026,24 +1020,24 @@ integer function juliano(year,mes,day)
   return
 end function
 
-!  _       _
-! (_)_ __ | |_ ___
-! | | '_ \| __/ __|
-! | | | | | || (__
-! |_|_| |_|\__\___|
+!  _       _   ____      _
+! (_)_ __ | |_|___ \ ___| |__   __ _ _ __
+! | | '_ \| __| __) / __| '_ \ / _` | '__|
+! | | | | | |_ / __/ (__| | | | (_| | |
+! |_|_| |_|\__|_____\___|_| |_|\__,_|_|
 !
-integer function intc(char)
+integer function int2char(char)
   implicit none
   character(len=*),intent(in):: char
   integer :: i,l
   l=len(char)
-  intc=0
+  int2char=0
   do i=1,l
     if(ichar(char(i:i)).lt.48 .or. ichar(char(i:i)).gt.57) then
-      print *,"Character not a number function INTC() ",char
+      print *,"Character not a number function INT2CHAR() ",char
       stop
     end if
-    intc=(ichar(char(i:i))-48)*10**(l-i)+intc
+    int2char=(ichar(char(i:i))-48)*10**(l-i)+int2char
   end do
   return
 end function
