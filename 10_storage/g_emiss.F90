@@ -261,6 +261,11 @@ end subroutine lee
 subroutine setup_mecha
 	IMPLICIT NONE
     select case (mecha)
+    case("cbm04")
+        print *,"   **************************************"
+        print *,"    CBM04 MECHANISM  NOT  YET IMPLEMENTED"
+        print *,"   **************************************"
+        stop "END program..."
     case("cbm05")
         print *,"Setup variables for ",mecha
         nf=30    ! number of files antropogenic
@@ -662,7 +667,10 @@ fnameP=(/'T_ANNCO.csv       ',&
         7*3600./)
         call lee_namelist_mecha('saprc  ')
     case default
+    print *,"   **************************"
     print *,"Mechanism :",mecha," does not exists!!"
+    print *,"   **************************"
+    stop  "End program, review namelist_emiss.nml"
     end select
 end subroutine setup_mecha
 !      _
