@@ -613,6 +613,7 @@ subroutine setup_file(FILE_NAME,ncid)
     write(current_date(9:11),'(I2.2,"_")') idia
     write(current_date(12:19),'("00:00:00")')
 !
+    iTime=current_date
     JULDAY=juliano(anio,month,idia)
 ! Open NETCDF emissions file
     call check( nf90_create(path =FILE_NAME,cmode = NF90_CLOBBER, ncid = ncid) )
@@ -638,7 +639,7 @@ subroutine setup_file(FILE_NAME,ncid)
     !Atributos Globales NF90_GLOBAL
     call check( nf90_put_att(ncid, NF90_GLOBAL, "TITLE",titulo))
     call check( nf90_put_att(ncid, NF90_GLOBAL, "START_DATE",iTime))
-    call check( nf90_put_att(ncid, NF90_GLOBAL, "DAY ",idia))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "DAY ",cday))
     call check( nf90_put_att(ncid, NF90_GLOBAL, "SIMULATION_START_DATE",iTime))
     call check( nf90_put_att(ncid, NF90_GLOBAL, "WEST-EAST_GRID_DIMENSION",nx))
     call check( nf90_put_att(ncid, NF90_GLOBAL, "SOUTH-NORTH_GRID_DIMENSION",ny))
@@ -912,7 +913,7 @@ subroutine lee_emis(ii,borra)
     end if
     if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
     if(ii.eq.imt) is=jmt
-write(6,'(i4,x,A,A,I3,I3)') ii,ruta//fnameA(ii),current_date(1:13)
+    write(6,'(i4,x,A,A,I3,I3)') ii,ruta//fnameA(ii),current_date(1:13)
     do
         if(ii.eq.ipm) then
             read(11,*,END=100) idcf,rdum,(edum(ih),ih=1,nh)
