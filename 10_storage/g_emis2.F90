@@ -1,5 +1,5 @@
 !
-!   g_emiss.F90
+!   g_emis2.F90
 !
 !  Creado por Jose Agustin Garcia Reynoso el 12/04/2020
 !  Derechos Reservados Universidad Nacional Autonoma de Mexico, CCA
@@ -9,7 +9,7 @@
 !            Guarda los datos del inventario para el
 !            mecanismo los diferentes mecanismos en formato netcdf y con NAMELIST
 !
-! ifort g_emiss.F90 -O2 -axAVX -lnetcdff -L$NETCDF/lib -I$NETCDF/include  -o emiss.exe
+! ifort g_emis2.F90 -O2 -axAVX -lnetcdff -L$NETCDF/lib -I$NETCDF/include  -o emis2.exe
 !
 !
 !   09/04/2020   Version 1.1
@@ -78,7 +78,7 @@ program guarda_nc
 
     call guarda_variables
 
-    call libera
+    call termina
 
 contains
 !  _                                          _ _     _
@@ -117,12 +117,11 @@ implicit none
         stop '***** No namelist_emis.nml in .. directory'
     end if
 end subroutine lee_namelist
-!  _                                          _ _     _                           _
-! | | ___  ___     _ __   __ _ _ __ ___   ___| (_)___| |_     _ __ ___   ___  ___| |__   __ _
-! | |/ _ \/ _ \   | '_ \ / _` | '_ ` _ \ / _ \ | / __| __|   | '_ ` _ \ / _ \/ __| '_ \ / _` |
-! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_    | | | | | |  __/ (__| | | | (_| |
-! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|___|_| |_| |_|\___|\___|_| |_|\__,_|
-!            |_____|                                    |_____|
+!   _                               _ _    _                  _
+! | |___ ___   _ _  __ _ _ __  ___| (_)__| |_   _ __  ___ __| |_  __ _
+! | / -_) -_) | ' \/ _` | '  \/ -_) | (_-<  _| | '  \/ -_) _| ' \/ _` |
+! |_\___\___|_|_||_\__,_|_|_|_\___|_|_/__/\__|_|_|_|_\___\__|_||_\__,_|
+!          |___|                            |___|
 subroutine lee_namelist_mecha(mecanismo)
     implicit none
     character(len=7),intent(in) :: mecanismo
@@ -578,10 +577,15 @@ subroutine setup_mecha
         stop  "End program, review namelist_emiss.nml"
     end select
 end subroutine setup_mecha
-
+!           _                   __ _ _
+!  ___  ___| |_ _   _ _ __     / _(_) | ___
+! / __|/ _ \ __| | | | '_ \   | |_| | |/ _ \
+! \__ \  __/ |_| |_| | |_) |  |  _| | |  __/
+! |___/\___|\__|\__,_| .__/___|_| |_|_|\___|
+!                    |_| |_____|
 subroutine setup_file(FILE_NAME,ncid)
     IMPLICIT NONE
-    character(len=44),intent(IN):: FILE_NAME
+    character(len=*),intent(IN):: FILE_NAME
     integer,intent(out) :: ncid
     integer, parameter :: NDIMS=6
     integer :: i,j,k,Layer
@@ -595,8 +599,7 @@ subroutine setup_file(FILE_NAME,ncid)
     character(8)  :: date
     character(10) :: time
     character(24) :: hoy
-
-
+!
     data sdim /"Time               ","DateStrLen         ","west_east          ",&
     &          "south_north        ","bottom_top         ","emissions_zdim_stag"/
 
@@ -609,12 +612,11 @@ subroutine setup_file(FILE_NAME,ncid)
     write(current_date(6:8),'(I2.2,"-")') month
     write(current_date(9:11),'(I2.2,"_")') idia
     write(current_date(12:19),'("00:00:00")')
-
+!
     JULDAY=juliano(anio,month,idia)
- !   FILE_NAME='wrfchemi.d01.'//trim(mecha)//'_'//trim(zona)//'_'//current_date(1:19)
 ! Open NETCDF emissions file
     call check( nf90_create(path =FILE_NAME,cmode = NF90_CLOBBER, ncid = ncid) )
-!        call check( nf90_create(path =FILE_NAME,cmode = NF90_NETCDF4,ncid = ncid) )
+!   all check( nf90_create(path =FILE_NAME,cmode = NF90_NETCDF4,ncid = ncid) )
 !     Define dimensiones
     dim(1)=1
     dim(2)=19
@@ -622,7 +624,7 @@ subroutine setup_file(FILE_NAME,ncid)
     dim(4)=ny
     dim(5)=1!mkx
     dim(6)= zlev! !8
-    print *, "    Dimensions definition ****"
+    !print *, "    Dimensions definition ****"
     call check( nf90_def_dim(ncid,sdim(1), NF90_UNLIMITED, id_dim(1)) )
 
     do i=2,NDIMS
@@ -632,8 +634,8 @@ subroutine setup_file(FILE_NAME,ncid)
     dimids2 = (/id_dim(2),id_dim(1)/)
     dimids3 = (/id_dim(3),id_dim(2),id_dim(1) /)
     dimids4 = (/id_dim(3),id_dim(4),id_dim(6),id_dim(1)/)
-    print *,"   Attributos Globales NF90_GLOBAL ****"
-    !Attributos Globales NF90_GLOBAL
+    !print *,"   Atributos Globales NF90_GLOBAL ****"
+    !Atributos Globales NF90_GLOBAL
     call check( nf90_put_att(ncid, NF90_GLOBAL, "TITLE",titulo))
     call check( nf90_put_att(ncid, NF90_GLOBAL, "START_DATE",iTime))
     call check( nf90_put_att(ncid, NF90_GLOBAL, "DAY ",idia))
@@ -659,8 +661,7 @@ subroutine setup_file(FILE_NAME,ncid)
     call check( nf90_put_att(ncid, NF90_GLOBAL, "MMINLU","USGS"))
     call check( nf90_put_att(ncid, NF90_GLOBAL, "MECHANISM",mecha))
     call check( nf90_put_att(ncid, NF90_GLOBAL, "CREATION_DATE",hoy))
-
-    print *,"Define las variables"
+    !print *,"Define las variables"
     !  Define las variables
     call check( nf90_def_var(ncid, "Times", NF90_CHAR, dimids2,id_unlimit ) )
     !  Attributos para cada variable
@@ -678,7 +679,7 @@ subroutine setup_file(FILE_NAME,ncid)
     call check( nf90_put_att(ncid, id_varlat, "description", "LATITUDE, SOUTH IS NEGATIVE") )
     call check( nf90_put_att(ncid, id_varlat, "units", "degree_north"))
     call check( nf90_put_att(ncid, id_varlat, "axis", "Y") )
-    print *," Pob"
+    !print *," Pob"
     call check( nf90_def_var(ncid,"POB",NF90_REAL,(/id_dim(3),id_dim(4),id_dim(1)/) ,id_varpop ) )
     ! Assign  attributes
     call check( nf90_put_att(ncid, id_varpop, "FieldType", 104 ) )
@@ -720,9 +721,14 @@ subroutine setup_file(FILE_NAME,ncid)
     call check( nf90_put_var(ncid, id_utmx,utmxd,start=(/1,1/)) )
     call check( nf90_put_var(ncid, id_utmy,utmyd,start=(/1,1/)) )
     call check( nf90_put_var(ncid, id_utmz,utmzd,start=(/1,1/)) )
-
+    deallocate(utmxd,utmyd,utmzd)
 end subroutine setup_file
-
+!                            _                         _       _     _
+!   __ _ _   _  __ _ _ __ __| | __ _  __   ____ _ _ __(_) __ _| |__ | | ___  ___
+!  / _` | | | |/ _` | '__/ _` |/ _` | \ \ / / _` | '__| |/ _` | '_ \| |/ _ \/ __|
+! | (_| | |_| | (_| | | | (_| | (_| |  \ V / (_| | |  | | (_| | |_) | |  __/\__ \
+!  \__, |\__,_|\__,_|_|  \__,_|\__,_|___\_/ \__,_|_|  |_|\__,_|_.__/|_|\___||___/
+!  |___/                           |_____|
 subroutine guarda_variables
     IMPLICIT NONE
     integer i
@@ -742,8 +748,6 @@ subroutine guarda_variables
             end if
             call escribe_var(ikk=i)
         end do
-!if(.not.ALLOCATED(ea)) allocate (ea(dim(3),dim(4),dim(6),dim(1)))
-
 end subroutine guarda_variables
 !
 !    _       _ _
@@ -761,7 +765,7 @@ integer function juliano(iyear,imes,iday)
     integer,dimension(12)::month=[31,28,31,30,31,30,31,31,30,31,30,31]
     integer i
 
-    if (mod(iyear,4)==0.and.mod(iyear,100)/=0) month(2)=29
+    if (mod(iyear,4)==0.and.mod(iyear,100)/=0) month(2)=29 !Bisiesto
     if (imes==1) then
         juliano=iday
     else
@@ -782,30 +786,23 @@ end function
 character(len=3)function mes(num)
     character*2 num
     select case (num)
-        case('01')
-            mes='Jan'
-        case('02')
-            mes='Feb'
-        case('03')
-            mes='Mar'
-        case('04')
-            mes='Apr'
-        case('05')
-            mes='May'
-        case('06')
-            mes='Jun'
-        case('07')
-            mes='Jul'
-        case('08')
-            mes='Aug'
-        case('09')
-            mes='Sep'
-        case('10')
-            mes='Oct'
-        case('11')
-            mes='Nov'
-        case('12')
-            mes='Dec'
+    case('01');mes='Jan'
+    case('02');mes='Feb'
+    case('03');mes='Mar'
+    case('04');mes='Apr'
+    case('05');mes='May'
+    case('06');mes='Jun'
+    case('07');mes='Jul'
+    case('08');mes='Aug'
+    case('09');mes='Sep'
+    case('10');mes='Oct'
+    case('11');mes='Nov'
+    case('12');mes='Dec'
+    case default
+        print *,"   **************************"
+        print *,"Month:",num," does not exists!!"
+        print *,"   **************************"
+        stop  "End program, review namelist_emiss.nml"
     end select
     return
 end function
@@ -843,6 +840,12 @@ use netcdf
     ! print *,"Entro a Attributos de variable",dimids,id,jd
     return
 end subroutine crea_attr
+!  _               _                 _ _
+! | | ___  ___    | | ___   ___ __ _| (_)______ _
+! | |/ _ \/ _ \   | |/ _ \ / __/ _` | | |_  / _` |
+! | |  __/  __/   | | (_) | (_| (_| | | |/ / (_| |
+! |_|\___|\___|___|_|\___/ \___\__,_|_|_/___\__,_|
+!            |_____|
 subroutine lee_localiza
     implicit NONE
     character(len=39) :: flocaliza,cdum
@@ -877,6 +880,12 @@ subroutine lee_localiza
     close(10)
     deallocate(lon,lat,pop,utmx,utmy,utmz)
 end subroutine lee_localiza
+!  _                             _
+! | | ___  ___     ___ _ __ ___ (_)___
+! | |/ _ \/ _ \   / _ \ '_ ` _ \| / __|
+! | |  __/  __/  |  __/ | | | | | \__ \
+! |_|\___|\___|___\___|_| |_| |_|_|___/
+!            |_____|
 subroutine lee_emis(ii,borra)
     implicit none
     integer,INTENT(in):: ii
@@ -888,7 +897,7 @@ subroutine lee_emis(ii,borra)
     character(len=13) cdum,crdum
     logical,INTENT(in) ::borra
     if (borra) eft =0
-    print *,fnameA(ii),fnameM(ii),fnameP(ii),ii
+    !print *,fnameA(ii),fnameM(ii),fnameP(ii),ii
     if (ii.le.5 .or. (ii.ge.ipm-2 .and. ii.le.ipm).or.ii.eq.icn .or. ii .eq.imt)then
         ruta="../04_temis/"
     else if( ii.gt. ipm) then; ruta="../09_pm25spec/"
@@ -903,7 +912,7 @@ subroutine lee_emis(ii,borra)
     end if
     if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
     if(ii.eq.imt) is=jmt
-    write(6,'(i4,x,A,A,I3,I3)') ii,ruta//fnameA(ii),current_date,is
+write(6,'(i4,x,A,A,I3,I3)') ii,ruta//fnameA(ii),current_date(1:13)
     do
         if(ii.eq.ipm) then
             read(11,*,END=100) idcf,rdum,(edum(ih),ih=1,nh)
@@ -939,7 +948,7 @@ subroutine lee_emis(ii,borra)
     end if
     if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
     if(ii.eq.imt) is=jmt
-    write(6,'(i4,x,A,A,I3,I3)') ii,ruta//fnameM(ii),current_date
+write(6,'(i4,x,A,A,I3,I3)') ii,ruta//fnameM(ii),current_date(1:13)
     do
         if(ii.eq.ipm) then !for PM2.5
             read(11,*,END=200) idcf,crdum,(edum(ih),ih=1,nh)
@@ -961,7 +970,7 @@ subroutine lee_emis(ii,borra)
         end do busca2
     end do
 200 close(11)
-
+!
 !  For point sources
 !    if (ii.ne.2) then
     if (ii.le.5 .or. (ii.ge.ipm-2 .and. ii.le.ipm).or.ii.eq.icn .or. ii .eq.imt)then
@@ -978,7 +987,7 @@ subroutine lee_emis(ii,borra)
     end if
     if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
     if(ii.eq.imt) is=jmt
-    write(6,'(I4,x,A,A,F7.1)') is,ruta//fnameP(ii),current_date,WTM(is)
+    write(6,'(I4,x,A,A,F7.1)') ii,ruta//fnameP(ii),current_date(1:13)
     do
         if(ii.eq.ipm) then   !for PM2.5
             read(11,*,END=300) idcf,rdum,levl,(edum(ih),ih=1,nh),levld
@@ -1016,22 +1025,26 @@ subroutine lee_emis(ii,borra)
     end do
 300 continue
 close(11)
-
-
 end subroutine lee_emis
-
+!                      _ _
+!   ___  ___  ___ _ __(_) |__   ___  __   ____ _ _ __
+!  / _ \/ __|/ __| '__| | '_ \ / _ \ \ \ / / _` | '__|
+! |  __/\__ \ (__| |  | | |_) |  __/  \ V / (_| | |
+!  \___||___/\___|_|  |_|_.__/ \___|___\_/ \__,_|_|
+!                                 |_____|
 subroutine escribe_var(ikk)
     implicit none
     integer,intent(in) ::ikk
     integer :: i,j,k,l
     integer :: periodo,iit,eit,it
-    real,allocatable :: ea(:,:,:,:)
-    character(len=44):: FILE_NAME
+    !real,allocatable :: ea(:,:,:,:)
+    character(len=47):: FILE_NAME
     character(len=19):: iTime
     character(len=19),dimension(1,1)::Times
 do periodo=1,1! 2
     if(periodo.eq.1) then
-    FILE_NAME='wrfchemi.d01.'//trim(mecha)//'.'//trim(zona)//'.'//current_date(1:19)
+        FILE_NAME='wrfchemi_d01_'//trim(mecha(1:5))//'_'&
+        &//trim(zona(1:8))//'_'//current_date(1:19)
         iit= 0
         eit= 23 !11
         iTime=current_date
@@ -1039,22 +1052,23 @@ do periodo=1,1! 2
         iit=12
         eit=23
         write(iTime(12:13),'(I2)') iit
-        FILE_NAME='wrfchemi.d01.'//trim(mecha)//'.'//trim(zona)//'.'//iTime
+        FILE_NAME='wrfchemi_d01_'//trim(mecha(1:5))//'_'//&
+        &trim(zona(1:8))//'_'//iTime
     end if
     if(ikk.eq.1 )    call setup_file(FILE_NAME,ncid)
-    if(.not.allocated(ea)) allocate (ea(nx,ny,zlev,1))
-
+ !   if(.not.allocated(ea)) allocate (ea(nx,ny,zlev,1))
 !    Inicia loop de tiempo
-tiempo: do it=iit,eit
-    do i=1, nx
-        do j=1, ny
-            do l=1,zlev
-                ea(i,j,l,1)=eft(i,j,l,it+1) /(CDIM*CDIM)
-            end do
-        end do
-    end do
+!    do i=1, nx
+!        do j=1, ny
+!            do l=1,zlev
+!                ea(i,j,l,1)=eft(i,j,l,it+1) /(CDIM*CDIM)
+!            end do
+!        end do
+!    end do
     if( ikk.lt.ipm-2) then !for gases
+
         if(ikk.eq.1) then
+tiempo: do it=iit,eit
             write(current_date(12:13),'(I2.2)') it
             Times(1,1)=current_date(1:19)
             !write(6,'(A,x,I2.2)')'TIEMPO: ', it
@@ -1069,39 +1083,47 @@ tiempo: do it=iit,eit
                 call check( nf90_put_var(ncid, id_varlat,xlat,start=(/1,1,it-11/)) )
                 call check( nf90_put_var(ncid, id_varpop,pob,start=(/1,1,it-11/)) )
             endif
+end do TIEMPO
+it=0
         end if   ! for ikk == 1
         if(periodo.eq.1) then
-            call check( nf90_put_var(ncid, id_var(isp(ikk)),ea,start=(/1,1,1,1/)) )
-            call check(nf90_close(ncid))
+            call check( nf90_put_var(ncid, id_var(isp(ikk)),eft,start=(/1,1,1,it+1/)) )
         else
-            call check( nf90_put_var(ncid, id_var(isp(ikk)),ea,start=(/1,1,1,it-11/)) )
+            call check( nf90_put_var(ncid, id_var(isp(ikk)),eft,start=(/1,1,1,it-11/)) )
         endif
     else
 !
     if(periodo.eq.1) then
-     call check( nf90_put_var(ncid, id_var(isp(ikk)),ea*0.8,start=(/1,1,1,1/)) )
-     call check( nf90_put_var(ncid, id_var(isp(ikk+5)),ea*0.2,start=(/1,1,1,1/)) )
+     call check( nf90_put_var(ncid, id_var(isp(ikk)),eft*0.8,start=(/1,1,1,it+1/)) )
+     call check( nf90_put_var(ncid, id_var(isp(ikk+5)),eft*0.2,start=(/1,1,1,it+1/)) )
     else
         call check( nf90_put_var(ncid, id_var(isp(ikk)),eft*0.8,start=(/1,1,1,it-11/)) )
         call check( nf90_put_var(ncid, id_var(isp(ikk+5)),eft*0.2,start=(/1,1,1,it-11/)) )
     end if !periodo
     end if
-end do TIEMPO
 end do !periodo
-deallocate(ea)
+!deallocate(ea)
 if(ikk.eq.ns) call check( nf90_close(ncid) )
-
 end subroutine escribe_var
-subroutine libera
-print *,"Libera Memoria"
-deallocate(ename,cname)
-deallocate(isp,wtm)
-deallocate(fnameA,fnameM,fnameP)
-deallocate(scala,scalm,scalp)
-deallocate(eft)
-deallocate(idcg)
-deallocate(xlon,xlat,pob)
-deallocate(utmxd,utmyd,utmzd)
+!  _____                   _
+! |_   _|__ _ __ _ __ ___ (_)_ __   __ _
+!   | |/ _ \ '__| '_ ` _ \| | '_ \ / _` |
+!   | |  __/ |  | | | | | | | | | | (_| |
+!   |_|\___|_|  |_| |_| |_|_|_| |_|\__,_|
+!
+subroutine termina
+    print *,"Libera Memoria"
+    deallocate(ename,cname)
+    deallocate(isp,wtm)
+    deallocate(fnameA,fnameM,fnameP)
+    deallocate(scala,scalm,scalp)
+    deallocate(eft)
+    deallocate(idcg)
+    deallocate(xlon,xlat,pob)
+    write(6,122)
 
-end subroutine libera
+122 format("*******************",/,"***   Termina   ***",/,&
+          &"*******************")
+
+end subroutine termina
 end program guarda_nc
