@@ -13,7 +13,7 @@
 #         14/08/2013 Actualizacion para IE del 2014
 #         14/10/2017 para bash
 #SBATCH -J emi_2019
-#SBATCH -o emi_2096%j.o
+#SBATCH -o emi_2019%j.o
 #SBATCH -n 4
 #SBATCH --ntasks-per-node=24
 #SBATCH -p id
@@ -24,18 +24,18 @@ echo "Directorio actual "$ProcessDir
 #  ecaim    guadalajara  mexicali
 #  mexico    monterrey    queretaro   tijuana
 #
-dominio=mexicali
+dominio=ecaim
 HacerArea=0
 #
 # Selecciona mecanismo
-# Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99
+# Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 sapcr99
 #
 MECHA=radm2
 #  Build the namelist_emis.nml file
 # Cambiar aqui la fecha
-mes=5
+mes=4
 dia=9
-dia2=9
+dia2=11
 dia1=$dia 
 #
 #    Aqui cambiar el año a modelar
@@ -86,7 +86,7 @@ lsummer = .true.
 ! Quimica a utilizar
 &chem_nml
 mecha='$MECHA'
-! Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 sapcr99
+! Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99
 /
 End_Of_File
 
@@ -111,15 +111,45 @@ fi
 # Inicia Loop de Tiempo
 # exit
 while [ $dia -le $dia2 ] ;do
-echo " Procesando el dia " $dia
-cd $ProcessDir/04_temis
 echo "directorio de trabajo "$PWD
-#
-#    Aqui cambiar el año a modelar
-#
 echo ' '
 echo '  Mes ='$mes 'DIA '$dia
 #
+cat << End_Of_File > namelist_emis.nml
+!
+!   Definicion de variables para calculo del Inventario
+!
+&region_nml
+zona ="$dominio"
+!
+! bajio     cdjuarez     colima
+! ecaim     guadalajara  mexicali
+! mexico    monterrey    queretaro   tijuana
+/
+&fecha_nml
+! Se indica el dia y el mes a calcular
+! se proporciona el anio
+! month jan =1 to dec=12
+! day in the month (from 1 to 28,30 or 31)
+idia=$dia
+month=$mes
+anio=$nyear
+/
+!Horario de verano
+&verano_nml
+! .true. o .false. para considerar o no el horario de verano
+! inicia  dia de inicio en abril del horario de verano 
+! termina dia de termino en octubre del Horario de verano 
+lsummer = .true.
+/
+! Quimica a utilizar
+&chem_nml
+mecha='$MECHA'
+! Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99
+/
+End_Of_File
+
+cd $ProcessDir/04_temis
 echo 'Area Temporal distribution'
 ./Atemporal.exe  > ../area.log &
 echo 'Point Temporal distribution'

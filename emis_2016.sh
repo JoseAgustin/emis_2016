@@ -28,7 +28,7 @@ dominio=ecaim
 HacerArea=0
 #
 # Selecciona mecanismo
-# Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99
+# Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 sapcr99
 #
 MECHA=radm2
 #  Build the namelist_emis.nml file
