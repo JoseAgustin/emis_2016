@@ -103,7 +103,7 @@ subroutine lee
 	character(len=18):: nfile,nfilep
     character(len=35):: canio
 
-    write(current_date,'(A5,I2.2,"-",I2.2,A9)')'2016-',month,idia,'_00:00:00'
+    write(current_date,'(I4,"-",I2.2,"-",I2.2,A9)')anio,month,idia,'_00:00:00'
     fweek=7./daym(month) !weeks per month
 !Horario de verano Abril 6 a octubre 26
     iverano=0

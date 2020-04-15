@@ -1,0 +1,44 @@
+!    Especies en RADM2
+!       CO    NH3   NO   NO2  SO2   ALD  CH4  CLS  ETH   GLY
+!       HC3   HC5   HC8  HCHO ISOP  KET  MACR MGLY MVK   OL2 
+!       OLI   OLT   ORA1 ORA2 TOL   XYL  CO2  PM10 PM2.5 PSO4
+!       PNO3  OTHER POA  PEC  CH4   CN
+!  Area          Moviles         Puntuales
+&SCALE
+scala( 1)=1.0 ;scalm( 1)=1.0 ;scalp( 1)=1.0 !CO
+scala( 2)=1.0 ;scalm( 2)=1.0 ;scalp( 2)=1.0 !NH3
+scala( 3)=1.0 ;scalm( 3)=1.0 ;scalp( 3)=1.0 !NO
+scala( 4)=1.0 ;scalm( 4)=1.0 ;scalp( 4)=1.0 !NO2
+scala( 5)=1.0 ;scalm( 5)=1.0 ;scalp( 5)=1.0 !SO2
+scala( 6)=1.0 ;scalm( 6)=1.0 ;scalp( 6)=1.0 !ALD
+scala( 7)=1.0 ;scalm( 7)=1.0 ;scalp( 7)=1.0 !CH4
+scala( 8)=1.0 ;scalm( 8)=1.0 ;scalp( 8)=1.0 !CLS
+scala( 9)=1.0 ;scalm( 9)=1.0 ;scalp( 9)=1.0 !ETH
+scala(10)=1.0 ;scalm(10)=1.0 ;scalp(10)=1.0 !GLY
+scala(11)=1.0 ;scalm(11)=1.0 ;scalp(11)=1.0 !HC3
+scala(12)=1.0 ;scalm(12)=1.0 ;scalp(12)=1.0 !HC5
+scala(13)=1.0 ;scalm(13)=1.0 ;scalp(13)=1.0 !HC8
+scala(14)=1.0 ;scalm(14)=1.0 ;scalp(14)=1.0 !HCHO
+scala(15)=1.0 ;scalm(15)=1.0 ;scalp(15)=1.0 !ISOP
+scala(16)=1.0 ;scalm(16)=1.0 ;scalp(16)=1.0 !KET
+scala(17)=1.0 ;scalm(17)=1.0 ;scalp(17)=1.0 !MACR
+scala(18)=1.0 ;scalm(18)=1.0 ;scalp(18)=1.0 !MGLY
+scala(19)=1.0 ;scalm(19)=1.0 ;scalp(19)=1.0 !MVK
+scala(20)=1.0 ;scalm(20)=1.0 ;scalp(20)=1.0 !OL2
+scala(21)=1.0 ;scalm(21)=1.0 ;scalp(21)=1.0 !OLI
+scala(22)=1.0 ;scalm(22)=1.0 ;scalp(22)=1.0 !OLT
+scala(23)=1.0 ;scalm(23)=1.0 ;scalp(23)=1.0 !ORA1
+scala(24)=1.0 ;scalm(24)=1.0 ;scalp(24)=1.0 !ORA2
+scala(25)=1.0 ;scalm(25)=1.0 ;scalp(25)=1.0 !TOL
+scala(26)=1.0 ;scalm(26)=1.0 ;scalp(26)=1.0 !XYL
+scala(27)=1.0 ;scalm(27)=1.0 ;scalp(27)=1.0 !CO2
+scala(28)=1.0 ;scalm(28)=1.0 ;scalp(28)=1.0 !PM10
+scala(29)=1.0 ;scalm(29)=1.0 ;scalp(29)=1.0 !PM2.5
+scala(30)=1.0 ;scalm(30)=1.0 ;scalp(30)=1.0 !PSO4
+scala(31)=1.0 ;scalm(31)=1.0 ;scalp(31)=1.0 !PNO3
+scala(32)=1.0 ;scalm(32)=1.0 ;scalp(32)=1.0 !OTHER
+scala(33)=1.0 ;scalm(33)=1.0 ;scalp(33)=1.0 !POA
+scala(34)=1.0 ;scalm(34)=1.0 ;scalp(34)=1.0 !PEC
+scala(35)=1.0 ;scalm(35)=1.0 ;scalp(35)=1.0 !CH4
+scala(36)=1.0 ;scalm(36)=1.0 ;scalp(36)=1.0 !CN
+/

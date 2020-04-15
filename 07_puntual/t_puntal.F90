@@ -81,8 +81,8 @@ implicit none
 	character(len=35)::cdum,canio
 	character(len=18):: nfile,nfilep
 
-    write(current_date,'(A5,I2.2,"-",I2.2,A9)')'2016-',month,idia,'_00:00:00'
-    fweek= 7./daym(month)  !semanas en el mes
+   write(current_date,'(I4,"-",I2.2,"-",I2.2,A9)')anio,month,idia,'_00:00:00'
+  fweek= 7./daym(month)  !semanas en el mes
 !   Horario de verano Abril 3 a octubre 30 en 2016
     iverano=0
     if(lsummer) iverano=kverano(idia,month)
