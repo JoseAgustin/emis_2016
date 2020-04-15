@@ -25,7 +25,7 @@ echo "Directorio actual "$ProcessDir
 #  mexico    monterrey    queretaro   tijuana
 #
 dominio=ecaim
-HacerArea=1
+HacerArea=0
 #
 # Selecciona mecanismo
 # Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99
@@ -33,14 +33,14 @@ HacerArea=1
 MECHA=radm2
 #  Build the namelist_emis.nml file
 # Cambiar aqui la fecha
-mes=5
+mes=4
 dia=9
-dia2=9
+dia2=11
 dia1=$dia 
 #
 #    Aqui cambiar el año a modelar
 #
-nyear=2016
+nyear=2020
 #  Revisa que exista el dominio
 cd 01_datos
 existe=0
@@ -111,15 +111,45 @@ fi
 # Inicia Loop de Tiempo
 # exit
 while [ $dia -le $dia2 ] ;do
-echo " Procesando el dia " $dia
-cd $ProcessDir/04_temis
 echo "directorio de trabajo "$PWD
-#
-#    Aqui cambiar el año a modelar
-#
 echo ' '
 echo '  Mes ='$mes 'DIA '$dia
 #
+cat << End_Of_File > namelist_emis.nml
+!
+!   Definicion de variables para calculo del Inventario
+!
+&region_nml
+zona ="$dominio"
+!
+! bajio     cdjuarez     colima
+! ecaim     guadalajara  mexicali
+! mexico    monterrey    queretaro   tijuana
+/
+&fecha_nml
+! Se indica el dia y el mes a calcular
+! se proporciona el anio
+! month jan =1 to dec=12
+! day in the month (from 1 to 28,30 or 31)
+idia=$dia
+month=$mes
+anio=$nyear
+/
+!Horario de verano
+&verano_nml
+! .true. o .false. para considerar o no el horario de verano
+! inicia  dia de inicio en abril del horario de verano 2016
+! termina dia de termino en octubre del Horario de verano 2016
+lsummer = .true.
+/
+! Quimica a utilizar
+&chem_nml
+mecha='$MECHA'
+! Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99
+/
+End_Of_File
+
+cd $ProcessDir/04_temis
 echo 'Area Temporal distribution'
 ./Atemporal.exe  > ../area.log &
 echo 'Point Temporal distribution'
