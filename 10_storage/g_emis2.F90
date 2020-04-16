@@ -814,11 +814,11 @@ subroutine check(status)
     stop 2
     end if
 end subroutine check
-!                                _   _
-!    ___ _ __ ___  __ _     __ _| |_| |_ _ __
+!                              _   _
+!   ___ _ __ ___  __ _     __ _| |_| |_ _ __
 !  / __| '__/ _ \/ _` |   / _` | __| __| '__|
 ! | (__| | |  __/ (_| |  | (_| | |_| |_| |
-! \___|_|  \___|\__,_|___\__,_|\__|\__|_|
+!  \___|_|  \___|\__,_|___\__,_|\__|\__|_|
 !                    |_____|
 subroutine crea_attr(ncid,idm,dimids,svar,cname,cunits,id_var)
 use netcdf
@@ -913,7 +913,7 @@ subroutine lee_emis(ii,borra)
     end if
     if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
     if(ii.eq.imt) is=jmt
-    write(6,'(i4,x,A,A,I3,I3)') ii,ruta//fnameA(ii),current_date(1:13)
+    write(6,'(i4,x,A,A,f7.1)') ii,ruta//fnameA(ii),current_date(1:13)
     do
         if(ii.eq.ipm) then
             read(11,*,END=100) idcf,rdum,(edum(ih),ih=1,nh)
@@ -949,7 +949,7 @@ subroutine lee_emis(ii,borra)
     end if
     if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
     if(ii.eq.imt) is=jmt
-write(6,'(i4,x,A,A,I3,I3)') ii,ruta//fnameM(ii),current_date(1:13)
+    write(6,'(i4,x,A,A,f7.1)') ii,ruta//fnameA(ii),current_date(1:13)
     do
         if(ii.eq.ipm) then !for PM2.5
             read(11,*,END=200) idcf,crdum,(edum(ih),ih=1,nh)
@@ -988,7 +988,7 @@ write(6,'(i4,x,A,A,I3,I3)') ii,ruta//fnameM(ii),current_date(1:13)
     end if
     if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
     if(ii.eq.imt) is=jmt
-    write(6,'(I4,x,A,A,F7.1)') ii,ruta//fnameP(ii),current_date(1:13)
+    write(6,'(i4,x,A,A,f7.1)') ii,ruta//fnameA(ii),current_date(1:13)
     do
         if(ii.eq.ipm) then   !for PM2.5
             read(11,*,END=300) idcf,rdum,levl,(edum(ih),ih=1,nh),levld
