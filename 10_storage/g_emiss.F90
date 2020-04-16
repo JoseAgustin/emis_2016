@@ -137,10 +137,9 @@ subroutine lee
     else
       read(11,*)j,current_date
     end if
-    is= ii
-    if(ii.eq.icn) is=jcn  ! suma todo el Carbono Negro
+    if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
     if(ii.eq.imt) is=jmt   ! suma todo el Metano
-    write(6,'(i4,x,A,A,I3,I3)') ii,ruta//fnameA(ii),current_date,is
+    write(6,'(i4,x,A,A,I3,F7.1)') ii,ruta//fnameA(ii),current_date,is,scala(is)
     do
       if(ii.eq.ipm) then
         read(11,*,END=100) idcf,rdum,(edum(ih),ih=1,nh)
@@ -153,7 +152,7 @@ subroutine lee
         k=k+1
         if(idcg(k).eq.idcf) then
           do ih=1,nh
-            eft(i,j,is,ih,1)=eft(i,j,is,ih,1)+edum(ih)/WTM(is)*scala(ii) ! Emission from kg to gmol
+            eft(i,j,ii,ih,1)=eft(i,j,ii,ih,1)+edum(ih)/WTM(is)*scala(ii) ! Emission from kg to gmol
           end do
           exit busca
         end if
@@ -187,7 +186,7 @@ subroutine lee
 			if(idcg(k).eq.idcf) then
 			  do ih=1,nh
                 ! Emission from g to gmol by 1/WTM
-                eft(i,j,is,ih,1)=eft(i,j,is,ih,1)+edum(ih)/WTM(is)*scalm(ii)
+                eft(i,j,ii,ih,1)=eft(i,j,ii,ih,1)+edum(ih)/WTM(is)*scalm(ii)
 			  end do
 			  exit busca2
 			end if
@@ -226,15 +225,15 @@ subroutine lee
                 ! Emission from g to gmol by 1/WTM
                 if(ih.gt.9 .and. ih.lt.19) then
                   if(levl.lt.2) then
-                    eft(i,j,is,ih,levl)=eft(i,j,is,ih,levl)+edum(ih)/WTM(is)*scalp(ii)
+                    eft(i,j,ii,ih,levl)=eft(i,j,ii,ih,levl)+edum(ih)/WTM(is)*scalp(ii)
                    else
-                    eft(i,j,is,ih,levl)=eft(i,j,is,ih,levl)+edum(ih)/WTM(is)
+                    eft(i,j,ii,ih,levl)=eft(i,j,ii,ih,levl)+edum(ih)/WTM(is)
                   end if
                  else
                   if(levld.lt.2) then
-                    eft(i,j,is,ih,levld)=eft(i,j,is,ih,levld)+edum(ih)/WTM(is)*scalp(ii)
+                    eft(i,j,ii,ih,levld)=eft(i,j,ii,ih,levld)+edum(ih)/WTM(is)*scalp(ii)
                   else
-                    eft(i,j,is,ih,levld)=eft(i,j,is,ih,levld)+edum(ih)/WTM(is)
+                    eft(i,j,ii,ih,levld)=eft(i,j,ii,ih,levld)+edum(ih)/WTM(is)
                   end if
                  end if
 	        end do
@@ -574,7 +573,7 @@ cname=(/'Carbon Monoxide ','NH3             ','NO              ', &
         WTM=[28., 17., 30., 46., 64.,   44.,16.,108.,30.,58.,&   !
         &    44., 72.,114., 30.,68., 72.,   70.,72., 70.,28.,56.,&
         &    42., 46., 60., 92.,106.,44.,&
-        &  7*3600.]! MW 3600 for unit conversion to ug/s
+        &  3600.,3600.,3600.,3600.,3600.,3600.,3600.]! MW 3600 for unit conversion to ug/s
         call lee_namelist_mecha('radm   ')
     case("saprc99")
         print *,"Setup variables for ",mecha
@@ -695,7 +694,7 @@ subroutine store
     integer,dimension(NDIMS):: dim,id_dim
     real,ALLOCATABLE :: ea(:,:,:,:)
     character (len=19),dimension(NDIMS) ::sdim
-    character(len=44):: FILE_NAME
+    character(len=47):: FILE_NAME
     character(len=19),dimension(1,1)::Times
     character(len=19):: iTime
     character(8)  :: date
@@ -717,7 +716,7 @@ subroutine store
     JULDAY=juliano(current_date(1:4),current_date(6:7),current_date(9:10))
      do periodo=1,1! 2
 	  if(periodo.eq.1) then
-        FILE_NAME='wrfchemi.d01.'//trim(mecha)//'.'//trim(zona)//'.'//current_date(1:19)         !******
+    FILE_NAME='wrfchemi.d01.'//trim(mecha(1:5))//'.'//trim(zona)//'.'//current_date(1:19)         !******
 	   iit= 0
 	   eit= 23 !11
 	   iTime=current_date
@@ -725,7 +724,7 @@ subroutine store
 	   iit=12
 	   eit=23
        write(iTime(12:13),'(I2)') iit
-        FILE_NAME='wrfchemi.d01.'//trim(mecha)//'.'//trim(zona)//'.'//iTime
+    FILE_NAME='wrfchemi.d01.'//trim(mecha(1:5))//'.'//trim(zona)//'.'//iTime
 	 end if
 	  ! Open NETCDF emissions file	
        call check( nf90_create(path =FILE_NAME,cmode = NF90_CLOBBER, ncid = ncid) )
@@ -857,6 +856,7 @@ tiempo: do it=iit,eit
               call check( nf90_put_var(ncid, id_varpop,pob,start=(/1,1,it-11/)) )
 			  endif
             end if   ! for kk == 1
+          if(ikk.ne.jmt) then
           do i=1, nx
             do j=1, ny
               do l=1,zlev
@@ -864,21 +864,40 @@ tiempo: do it=iit,eit
               end do
             end do
           end do
+        else
+        do i=1, nx
+          do j=1, ny
+            do l=1,zlev
+              ea(i,j,l,1)=(eft(i,j,ikk,it+1,l)+eft(i,j,imt,it+1,l)) /(CDIM*CDIM)
+            end do
+          end do
+        end do
+        end if
             if(periodo.eq.1) then
                 call check( nf90_put_var(ncid, id_var(isp(ikk)),ea,start=(/1,1,1,it+1/)) )
             else
-                call check( nf90_put_var(ncid, id_var(isp(ikk)),ea,start=(/1,1,1,it-11/)) )        !******
+                call check( nf90_put_var(ncid, id_var(isp(ikk)),ea,start=(/1,1,1,it-11/)) )!******
             endif
 		 end do gases
         aerosol: do ikk=ipm-1,ns ! from PM10
 			ea=0.0
+        if(ikk.ne.jcn)then
         do i=1, nx
           do j=1, ny
             do l=1,zlev
-              ea(i,j,l,1)=eft(i,j,ikk,it+1,l) /(CDIM*CDIM) !entre 9x9 km
+              ea(i,j,l,1)=eft(i,j,ikk,it+1,l) /(CDIM*CDIM)
             end do
           end do
         end do
+        else
+        do i=1, nx
+          do j=1, ny
+            do l=1,zlev
+              ea(i,j,l,1)=(eft(i,j,ikk,it+1,l)+eft(i,j,icn,it+1,l))/(CDIM*CDIM)
+            end do
+          end do
+        end do
+        end if
 !
         if(periodo.eq.1) then
           call check( nf90_put_var(ncid, id_var(isp(ikk)),ea*0.8,start=(/1,1,1,it+1/)) )
@@ -912,10 +931,10 @@ subroutine check(status)
 		stop 2
 	end if
 end subroutine check  
-!                                _   _
-!    ___ _ __ ___  __ _     __ _| |_| |_ _ __
-!  / __| '__/ _ \/ _` |   / _` | __| __| '__|
-! | (__| | |  __/ (_| |  | (_| | |_| |_| |
+!                              _   _
+!  ___ _ __ ___  __ _     __ _| |_| |_ _ __
+! / __| '__/ _ \/ _` |   / _` | __| __| '__|
+!| (__| | |  __/ (_| |  | (_| | |_| |_| |
 ! \___|_|  \___|\__,_|___\__,_|\__|\__|_|
 !                    |_____|
 	  subroutine crea_attr(ncid,idm,dimids,svar,cname,id_var)
