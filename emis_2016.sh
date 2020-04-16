@@ -111,6 +111,7 @@ fi
 # Inicia Loop de Tiempo
 # exit
 while [ $dia -le $dia2 ] ;do
+cd $ProcessDir
 echo "directorio de trabajo "$PWD
 echo ' '
 echo '  Mes ='$mes 'DIA '$dia
