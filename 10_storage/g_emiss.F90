@@ -85,7 +85,7 @@ subroutine lee
 	integer :: ii,i,j,k,levl,levld,ih
     integer :: is
 	integer :: iunit=14
-	real ::rdum
+	real ::rdum,constant
 	real,dimension(nh)::edum
 	character(len=39) :: flocaliza
 	character(len=13) cdum,crdum
@@ -102,7 +102,7 @@ subroutine lee
   allocate(xlon(nx,ny),xlat(nx,ny),pob(nx,ny))
   allocate(utmxd(nx,ny),utmyd(nx,ny),utmzd(nx,ny))
   allocate(eft(nx,ny,nf,nh,8))
-  zlev=0
+  zlev=8
   eft=0
   do k=1,ncel
 	read(10,*) idcg(k),lon(k),lat(k),i,pop(k),utmx(k),utmy(k),utmz(k)
@@ -139,7 +139,8 @@ subroutine lee
     end if
     if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
     if(ii.eq.imt) is=jmt   ! suma todo el Metano
-    write(6,'(i4,x,A,A,I3,F7.1)') ii,ruta//fnameA(ii),current_date,is,scala(is)
+    constant=scala(ii)/WTM(is)/(CDIM*CDIM)
+write(6,'(i4,x,A,A,I3,2ES11.3)') ii,ruta//fnameA(ii),current_date(1:13),is,constant
     do
       if(ii.eq.ipm) then
         read(11,*,END=100) idcf,rdum,(edum(ih),ih=1,nh)
@@ -152,7 +153,7 @@ subroutine lee
         k=k+1
         if(idcg(k).eq.idcf) then
           do ih=1,nh
-            eft(i,j,ii,ih,1)=eft(i,j,ii,ih,1)+edum(ih)/WTM(is)*scala(ii) ! Emission from kg to gmol
+            eft(i,j,ii,ih,1)=eft(i,j,ii,ih,1)+edum(ih)*constant ! Emission from kg to gmol
           end do
           exit busca
         end if
@@ -173,7 +174,8 @@ subroutine lee
             read(11,*)j,current_date
         end if
         write(6,'(i4,x,A,A,I3,I3)') ii,ruta//fnameM(ii),current_date
-		do 
+      constant=scalm(ii)/WTM(is)/(CDIM*CDIM)
+      do
 		 if(ii.eq.ipm) then !for PM2.5
 		 read(11,*,END=200) idcf,crdum,(edum(ih),ih=1,nh)
 		 else
@@ -186,7 +188,7 @@ subroutine lee
 			if(idcg(k).eq.idcf) then
 			  do ih=1,nh
                 ! Emission from g to gmol by 1/WTM
-                eft(i,j,ii,ih,1)=eft(i,j,ii,ih,1)+edum(ih)/WTM(is)*scalm(ii)
+                eft(i,j,ii,ih,1)=eft(i,j,ii,ih,1)+edum(ih)*constant
 			  end do
 			  exit busca2
 			end if
@@ -209,6 +211,8 @@ subroutine lee
             read(11,*)j,current_date
         end if
         write(6,'(i4,x,A,A,I3,I3)') ii,ruta//fnameP(ii),current_date
+      constant=scalp(ii)/WTM(is)/(CDIM*CDIM)
+      rdum=1./WTM(is)/(CDIM*CDIM)
 		do 
 		 if(ii.eq.ipm) then   !for PM2.5
 		 read(11,*,END=300) idcf,rdum,levl,(edum(ih),ih=1,nh),levld
@@ -216,6 +220,7 @@ subroutine lee
 		 else
 		 read(11,*,END=300) idcf,levl,(edum(ih),ih=1,nh),levld
 		 end if
+      if(levl.gt.zlev.or.levld.gt.zlev) Stop "*** Change dimension line  allocate(eft.."
 		 k=0
 		 busca3: do j=1,ny
 		  do i=1,nx
@@ -225,20 +230,18 @@ subroutine lee
                 ! Emission from g to gmol by 1/WTM
                 if(ih.gt.9 .and. ih.lt.19) then
                   if(levl.lt.2) then
-                    eft(i,j,ii,ih,levl)=eft(i,j,ii,ih,levl)+edum(ih)/WTM(is)*scalp(ii)
+                    eft(i,j,ii,ih,levl)=eft(i,j,ii,ih,levl)+edum(ih)*constant
                    else
-                    eft(i,j,ii,ih,levl)=eft(i,j,ii,ih,levl)+edum(ih)/WTM(is)
+                    eft(i,j,ii,ih,levl)=eft(i,j,ii,ih,levl)+edum(ih)*rdum
                   end if
                  else
                   if(levld.lt.2) then
-                    eft(i,j,ii,ih,levld)=eft(i,j,ii,ih,levld)+edum(ih)/WTM(is)*scalp(ii)
+                    eft(i,j,ii,ih,levld)=eft(i,j,ii,ih,levld)+edum(ih)*constant
                   else
-                    eft(i,j,ii,ih,levld)=eft(i,j,ii,ih,levld)+edum(ih)/WTM(is)
+                    eft(i,j,ii,ih,levld)=eft(i,j,ii,ih,levld)+edum(ih)*rdum
                   end if
                  end if
 	        end do
-          zlev =max(zlev,levl,levld)
-          if(zlev.gt.8) Stop "*** Change dimension line  allocate(eft.."
 			  exit busca3
 			end if
 		 end do
@@ -571,8 +574,8 @@ cname=(/'Carbon Monoxide ','NH3             ','NO              ', &
              21,22,23,24,25, 26,27,28,29,30, &
              31,32,33,34,35, 36,37,38,39]
         WTM=[28., 17., 30., 46., 64.,   44.,16.,108.,30.,58.,&   !
-        &    44., 72.,114., 30.,68., 72.,   70.,72., 70.,28.,56.,&
-        &    42., 46., 60., 92.,106.,44.,&
+        &    44., 72.,114., 30., 68.,   72.,70., 72.,70.,28.,&
+        &    56., 42., 46., 60., 92.,  106.,44.,&
         &  3600.,3600.,3600.,3600.,3600.,3600.,3600.]! MW 3600 for unit conversion to ug/s
         call lee_namelist_mecha('radm   ')
     case("saprc99")
@@ -860,7 +863,7 @@ tiempo: do it=iit,eit
           do i=1, nx
             do j=1, ny
               do l=1,zlev
-                 ea(i,j,l,1)=eft(i,j,ikk,it+1,l) /(CDIM*CDIM)
+                 ea(i,j,l,1)=eft(i,j,ikk,it+1,l)
               end do
             end do
           end do
@@ -868,7 +871,7 @@ tiempo: do it=iit,eit
         do i=1, nx
           do j=1, ny
             do l=1,zlev
-              ea(i,j,l,1)=(eft(i,j,ikk,it+1,l)+eft(i,j,imt,it+1,l)) /(CDIM*CDIM)
+              ea(i,j,l,1)=(eft(i,j,ikk,it+1,l)+eft(i,j,imt,it+1,l))
             end do
           end do
         end do
@@ -885,7 +888,7 @@ tiempo: do it=iit,eit
         do i=1, nx
           do j=1, ny
             do l=1,zlev
-              ea(i,j,l,1)=eft(i,j,ikk,it+1,l) /(CDIM*CDIM)
+              ea(i,j,l,1)=eft(i,j,ikk,it+1,l)
             end do
           end do
         end do
@@ -893,7 +896,7 @@ tiempo: do it=iit,eit
         do i=1, nx
           do j=1, ny
             do l=1,zlev
-              ea(i,j,l,1)=(eft(i,j,ikk,it+1,l)+eft(i,j,icn,it+1,l))/(CDIM*CDIM)
+              ea(i,j,l,1)=(eft(i,j,ikk,it+1,l)+eft(i,j,icn,it+1,l))
             end do
           end do
         end do

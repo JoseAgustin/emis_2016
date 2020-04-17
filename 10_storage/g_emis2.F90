@@ -48,7 +48,7 @@ real,allocatable :: lon(:),lat(:),pop(:)
 real,allocatable ::xlon(:,:),xlat(:,:),pob(:,:)
 real,allocatable :: utmxd(:,:),utmyd(:,:)
 real,dimension(:), allocatable:: scala,scalm,scalp !Scaling factors
-real :: CDIM      ! cell dimension in km
+real :: CDIM, SUPF1    ! cell dimension CDIM km  SUPF1 km^-2
 character(len=3) :: cday
 character(len=11),dimension(:),allocatable:: ename
 character(len=16),dimension(:),allocatable:: cname
@@ -57,7 +57,7 @@ character (len=19) :: current_date,mecha
 character (len=40) :: titulo
 character(len=12):: zona
 common /quimicos/ nf,ns,radm,ipm,icn,jcn,imt,jmt
-common /domain/ ncel,nl,nx,ny,CDIM,zona
+common /domain/ ncel,nl,nx,ny,CDIM,SUPF1,zona
 common /fileout/id_varlong,id_varlat,id_varpop,&
 id_unlimit,id_utmx,id_utmy,id_utmz,ncid
 common /date/ current_date,cday,mecha,titulo
@@ -474,9 +474,9 @@ subroutine setup_mecha
         11,12,13,14,15, 16,17,18,19,20, &
         21,22,23,24,25, 26,27,28,29,30, &
         31,32,33,34,35, 36,37,38,39]
-        WTM=[28., 17., 30., 46., 64.,   44.,16.,108.,30.,58.,&   !
-        &    44., 72.,114., 30.,68., 72.,   70.,72., 70.,28.,56.,&
-        &    42., 46., 60., 92.,106.,44.,&
+        WTM=[28., 17., 30., 46.,64.,    44.,16.,108.,30.,58.,&   !
+        &    44., 72.,114., 30.,68.,    72.,70., 72.,70.,28.,&
+        &    56., 42., 46., 60.,92.,   106.,44.,&
         &  3600.,3600.,3600.,3600.,3600.,3600.,3600.]! MW 3600 for unit conversion to ug/s
         call lee_namelist_mecha('radm   ')
     case("saprc99")
@@ -767,14 +767,11 @@ integer function juliano(iyear,imes,iday)
     integer i
 
     if (mod(iyear,4)==0.and.mod(iyear,100)/=0) month(2)=29 !Bisiesto
-    if (imes==1) then
-        juliano=iday
-    else
-        juliano=0
+    juliano=iday
+    if (imes.gt.1) then
         do i=1,imes-1
             juliano=juliano+month(i)
         end do
-        juliano=juliano+iday
     end if
     return
 end function
@@ -878,6 +875,7 @@ subroutine lee_localiza
     end do
     CDIM=(utmx(2)-utmx(1))/1000.  ! from meters to km
     write(6,'(F8.2,A30)') CDIM,trim(titulo)
+    SUPF1=1/(CDIM*CDIM)
     close(10)
     deallocate(lon,lat,pop,utmx,utmy,utmz)
 end subroutine lee_localiza
@@ -891,8 +889,7 @@ subroutine lee_emis(ii,borra)
     implicit none
     integer,INTENT(in):: ii
     integer :: i,ih,is,j,k,levl,levld
-    integer ::izlev
-    real ::rdum
+    real ::rdum, constant
     real,dimension(nh)::edum
     character (len=15)::ruta
     character(len=13) cdum,crdum
@@ -913,7 +910,8 @@ subroutine lee_emis(ii,borra)
     end if
     if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
     if(ii.eq.imt) is=jmt
-    write(6,'(i4,x,A,A,f7.1)') ii,ruta//fnameA(ii),current_date(1:13)
+    constant=scala(ii)*SUPF1/WTM(is)
+    write(6,'(i4,x,A,A,2ES11.1)') ii,ruta//fnameA(ii),current_date(1:13),constant
     do
         if(ii.eq.ipm) then
             read(11,*,END=100) idcf,rdum,(edum(ih),ih=1,nh)
@@ -926,8 +924,8 @@ subroutine lee_emis(ii,borra)
                 k=k+1
                 if(idcg(k).eq.idcf) then
                     do ih=1,nh
-                        eft(i,j,1,ih)=eft(i,j,1,ih)+edum(ih)/WTM(is)*scala(ii)
-                        !convert kg to gmol
+                        eft(i,j,1,ih)=eft(i,j,1,ih)+edum(ih)*constant
+                        ! Emission from g to gmol by 1/WTM 1/(CDIM*CDIM)
                     end do
                     exit busca
                 end if
@@ -949,7 +947,8 @@ subroutine lee_emis(ii,borra)
     end if
     if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
     if(ii.eq.imt) is=jmt
-    write(6,'(i4,x,A,A,f7.1)') ii,ruta//fnameA(ii),current_date(1:13)
+    write(6,'(i4,x,A,A,f7.1)') ii,ruta//fnameM(ii),current_date(1:13)
+    constant=scalm(ii)*SUPF1/WTM(is)
     do
         if(ii.eq.ipm) then !for PM2.5
             read(11,*,END=200) idcf,crdum,(edum(ih),ih=1,nh)
@@ -963,7 +962,7 @@ subroutine lee_emis(ii,borra)
                 if(idcg(k).eq.idcf) then
                     do ih=1,nh
                     ! Emission from g to gmol by 1/WTM
-                        eft(i,j,1,ih)=eft(i,j,1,ih)+edum(ih)/WTM(is)*scalm(ii)
+                        eft(i,j,1,ih)=eft(i,j,1,ih)+edum(ih)*constant
                     end do
                     exit busca2
                 end if
@@ -988,7 +987,9 @@ subroutine lee_emis(ii,borra)
     end if
     if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
     if(ii.eq.imt) is=jmt
-    write(6,'(i4,x,A,A,f7.1)') ii,ruta//fnameA(ii),current_date(1:13)
+    write(6,'(i4,x,A,A,f7.1)') ii,ruta//fnameP(ii),current_date(1:13)
+    constant=scalp(ii)*SUPF1/WTM(is)
+    rdum=SUPF1/WTM(is)
     do
         if(ii.eq.ipm) then   !for PM2.5
             read(11,*,END=300) idcf,rdum,levl,(edum(ih),ih=1,nh),levld
@@ -996,6 +997,7 @@ subroutine lee_emis(ii,borra)
         else
             read(11,*,END=300) idcf,levl,(edum(ih),ih=1,nh),levld
         end if
+      if(levl.gt.zlev .or.levld.gt.zlev) Stop "*** Change dimension line  allocate(eft.."
         k=0
         busca3: do j=1,ny
             do i=1,nx
@@ -1005,26 +1007,25 @@ subroutine lee_emis(ii,borra)
             ! Emission from g to gmol by 1/WTM
                 if(ih.gt.9 .and. ih.lt.19) then
                     if(levl.lt.2) then
-                    eft(i,j,levl,ih)=eft(i,j,levl,ih)+edum(ih)/WTM(is)*scalp(ii)
+                      eft(i,j,levl,ih)=eft(i,j,levl,ih)+edum(ih)*constant
                     else
-                    eft(i,j,levl,ih)=eft(i,j,levl,ih)+edum(ih)/WTM(is)
+                      eft(i,j,levl,ih)=eft(i,j,levl,ih)+edum(ih)*rdum
                     end if
                 else
                     if(levld.lt.2) then
-                    eft(i,j,levld,ih)=eft(i,j,levld,ih)+edum(ih)/WTM(is)*scalp(ii)
+                      eft(i,j,levld,ih)=eft(i,j,levld,ih)+edum(ih)*constant
                     else
-                    eft(i,j,levld,ih)=eft(i,j,levld,ih)+edum(ih)/WTM(is)
+                      eft(i,j,levld,ih)=eft(i,j,levld,ih)+edum(ih)*rdum
                     end if
                 end if
                 end do
-                izlev =max(zlev,levl,levld)
-                if(izlev.gt.8) Stop "*** Change dimension line  allocate(eft.."
                 exit busca3
                 end if
             end do
         end do busca3
     end do
 300 continue
+
 close(11)
 end subroutine lee_emis
 !                      _ _
@@ -1038,7 +1039,6 @@ subroutine escribe_var(ikk)
     integer,intent(in) ::ikk
     integer :: i,j,k,l
     integer :: periodo,iit,eit,it
-    !real,allocatable :: ea(:,:,:,:)
     character(len=47):: FILE_NAME
     character(len=19):: iTime
     character(len=19),dimension(1,1)::Times
@@ -1056,37 +1056,27 @@ do periodo=1,1! 2
         FILE_NAME='wrfchemi_d01_'//trim(mecha(1:5))//'_'//&
         &trim(zona(1:8))//'_'//iTime
     end if
-    if(ikk.eq.1 )    call setup_file(FILE_NAME,ncid)
- !   if(.not.allocated(ea)) allocate (ea(nx,ny,zlev,1))
-!    Inicia loop de tiempo
-!    do i=1, nx
-!        do j=1, ny
-!            do l=1,zlev
-!                ea(i,j,l,1)=eft(i,j,l,it+1) /(CDIM*CDIM)
-!            end do
-!        end do
-!    end do
-    if( ikk.lt.ipm-2) then !for gases
-
-        if(ikk.eq.1) then
-tiempo: do it=iit,eit
-            write(current_date(12:13),'(I2.2)') it
-            Times(1,1)=current_date(1:19)
-            !write(6,'(A,x,I2.2)')'TIEMPO: ', it
-            if (periodo.eq. 1) then
-                call check( nf90_put_var(ncid, id_unlimit,Times,start=(/1,it+1/)) )
-                call check( nf90_put_var(ncid, id_varlong,xlon,start=(/1,1,it+1/)) )
-                call check( nf90_put_var(ncid, id_varlat,xlat,start=(/1,1,it+1/)) )
-                call check( nf90_put_var(ncid, id_varpop,pob,  start=(/1,1,it+1/)) )
-            else
-                call check( nf90_put_var(ncid, id_unlimit,Times,start=(/1,it-11/)) )
-                call check( nf90_put_var(ncid, id_varlong,xlon,start=(/1,1,it-11/)) )
-                call check( nf90_put_var(ncid, id_varlat,xlat,start=(/1,1,it-11/)) )
-                call check( nf90_put_var(ncid, id_varpop,pob,start=(/1,1,it-11/)) )
-            endif
-end do TIEMPO
-it=0
-        end if   ! for ikk == 1
+    if(ikk.eq.1) then
+    call setup_file(FILE_NAME,ncid)
+    tiempo: do it=iit,eit
+      write(current_date(12:13),'(I2.2)') it
+      Times(1,1)=current_date(1:19)
+      !write(6,'(A,x,I2.2)')'TIEMPO: ', it
+      if (periodo.eq. 1) then
+          call check( nf90_put_var(ncid, id_unlimit,Times,start=(/1,it+1/)) )
+          call check( nf90_put_var(ncid, id_varlong,xlon,start=(/1,1,it+1/)) )
+          call check( nf90_put_var(ncid, id_varlat,xlat,start=(/1,1,it+1/)) )
+          call check( nf90_put_var(ncid, id_varpop,pob,  start=(/1,1,it+1/)) )
+      else
+          call check( nf90_put_var(ncid, id_unlimit,Times,start=(/1,it-11/)) )
+          call check( nf90_put_var(ncid, id_varlong,xlon,start=(/1,1,it-11/)) )
+          call check( nf90_put_var(ncid, id_varlat,xlat,start=(/1,1,it-11/)) )
+          call check( nf90_put_var(ncid, id_varpop,pob,start=(/1,1,it-11/)) )
+      endif
+    end do TIEMPO
+    it=0
+    end if   ! for ikk == 1
+    if( ikk.lt.ipm-1) then !for gases
         if(periodo.eq.1) then
             call check( nf90_put_var(ncid, id_var(isp(ikk)),eft,start=(/1,1,1,it+1/)) )
         else
@@ -1103,7 +1093,6 @@ it=0
     end if !periodo
     end if
 end do !periodo
-!deallocate(ea)
 if(ikk.eq.ns) call check( nf90_close(ncid) )
 end subroutine escribe_var
 !  _____                   _
