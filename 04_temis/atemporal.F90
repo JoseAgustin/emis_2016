@@ -35,6 +35,7 @@ integer :: lh ! line number in uso horario
 integer :: iverano  ! si es en periodo de verano
 integer :: idia     ! dia para el calculo de emisiones
 integer :: anio     ! anio de las emisiones 2016
+integer ::periodo! =1 uno 24 hr, =2 dos de 12hrs c/u
 integer,dimension(nf) :: nscc ! number of scc codes per file
 integer*8,dimension(nnscc) ::iscc 
 integer, allocatable :: idcel(:),idcel2(:),idcel3(:)
@@ -71,7 +72,7 @@ character(len=14),dimension(nf) ::efile,casn
      data inicia  /6,  5,  3,   2,   1,   7,   5/
      data termina /26,25, 30,  29,  28,  27,  25/
 common /vars/ fweek,nscc,nm,lh,daytype,mes,dia,current_date
-common /nlm_vars/lsummer,month,idia,anio,inicia,termina
+common /nlm_vars/lsummer,month,idia,anio,periodo,inicia,termina
 end module
 !
 !  Progran  atemporal.F90
@@ -720,7 +721,7 @@ integer function kverano(ida,mes)
 233 format("******  HORARIO de VERANO *******",/,3x,"Abril ",I2,x,"a Octubre ",I2)
 end function
 subroutine lee_namelist
-    NAMELIST /fecha_nml/ idia,month,anio
+    NAMELIST /fecha_nml/ idia,month,anio,periodo
     NAMELIST /verano_nml/ lsummer
     integer unit_nml
     logical existe

@@ -27,6 +27,7 @@ module vars
     integer :: idia     ! dia para el calculo de emisiones
     integer :: anio     ! anio de las emisiones 2016
     integer :: month    ! mes de la modelacio
+    integer ::periodo! =1 uno 24 hr, =2 dos de 12hrs c/u
     integer ::ncel   ! number of cell in the grid
     integer ::nl     ! number of lines in files
     integer :: nx,ny ! grid dimensions
@@ -54,7 +55,7 @@ module vars
     common /quimicos/ nf,ns,radm,ipm,icn,jcn,imt,jmt
     common /domain/ ncel,nl,nx,ny,zlev,CDIM,zona
     common /date/ current_date,cday,mecha,titulo
-    common /nlm_vars/month,idia,anio
+    common /nlm_vars/month,idia,anio,periodo
 end module vars
 !   __ _ _   _  __ _ _ __ __| | __ _     _ __   ___
 !  / _` | | | |/ _` | '__/ _` |/ _` |   | '_ \ / __|
@@ -1084,7 +1085,7 @@ end function
 subroutine lee_namelist
     implicit none
     NAMELIST /region_nml/ zona
-    NAMELIST /fecha_nml/ idia,month,anio
+    NAMELIST /fecha_nml/ idia,month,anio,periodo
     NAMELIST /chem_nml/ mecha
     integer unit_nml
     logical existe

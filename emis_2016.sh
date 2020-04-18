@@ -24,8 +24,8 @@ echo "Directorio actual "$ProcessDir
 #  ecaim    guadalajara  mexicali
 #  mexico    monterrey    queretaro   tijuana
 #
-dominio=ecaim
-HacerArea=0
+dominio=tijuana
+HacerArea=1
 #
 # Selecciona mecanismo
 # Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 sapcr99
@@ -34,13 +34,17 @@ MECHA=radm2
 #  Build the namelist_emis.nml file
 # Cambiar aqui la fecha
 mes=4
-dia=9
-dia2=11
+dia=10
+dia2=10
 dia1=$dia 
 #
 #    Aqui cambiar el año a modelar
 #
 nyear=2020
+#
+#   Si se desea un archivo de 24 hrs  nfile=1
+#              dos archivos de 12 hrs nfile=2
+nfile=1
 #  Revisa que exista el dominio
 cd 01_datos
 existe=0
@@ -72,21 +76,27 @@ zona ="$dominio"
 ! se proporciona el anio
 ! month jan =1 to dec=12
 ! day in the month (from 1 to 28,30 or 31)
+! anio a modelar validos: 2014 a 2020
+! Si se quiere un archvio de 24 hr periodo=1
+!    o dos archivos de 12 hr peridodo=2
 idia=$dia
 month=$mes
 anio=$nyear
+periodo=$nfile
 /
 !Horario de verano
 &verano_nml
-! .true. o .false. para considerar o no el horario de verano
-! inicia  dia de inicio en abril del horario de verano 2016
-! termina dia de termino en octubre del Horario de verano 2016
+! .true. o .false. para considerar o no el cambio cuando se
+!  esta en horario de verano
+!
 lsummer = .true.
 /
 ! Quimica a utilizar
+! Los mecanismos a usar:
+!  cbm04 cbm05 mozart racm2 radm2 saprc99
+!
 &chem_nml
 mecha='$MECHA'
-! Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99
 /
 End_Of_File
 
@@ -132,21 +142,27 @@ zona ="$dominio"
 ! se proporciona el anio
 ! month jan =1 to dec=12
 ! day in the month (from 1 to 28,30 or 31)
+! anio a modelar validos: 2014 a 2020
+! Si se quiere un archvio de 24 hr periodo=1
+!    o dos archivos de 12 hr peridodo=2
 idia=$dia
 month=$mes
 anio=$nyear
+periodo=$nfile
 /
 !Horario de verano
 &verano_nml
-! .true. o .false. para considerar o no el horario de verano
-! inicia  dia de inicio en abril del horario de verano 2016
-! termina dia de termino en octubre del Horario de verano 2016
+! .true. o .false. para considerar o no el cambio cuando se
+!  esta en horario de verano
+!
 lsummer = .true.
 /
 ! Quimica a utilizar
+! Los mecanismos a usar:
+!  cbm04 cbm05 mozart racm2 radm2 saprc99
+!
 &chem_nml
 mecha='$MECHA'
-! Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99
 /
 End_Of_File
 
@@ -188,10 +204,10 @@ wait
 echo ' Guarda'
 
 cd ../10_storage
-./emiss.exe  > ../${MECHA}.log
+./emis2.exe  > ../${MECHA}.log
  let dia=dia+1
 done
-mv wrfchemi.d01* ../inventario/$dominio/
+mv wrfchemi?d01* ../inventario/$dominio/
 #ncrcat -O wrfchemi.d01.radm2.2019-0${mes}-1* wrfchemi_d01_2019-0${mes}-${dia}_00:00:00
 #mv wrfchemi_d01_2019-02-05_00:00:00 ../../DOMAIN/mecanismos/emisiones
 echo "DONE  Guarda "$MECHA

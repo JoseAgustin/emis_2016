@@ -29,6 +29,7 @@ integer :: nl,nx,ny
 integer :: iverano  ! si es en periodo de verano
 integer :: idia     ! dia para el calculo de emisiones
 integer :: anio     ! anio de las emisiones 2016
+integer ::periodo! =1 uno 24 hr, =2 dos de 12hrs c/u
 integer,dimension(2014:2020) :: inicia   ! dia inicio horario verano
 integer,dimension(2014:2020) :: termina  ! dia fin del horario de verano
 integer,dimension(12) :: daym ! days in a month
@@ -48,7 +49,7 @@ character (len=19) :: current_date
     data inicia  /6,  5,  3,   2,   1,   7,   5/
     data termina /26,25, 30,  29,  28,  27,  25/
 common /dat/ nl,nx,ny,daytype,fweek,cvar,current_date
-common /nlm_vars/lsummer,zona,month,idia,anio,inicia,termina
+common /nlm_vars/lsummer,zona,month,idia,anio,periodo,inicia,termina
 
 end module vars
 !
@@ -469,7 +470,7 @@ end function
 subroutine lee_namelist
     implicit none
     NAMELIST /region_nml/ zona
-    NAMELIST /fecha_nml/ idia,month,anio
+    NAMELIST /fecha_nml/ idia,month,anio,periodo
     NAMELIST /verano_nml/ lsummer,inicia,termina
     integer unit_nml
     logical existe

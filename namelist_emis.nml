@@ -2,7 +2,7 @@
 !   Definicion de variables para calculo del Inventario
 !
 &region_nml
-zona ="mexicali"
+zona ="tijuana"
 !
 ! bajio     cdjuarez     colima
 ! ecaim     guadalajara  mexicali
@@ -13,19 +13,25 @@ zona ="mexicali"
 ! se proporciona el anio
 ! month jan =1 to dec=12
 ! day in the month (from 1 to 28,30 or 31)
-idia=9
-month=5
-anio=2016
+! anio a modelar validos: 2014 a 2020
+! Si se quiere un archvio de 24 hr periodo=1
+!    o dos archivos de 12 hr peridodo=2
+idia=10
+month=4
+anio=2020
+periodo=1
 /
 !Horario de verano
 &verano_nml
-! .true. o .false. para considerar o no el horario de verano
-! inicia  dia de inicio en abril del horario de verano 2016
-! termina dia de termino en octubre del Horario de verano 2016
+! .true. o .false. para considerar o no el cambio cuando se
+!  esta en horario de verano
+!
 lsummer = .true.
 /
 ! Quimica a utilizar
+! Los mecanismos a usar:
+!  cbm04 cbm05 mozart racm2 radm2 saprc99
+!
 &chem_nml
 mecha='radm2'
-! Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99
 /

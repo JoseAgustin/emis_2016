@@ -27,12 +27,13 @@ integer :: jcn   ! Posicion archivo CN de especiacion
 integer :: imt   ! Posicion archivo CH4 del INEM
 integer :: jmt   ! Posicion archivo CH4 de especiacion
 integer :: idia  ! dia para el calculo de emisiones
-integer :: anio  ! anio de las emisiones 2016
 integer :: month ! mes de la modelacio
+integer :: anio  ! anio de las emisiones 2016
+integer ::periodo! =1 uno 24 hr, =2 dos de 12hrs c/u
 integer ::ncel   ! number of cell in the grid
 integer ::nl     ! number of lines in files
 integer :: nx,ny ! grid dimensions
-integer ::ncid
+integer ::ncid,ncid2
 integer*8 :: idcf! ID cell in file
 integer,allocatable :: idcg(:) ! ID cell in grid
 integer,allocatable:: utmz(:),utmzd(:,:)  !utmz
@@ -59,9 +60,9 @@ character(len=12):: zona
 common /quimicos/ nf,ns,radm,ipm,icn,jcn,imt,jmt
 common /domain/ ncel,nl,nx,ny,CDIM,SUPF1,zona
 common /fileout/id_varlong,id_varlat,id_varpop,&
-id_unlimit,id_utmx,id_utmy,id_utmz,ncid
+id_unlimit,id_utmx,id_utmy,id_utmz,ncid,ncid2
 common /date/ current_date,cday,mecha,titulo
-common /nlm_vars/month,idia,anio
+common /nlm_vars/month,idia,anio,periodo
 end module vars_emis
 !   __ _ _   _  __ _ _ __ __| | __ _     _ __   ___
 !  / _` | | | |/ _` | '__/ _` |/ _` |   | '_ \ / __|
@@ -90,7 +91,7 @@ contains
 subroutine lee_namelist
 implicit none
     NAMELIST /region_nml/ zona
-    NAMELIST /fecha_nml/ idia,month,anio
+    NAMELIST /fecha_nml/ idia,month,anio,periodo
     NAMELIST /chem_nml/ mecha
     integer unit_nml
     logical existe
@@ -603,7 +604,7 @@ subroutine setup_file(FILE_NAME,ncid)
     data sdim /"Time               ","DateStrLen         ","west_east          ",&
     &          "south_north        ","bottom_top         ","emissions_zdim_stag"/
 
-    print *,"Inicializa archivo de salida"
+print *,"Inicializa archivo de salida ",FILE_NAME(1:40)
 ! ******************************************************************
     call date_and_time(date,time)
     hoy=date(7:8)//'-'//mes(date(5:6))//'-'//date(1:4)//' '//time(1:2)//':'//time(3:4)//':'//time(5:10)
@@ -708,6 +709,7 @@ subroutine setup_file(FILE_NAME,ncid)
     call check( nf90_put_att(ncid, id_utmz, "MemoryOrder", "XYZ") )
     call check( nf90_put_att(ncid, id_utmz, "description", "UTM Zone") )
     call check( nf90_put_att(ncid, id_utmz, "units", "None"))
+    !print *,"Especies",ncid
     do i=1,radm
     if(i.lt.ipm-1 ) then
     call crea_attr(ncid,4,dimids4,ename(i),cname(i),"mol km^-2 hr^-1",id_var(i))
@@ -722,7 +724,8 @@ subroutine setup_file(FILE_NAME,ncid)
     call check( nf90_put_var(ncid, id_utmx,utmxd,start=(/1,1/)) )
     call check( nf90_put_var(ncid, id_utmy,utmyd,start=(/1,1/)) )
     call check( nf90_put_var(ncid, id_utmz,utmzd,start=(/1,1/)) )
-    deallocate(utmxd,utmyd,utmzd)
+    !
+    print *,"sale setup file"
 end subroutine setup_file
 !                            _                         _       _     _
 !   __ _ _   _  __ _ _ __ __| | __ _  __   ____ _ _ __(_) __ _| |__ | | ___  ___
@@ -1038,62 +1041,78 @@ subroutine escribe_var(ikk)
     implicit none
     integer,intent(in) ::ikk
     integer :: i,j,k,l
-    integer :: periodo,iit,eit,it
-    character(len=47):: FILE_NAME
+    integer :: iit,eit,it
+    character(len=47):: FILE_NAME,FILE_NAME2
     character(len=19):: iTime
     character(len=19),dimension(1,1)::Times
-do periodo=1,1! 2
+
+    FILE_NAME='wrfchemi_d01_'//trim(mecha(1:5))//'_'&
+    &//trim(zona(1:8))//'_'//current_date(1:19)
+   iTime=current_date
     if(periodo.eq.1) then
-        FILE_NAME='wrfchemi_d01_'//trim(mecha(1:5))//'_'&
-        &//trim(zona(1:8))//'_'//current_date(1:19)
-        iit= 0
-        eit= 23 !11
-        iTime=current_date
+        iit= 1
+        eit= nh
     else if(periodo.eq.2) then
-        iit=12
-        eit=23
-        write(iTime(12:13),'(I2)') iit
-        FILE_NAME='wrfchemi_d01_'//trim(mecha(1:5))//'_'//&
+        iit=1
+        eit=12
+        write(iTime(12:13),'(I2.2)') 12
+        FILE_NAME2='wrfchemi_d01_'//trim(mecha(1:5))//'_'//&
         &trim(zona(1:8))//'_'//iTime
     end if
     if(ikk.eq.1) then
-    call setup_file(FILE_NAME,ncid)
-    tiempo: do it=iit,eit
-      write(current_date(12:13),'(I2.2)') it
-      Times(1,1)=current_date(1:19)
-      !write(6,'(A,x,I2.2)')'TIEMPO: ', it
-      if (periodo.eq. 1) then
-          call check( nf90_put_var(ncid, id_unlimit,Times,start=(/1,it+1/)) )
-          call check( nf90_put_var(ncid, id_varlong,xlon,start=(/1,1,it+1/)) )
-          call check( nf90_put_var(ncid, id_varlat,xlat,start=(/1,1,it+1/)) )
-          call check( nf90_put_var(ncid, id_varpop,pob,  start=(/1,1,it+1/)) )
-      else
-          call check( nf90_put_var(ncid, id_unlimit,Times,start=(/1,it-11/)) )
-          call check( nf90_put_var(ncid, id_varlong,xlon,start=(/1,1,it-11/)) )
-          call check( nf90_put_var(ncid, id_varlat,xlat,start=(/1,1,it-11/)) )
-          call check( nf90_put_var(ncid, id_varpop,pob,start=(/1,1,it-11/)) )
-      endif
-    end do TIEMPO
-    it=0
+      call setup_file(FILE_NAME,ncid)
+        if (periodo.eq. 1) then
+          tiempo: do it=iit,eit
+            write(current_date(12:13),'(I2.2)') it-1
+            Times(1,1)=current_date(1:19)
+            !write(6,'(A,x,I2.2)')'TIEMPO: ', it
+            call check( nf90_put_var(ncid, id_unlimit,Times,start=(/1,it/)) )
+            call check( nf90_put_var(ncid, id_varlong,xlon,start=(/1,1,it/)) )
+            call check( nf90_put_var(ncid, id_varlat,xlat,start=(/1,1,it/)) )
+            call check( nf90_put_var(ncid, id_varpop,pob,  start=(/1,1,it/)) )
+          end do TIEMPO
+        else
+        call setup_file(FILE_NAME2,ncid2)
+          do it=iit,eit
+        write(current_date(12:13),'(I2.2)') it-1
+        Times(1,1)=current_date(1:19)
+          !write(6,'(A,x,I2.2)')'TIEMPO: ', it
+          call check( nf90_put_var(ncid, id_unlimit,Times,start=(/1,it/)) )
+          call check( nf90_put_var(ncid, id_varlong,xlon,start=(/1,1,it/)) )
+          call check( nf90_put_var(ncid, id_varlat,xlat,start=(/1,1,it/)) )
+          call check( nf90_put_var(ncid, id_varpop,pob,  start=(/1,1,it/)) )
+        write(current_date(12:13),'(I2.2)') it+11
+        Times(1,1)=current_date(1:19)
+          call check( nf90_put_var(ncid2,id_unlimit,Times,start=(/1,it/)) )
+          call check( nf90_put_var(ncid2,id_varlong,xlon,start=(/1,1,it/)) )
+          call check( nf90_put_var(ncid2,id_varlat,xlat,start=(/1,1,it/)) )
+          call check( nf90_put_var(ncid2,id_varpop,pob,start=(/1,1,it/)) )
+         end do
+        endif
+      it=0
     end if   ! for ikk == 1
     if( ikk.lt.ipm-1) then !for gases
         if(periodo.eq.1) then
-            call check( nf90_put_var(ncid, id_var(isp(ikk)),eft,start=(/1,1,1,it+1/)) )
+call check( nf90_put_var(ncid, id_var(isp(ikk)),eft,start=(/1,1,1,1/),count=(/nx,ny,zlev,24/)))
         else
-            call check( nf90_put_var(ncid, id_var(isp(ikk)),eft,start=(/1,1,1,it-11/)) )
+call check( nf90_put_var(ncid, id_var(isp(ikk)),eft,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
+call check( nf90_put_var(ncid2,id_var(isp(ikk)),eft,start=(/1,1,1,1/),count=(/nx,ny,zlev,12:24/)))
         endif
     else
 !
     if(periodo.eq.1) then
-     call check( nf90_put_var(ncid, id_var(isp(ikk)),eft*0.8,start=(/1,1,1,it+1/)) )
-     call check( nf90_put_var(ncid, id_var(isp(ikk+5)),eft*0.2,start=(/1,1,1,it+1/)) )
+     call check( nf90_put_var(ncid, id_var(isp(ikk)),eft*0.8,start=(/1,1,1,1/)) )
+     call check( nf90_put_var(ncid, id_var(isp(ikk+5)),eft*0.2,start=(/1,1,1,1/)) )
     else
-        call check( nf90_put_var(ncid, id_var(isp(ikk)),eft*0.8,start=(/1,1,1,it-11/)) )
-        call check( nf90_put_var(ncid, id_var(isp(ikk+5)),eft*0.2,start=(/1,1,1,it-11/)) )
+      call check( nf90_put_var(ncid2,id_var(isp(ikk)),eft*0.8,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
+      call check( nf90_put_var(ncid2,id_var(isp(ikk+5)),eft*0.2,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
+      call check( nf90_put_var(ncid2,id_var(isp(ikk)),eft*0.8,start=(/1,1,1,1/),count=(/nx,ny,zlev,12:24/)))
+      call check( nf90_put_var(ncid2,id_var(isp(ikk+5)),eft*0.2,start=(/1,1,1,1/),count=(/nx,ny,zlev,12:24/)))
     end if !periodo
     end if
-end do !periodo
 if(ikk.eq.ns) call check( nf90_close(ncid) )
+if(ikk.eq.ns.and. periodo.eq.2) call check( nf90_close(ncid2) )
+
 end subroutine escribe_var
 !  _____                   _
 ! |_   _|__ _ __ _ __ ___ (_)_ __   __ _
@@ -1110,6 +1129,8 @@ subroutine termina
     deallocate(eft)
     deallocate(idcg)
     deallocate(xlon,xlat,pob)
+    deallocate(utmxd,utmyd,utmzd)
+
     write(6,122)
 
 122 format("*******************",/,"***   Termina   ***",/,&

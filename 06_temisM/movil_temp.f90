@@ -29,6 +29,7 @@ integer :: nm ! line number in emissions file
 integer :: iverano  ! si es en periodo de verano
 integer :: idia     ! dia para el calculo de emisiones
 integer :: anio     ! anio de las emisiones 2016
+integer ::periodo! =1 uno 24 hr, =2 dos de 12hrs c/u
 integer,dimension(2014:2020) :: inicia   ! dia inicio horario verano
 integer,dimension(2014:2020) :: termina  ! dia fin del horario de verano
 integer,dimension(nf) :: nscc ! number of scc codes per file
@@ -64,7 +65,7 @@ character(len=14),dimension(nf) ::efile,casn
     data inicia  /6,  5,   3,   2,   1,  7,   5/
     data termina /26,25,  30,  29,  28, 27,  25/
 common /vars/ fweek,nscc,nm,daytype,perfil,mes,dia,hora,current_date
-common /nlm_vars/lsummer,month,idia,anio,inicia,termina
+common /nlm_vars/lsummer,month,idia,anio,periodo,inicia,termina
 
 end module
 !
@@ -540,7 +541,7 @@ integer function kverano(ida,mes)
 end function
 subroutine lee_namelist
     implicit none
-    NAMELIST /fecha_nml/ idia,month,anio
+    NAMELIST /fecha_nml/ idia,month,anio,periodo
     NAMELIST /verano_nml/ lsummer
     integer unit_nml
     logical existe
