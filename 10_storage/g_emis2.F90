@@ -43,7 +43,8 @@ integer :: id_varlong,id_varlat,id_varpop
 integer :: id_unlimit,id_utmx,id_utmy,id_utmz
 
 real,allocatable::wtm(:)  !storage
-real,allocatable:: eft(:,:,:,:)  ! emissions by nx,ny,level,nh
+real,allocatable:: eft(:,:,:,:)! emissions by nx,ny,level,nh
+real,allocatable:: efs(:,:,:,:)! emissions by nx,ny,level,nh/2
 real,allocatable :: utmx(:),utmy(:)
 real,allocatable :: lon(:),lat(:),pop(:)
 real,allocatable ::xlon(:,:),xlat(:,:),pob(:,:)
@@ -738,7 +739,9 @@ subroutine guarda_variables
     integer i
     call lee_localiza
     allocate(eft(nx,ny,zlev,nh))
+    if(periodo.eq.2) allocate(efs(nx,ny,zlev,nh/2))
     eft=0
+
         do i=1,nf
             if(i.eq.icn .or. i.eq.imt) cycle
             if(i.eq.jcn ) then
@@ -1095,8 +1098,9 @@ subroutine escribe_var(ikk)
         if(periodo.eq.1) then
 call check( nf90_put_var(ncid, id_var(isp(ikk)),eft,start=(/1,1,1,1/),count=(/nx,ny,zlev,24/)))
         else
+call copia
 call check( nf90_put_var(ncid, id_var(isp(ikk)),eft,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
-call check( nf90_put_var(ncid2,id_var(isp(ikk)),eft,start=(/1,1,1,1/),count=(/nx,ny,zlev,12:24/)))
+call check( nf90_put_var(ncid2,id_var(isp(ikk)),efs,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
         endif
     else
 !
@@ -1104,10 +1108,11 @@ call check( nf90_put_var(ncid2,id_var(isp(ikk)),eft,start=(/1,1,1,1/),count=(/nx
      call check( nf90_put_var(ncid, id_var(isp(ikk)),eft*0.8,start=(/1,1,1,1/)) )
      call check( nf90_put_var(ncid, id_var(isp(ikk+5)),eft*0.2,start=(/1,1,1,1/)) )
     else
-      call check( nf90_put_var(ncid2,id_var(isp(ikk)),eft*0.8,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
-      call check( nf90_put_var(ncid2,id_var(isp(ikk+5)),eft*0.2,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
-      call check( nf90_put_var(ncid2,id_var(isp(ikk)),eft*0.8,start=(/1,1,1,1/),count=(/nx,ny,zlev,12:24/)))
-      call check( nf90_put_var(ncid2,id_var(isp(ikk+5)),eft*0.2,start=(/1,1,1,1/),count=(/nx,ny,zlev,12:24/)))
+      call copia
+      call check( nf90_put_var(ncid ,id_var(isp(ikk)),eft*0.8,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
+      call check( nf90_put_var(ncid ,id_var(isp(ikk+5)),eft*0.2,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
+      call check( nf90_put_var(ncid2,id_var(isp(ikk)),efs*0.8,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
+      call check( nf90_put_var(ncid2,id_var(isp(ikk+5)),efs*0.2,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
     end if !periodo
     end if
 if(ikk.eq.ns) call check( nf90_close(ncid) )
@@ -1137,4 +1142,19 @@ subroutine termina
           &"*******************")
 
 end subroutine termina
+
+subroutine copia
+IMPLICIT NONE
+integer i,j,k,l,ll
+do i=1,nx
+    do j=1,ny
+        do k=1,zlev
+        do l=13,24
+            ll=l-12
+            efs(i,j,k,ll) = eft(i,j,k,l)
+        end do
+        end do
+    end do
+end do
+end subroutine
 end program guarda_nc
