@@ -36,7 +36,7 @@ integer :: nx,ny ! grid dimensions
 integer ::ncid,ncid2
 integer*8 :: idcf! ID cell in file
 integer,allocatable :: idcg(:) ! ID cell in grid
-integer,allocatable:: utmz(:),utmzd(:,:)  !utmz
+integer,allocatable:: utmzd(:,:)  !utmz
 integer,allocatable :: isp(:) ! storage
 integer,allocatable:: id_var(:)  !netcdf
 integer :: id_varlong,id_varlat,id_varpop
@@ -45,8 +45,6 @@ integer :: id_unlimit,id_utmx,id_utmy,id_utmz
 real,allocatable::wtm(:)  !storage
 real,allocatable:: eft(:,:,:,:)! emissions by nx,ny,level,nh
 real,allocatable:: efs(:,:,:,:)! emissions by nx,ny,level,nh/2
-real,allocatable :: utmx(:),utmy(:)
-real,allocatable :: lon(:),lat(:),pop(:)
 real,allocatable ::xlon(:,:),xlat(:,:),pob(:,:)
 real,allocatable :: utmxd(:,:),utmyd(:,:)
 real,dimension(:), allocatable:: scala,scalm,scalp !Scaling factors
@@ -853,33 +851,26 @@ end subroutine crea_attr
 subroutine lee_localiza
     implicit NONE
     character(len=39) :: flocaliza,cdum
-    integer i,j,k,ncel
+    integer i,j,k,idum,ncel
     flocaliza='../01_datos/'//trim(zona)//'/'//'localiza.csv'
     write(6,*)' >>>> Reading file -',flocaliza,' ---------'
     open (unit=10,file=flocaliza,status='old',action='read')
     read (10,*) cdum  !Header
     read (10,*) nx,ny,titulo  ! Dimensions and Title
     ncel=nx*ny
-    allocate(idcg(ncel),lon(ncel),lat(ncel),pop(ncel))
-    allocate(utmx(ncel),utmy(ncel),utmz(ncel))
+    allocate(idcg(ncel))
     allocate(xlon(nx,ny),xlat(nx,ny),pob(nx,ny))
     allocate(utmxd(nx,ny),utmyd(nx,ny),utmzd(nx,ny))
-    do k=1,ncel
-        read(10,*) idcg(k),lon(k),lat(k),i,pop(k),utmx(k),utmy(k),utmz(k)
+    do j=1,ny
+     do i=1,nx
+      k=i+(j-1)*nx
+      read(10,*) idcg(k),xlon(i,j),xlat(i,j),idum,pob(i,j),utmxd(i,j),utmyd(i,j),utmzd(i,j)
+     end do
     end do
-    !
-    xlon =RESHAPE(lon ,(/nx,ny/))
-    xlat =RESHAPE(lat ,(/nx,ny/))
-    pob  =RESHAPE(pop ,(/nx,ny/))
-    utmxd=RESHAPE(utmx,(/nx,ny/))
-    utmyd=RESHAPE(utmy,(/nx,ny/))
-    utmzd=RESHAPE(utmz,(/nx,ny/))
-!
-    CDIM=(utmx(2)-utmx(1))/1000.  ! from meters to km
+    CDIM=(utmxd(2,1)-utmxd(1,1))/1000.  ! from meters to km
     write(6,'(F8.2,A30)') CDIM,trim(titulo)
-    SUPF1=1/(CDIM*CDIM)
+    SUPF1=1./(CDIM*CDIM)
     close(10)
-    deallocate(lon,lat,pop,utmx,utmy,utmz)
 end subroutine lee_localiza
 !  _                             _
 ! | | ___  ___     ___ _ __ ___ (_)___

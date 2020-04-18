@@ -33,7 +33,7 @@ module vars
     integer :: nx,ny ! grid dimensions
     integer :: ncty  ! number of point stations
     integer*8 :: idcf  ! ID cell in file
-    integer :: zlev       ! Layer of emission (1 to 8) 8 lower 1 upper
+    integer :: zlev=8  ! Layer of emission (1 to 8) 8 lower 1 upper
     integer,allocatable :: idcg(:) ! ID cell in grid
     integer,allocatable:: utmz(:),utmzd(:,:)  !utmz
     integer,allocatable :: isp(:) ! storage
@@ -98,29 +98,20 @@ subroutine lee
   read (10,*) cdum  !Header
   read (10,*) nx,ny,titulo  ! Dimensions and Title
   ncel=nx*ny
-  allocate(idcg(ncel),lon(ncel),lat(ncel),pop(ncel))
-  allocate(utmx(ncel),utmy(ncel),utmz(ncel))
+  allocate(idcg(ncel))!,lon(ncel),lat(ncel),pop(ncel))
+ ! allocate(utmx(ncel),utmy(ncel),utmz(ncel))
   allocate(xlon(nx,ny),xlat(nx,ny),pob(nx,ny))
   allocate(utmxd(nx,ny),utmyd(nx,ny),utmzd(nx,ny))
-  allocate(eft(nx,ny,nf,nh,8))
-  zlev=8
+  allocate(eft(nx,ny,nf,nh,zlev))
   eft=0
-  do k=1,ncel
-	read(10,*) idcg(k),lon(k),lat(k),i,pop(k),utmx(k),utmy(k),utmz(k)
-  end do
 !
-  do i=1,nx
     do j=1,ny
+    do i=1,nx
       k=i+(j-1)*nx
-        xlon(i,j)=lon(k)
-        xlat(i,j)=lat(k)
-        pob(i,j)=pop(k)
-        utmxd(i,j)=utmx(k)
-        utmyd(i,j)=utmy(k)
-        utmzd(i,j)=utmz(k)
+        read(10,*) idcg(k),xlon(i,j),xlat(i,j),ii,pob(i,j),utmxd(i,j),utmyd(i,j),utmzd(i,j)
     end do
   end do
-  CDIM=(utmx(2)-utmx(1))/1000.  ! from meters to km
+  CDIM=(utmxd(2,1)-utmxd(1,1))/1000.  ! from meters to km
   print *,CDIM,trim(titulo)
   close(10)
 
@@ -915,8 +906,8 @@ tiempo: do it=iit,eit
         call check( nf90_close(ncid) )
 	 end do !periodo
     deallocate(ea)
-    deallocate(idcg,lon,lat,pop,pob)
-    deallocate(utmx,utmy,utmz)
+    deallocate(idcg,pob)
+!    deallocate(utmx,utmy,utmz)
     deallocate(xlon,xlat)
     deallocate(utmxd,utmyd,utmzd)
     deallocate(eft)
