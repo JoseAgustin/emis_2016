@@ -92,9 +92,8 @@ implicit none
     NAMELIST /region_nml/ zona
     NAMELIST /fecha_nml/ idia,month,anio,periodo
     NAMELIST /chem_nml/ mecha
-    integer unit_nml
+    integer:: unit_nml=9
     logical existe
-    unit_nml = 9
     existe = .FALSE.
     write(6,*)' >>>> Reading file - ../namelist_emis.nml'
     inquire ( FILE = '../namelist_emis.nml' , EXIST = existe )
@@ -127,9 +126,8 @@ subroutine lee_namelist_mecha(mecanismo)
     character(len=7),intent(in) :: mecanismo
     character(len=15) ::cfile
     NAMELIST /SCALE/ scala,scalm,scalp
-    integer unit_nml
-    logical existe
-    unit_nml = 9
+    integer:: unit_nml=9
+    logical:: existe
     existe = .FALSE.
     cfile='namelist.'//trim(mecanismo)
     write(6,*)' >>>> Reading file - ',cfile
@@ -572,7 +570,7 @@ subroutine setup_mecha
         call lee_namelist_mecha('saprc  ')
     case default
         print *,"   **************************"
-        print *,"Mechanism :",mecha," does not exists!!"
+        print *," Mechanism :",mecha," does not exists!!"
         print *,"   **************************"
         stop  "End program, review namelist_emiss.nml"
     end select
@@ -619,12 +617,7 @@ print *,"Inicializa archivo de salida ",FILE_NAME(1:40)
     call check( nf90_create(path =FILE_NAME,cmode = NF90_CLOBBER, ncid = ncid) )
 !   all check( nf90_create(path =FILE_NAME,cmode = NF90_NETCDF4,ncid = ncid) )
 !     Define dimensiones
-    dim(1)=1
-    dim(2)=19
-    dim(3)=nx
-    dim(4)=ny
-    dim(5)=1!mkx
-    dim(6)= zlev! !8
+    dim=(/1,19,nx,ny,1,zlev/)
     !print *, "    Dimensions definition ****"
     call check( nf90_def_dim(ncid,sdim(1), NF90_UNLIMITED, id_dim(1)) )
 
@@ -685,7 +678,7 @@ print *,"Inicializa archivo de salida ",FILE_NAME(1:40)
     ! Assign  attributes
     call check( nf90_put_att(ncid, id_varpop, "FieldType", 104 ) )
     call check( nf90_put_att(ncid, id_varpop, "MemoryOrder", "XYZ") )
-    call check(nf90_put_att(ncid,id_varpop,"description","Population in each grid"))
+    call check( nf90_put_att(ncid, id_varpop,"description","Population in each grid"))
     call check( nf90_put_att(ncid, id_varpop, "units", "number"))
     ! Para Mercator
     call check( nf90_def_var(ncid, "UTMx", NF90_REAL,(/id_dim(3),id_dim(4)/),id_utmx ) )
@@ -739,20 +732,19 @@ subroutine guarda_variables
     allocate(eft(nx,ny,zlev,nh))
     if(periodo.eq.2) allocate(efs(nx,ny,zlev,nh/2))
     eft=0
-
-        do i=1,nf
-            if(i.eq.icn .or. i.eq.imt) cycle
-            if(i.eq.jcn ) then
-                call lee_emis(ii=i,borra=.true.)
-                call lee_emis(ii=icn,borra=.false.)
-            else if(i.eq.jmt) then
-                call lee_emis(ii=i,borra=.true.)
-                call lee_emis(ii=imt,borra=.false.)
-            else
-                call lee_emis(ii=i,borra=.true.)
-            end if
-            call escribe_var(ikk=i)
-        end do
+    do i=1,nf
+        if(i.eq.icn .or. i.eq.imt) cycle
+        if(i.eq.jcn ) then
+            call lee_emis(ii=  i,borra=.true.)
+            call lee_emis(ii=icn,borra=.false.)
+        else if(i.eq.jmt) then
+            call lee_emis(ii=  i,borra=.true.)
+            call lee_emis(ii=imt,borra=.false.)
+        else
+            call lee_emis(ii=  i,borra=.true.)
+        end if
+        call escribe_var(ikk=i)
+    end do
 end subroutine guarda_variables
 !
 !    _       _ _
@@ -811,8 +803,8 @@ end function
 subroutine check(status)
     integer, intent ( in) :: status
     if(status /= nf90_noerr) then
-    print *, trim(nf90_strerror(status))
-    stop 2
+        print *, trim(nf90_strerror(status))
+        stop 2
     end if
 end subroutine check
 !                              _   _
@@ -913,16 +905,16 @@ subroutine lee_emis(ii,borra)
         end if
         k=0
         busca: do j=1,ny
-            do i=1,nx
-                k=k+1
-                if(idcg(k).eq.idcf) then
-                    do ih=1,nh
-                        eft(i,j,1,ih)=eft(i,j,1,ih)+edum(ih)*constant
-                        ! Emission from g to gmol by 1/WTM 1/(CDIM*CDIM)
-                    end do
-                    exit busca
-                end if
-            end do
+        do i=1,nx
+            k=k+1
+            if(idcg(k).eq.idcf) then
+                do ih=1,nh
+                    eft(i,j,1,ih)=eft(i,j,1,ih)+edum(ih)*constant
+                    ! Emission from g to gmol by 1/WTM 1/(CDIM*CDIM)
+                end do
+                exit busca
+            end if
+        end do
         end do busca
     end do
 100 close(11)
