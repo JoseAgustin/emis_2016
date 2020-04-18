@@ -868,17 +868,13 @@ subroutine lee_localiza
         read(10,*) idcg(k),lon(k),lat(k),i,pop(k),utmx(k),utmy(k),utmz(k)
     end do
     !
-    do i=1,nx
-        do j=1,ny
-            k=i+(j-1)*nx
-            xlon(i,j)=lon(k)
-            xlat(i,j)=lat(k)
-            pob(i,j)=pop(k)
-            utmxd(i,j)=utmx(k)
-            utmyd(i,j)=utmy(k)
-            utmzd(i,j)=utmz(k)
-        end do
-    end do
+    xlon =RESHAPE(lon ,(/nx,ny/))
+    xlat =RESHAPE(lat ,(/nx,ny/))
+    pob  =RESHAPE(pop ,(/nx,ny/))
+    utmxd=RESHAPE(utmx,(/nx,ny/))
+    utmyd=RESHAPE(utmy,(/nx,ny/))
+    utmzd=RESHAPE(utmz,(/nx,ny/))
+!
     CDIM=(utmx(2)-utmx(1))/1000.  ! from meters to km
     write(6,'(F8.2,A30)') CDIM,trim(titulo)
     SUPF1=1/(CDIM*CDIM)
@@ -1135,14 +1131,19 @@ subroutine termina
     deallocate(idcg)
     deallocate(xlon,xlat,pob)
     deallocate(utmxd,utmyd,utmzd)
-
+    if(allocated(isp)) deallocate(efs)
     write(6,122)
 
 122 format("*******************",/,"***   Termina   ***",/,&
           &"*******************")
 
 end subroutine termina
-
+!                  _
+!   ___ ___  _ __ (_) __ _
+!  / __/ _ \| '_ \| |/ _` |
+! | (_| (_) | |_) | | (_| |
+!  \___\___/| .__/|_|\__,_|
+!           |_|
 subroutine copia
 IMPLICIT NONE
 integer i,j,k,l,ll
