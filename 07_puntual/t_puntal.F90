@@ -400,6 +400,8 @@ subroutine guarda
     deallocate(emis)
     deallocate(profile)
     deallocate(ict,jct)
+    deallocate(idcg,mcst)
+
 #ifndef PGI
 210 format(I8,',',I3,',',23(ES,","),ES,",",I3)
 220 format(f10.6,',',f10.4,',',I3,',',23(ES,","),ES)

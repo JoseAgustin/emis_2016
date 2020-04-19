@@ -34,7 +34,7 @@ RM_LIST =       *.mod *.o core .tmpfile *.exe A*_2014.csv
 INTEL_LIB =     /opt/intel/lib
 
 # Ejecuta
-default:
+intel:
 	uname -a > .tmpfile
 	grep Linux .tmpfile ; \
 	if [ $$? = 0 ]; then echo "Compiling for Linux" ;               \
@@ -53,16 +53,17 @@ default:
 	( $(MAKE) all                          \
 	"RM             = $(RM)"        "RM_LIST        = $(RM_LIST)"   \
 	"LN             = $(LN)"        "MACH           = DEC"          \
-	"MAKE           = $(MAKE)"      "CPP            = fpp"  \
+	"MAKE           = $(MAKE)"      "CPP            = ifort"  \
 	"CPPFLAGS       = -I. -C "      \
-	"FC             = ifort"        "FCFLAGS        = -fast -axAVX  -align commons" \
-	"LDOPTIONS      = -fast -axAVX  -align commons " \
+	"FC             = ifort"        "FCFLAGS        = -fast -axAVX2  -align commons -FR" \
+	"LDOPTIONS      = -fast -axAVX2  -align commons " \
 	"CFLAGS         = -I."          \
 	"LOCAL_LIBRARIES=  " ) ; \
 	else echo "Do not know how to compile for the `cat .tmpfile` machine." \
 	fi ; \
 	fi ; \
 	fi ; \
+	$(RM) .tmpfile
 
 pgi:
 	uname -a >  .tmpfile
@@ -93,6 +94,7 @@ pgi:
 	fi ; \
 	fi ; \
 	fi ; \
+	$(RM) .tmpfile
 
 all :	ASpatial.exe
 
@@ -100,8 +102,8 @@ ASpatial.exe: $(objects)
 	$(FC) -o $@ $(objects) $(LDOPTIONS) 
 
 area_espacial.o: area_espacial.F90
-	$(CPP) $<  $(CPPFLAGS) -D$(MACH) > $*.f90
-	$(FC) -c $*.f90 $(FCFLAGS)
+#	$(CPP) $<  $(CPPFLAGS) -D$(MACH) > $*.f
+	$(FC) -c $*.F90 $(FCFLAGS) -D$(MACH)
  
 clean:
 		$(RM) $(RM_LIST)

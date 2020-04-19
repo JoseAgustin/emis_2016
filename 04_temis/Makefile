@@ -1,12 +1,7 @@
 #  
 #	Lower level Makefile for 04_temis
 #
-#       Suffix rules and commands
-#######################
-FIX01 =
-#######################
-
-
+#
 objects = atemporal.o
 
 AR      =       ar ru
@@ -47,20 +42,21 @@ pgi:
 	fi ; \
 	fi ; \
  	fi ; \
+	$(RM) .tmpfile
 
-default:
+intel:
 	uname -a > .tmpfile
 	grep Linux .tmpfile ; \
 	if [ $$? = 0 ]; then echo "Compiling for Linux" ;               \
 	( $(MAKE) all							\
-        "RM             = $(RM)"        "RM_LIST        = $(RM_LIST)"   \
-        "LN             = $(LN)"        "MACH           = DEC"          \
-        "MAKE           = $(MAKE)"      "CPP            = fpp"  \
-        "CPPFLAGS       = -I. -C "      \
-        "FC             = ifort"        "FCFLAGS        = -O3 -axAVX  -align commons" \
-        "LDOPTIONS      = -O3 -axAVX  -align commons " \
-        "CFLAGS         = -I."          \
-        "LOCAL_LIBRARIES=  " ) ; \
+    "RM             = $(RM)"        "RM_LIST        = $(RM_LIST)"   \
+    "LN             = $(LN)"        "MACH           = DEC"          \
+    "MAKE           = $(MAKE)"      "CPP            = fpp"  \
+    "CPPFLAGS       = -I. -C "      \
+    "FC             = ifort"        "FCFLAGS        = -O3 -axAVX  -align commons" \
+    "LDOPTIONS      = -O3 -axAVX  -align commons " \
+    "CFLAGS         = -I."          \
+    "LOCAL_LIBRARIES=  " ) ; \
 	else \
 	grep Darwin .tmpfile ; \
 	if [ $$? = 0 ]; then echo "Compiling for Darwin" ;              \
@@ -69,21 +65,22 @@ default:
 	"LN             = $(LN)"        "MACH           = DEC"          \
 	"MAKE           = $(MAKE)"      "CPP            = fpp"  \
 	"CPPFLAGS       = -I. -C "      \
-	"FC             = ifort"        "FCFLAGS        = -fast -axAVX  -align commons" \
-	"LDOPTIONS      = -fast -axAVX  -align commons " \
+	"FC             = ifort"        "FCFLAGS        = -fast -axAVX2  -align commons" \
+	"LDOPTIONS      = -fast -axAVX2  -align commons " \
 	"CFLAGS         = -I."          \
 	"LOCAL_LIBRARIES=  " ) ; \
 	else echo "Do not know how to compile for the `cat .tmpfile` machine." \
 	fi ; \
 	fi ; \
 	fi ; \
+	$(RM) .tmpfile
 
 all :	Atemporal.exe
 
 Atemporal.exe: $(objects)
 	$(FC) -o $@ $(objects) $(LDOPTIONS)
 
-atemporal.o: atemporal.f90
+atemporal.o: atemporal.F90
 	$(FC) -c $< $(FCFLAGS)
  
 clean:

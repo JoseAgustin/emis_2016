@@ -15,19 +15,19 @@ RM	=	/bin/rm -f
 LN	=	ln -s
 MAKE	=	make -i -f Makefile
 # Ejecuta
-default:
+intel:
 	uname -a > .tmpfile
 	grep Linux .tmpfile ; \
 	if [ $$? = 0 ]; then echo "Compiling for Linux" ;               \
 	( $(MAKE) all                               \
 	"RM             = $(RM)"        "RM_LIST        = $(RM_LIST)"   \
-        "LN             = $(LN)"        "MACH           = DEC"          \
-        "MAKE           = $(MAKE)"      "CPP            = fpp"  \
-        "CPPFLAGS       = -I. -C "      \
-        "FC             = ifort"        "FCFLAGS        = -O3 -axAVX  -align commons" \
-        "LDOPTIONS      = -O3 -axAVX  -align commons " \
-        "CFLAGS         = -I."          \
-        "LOCAL_LIBRARIES=  " ) ; \
+    "LN             = $(LN)"        "MACH           = DEC"          \
+    "MAKE           = $(MAKE)"      "CPP            = fpp"  \
+    "CPPFLAGS       = -I. -C "      \
+    "FC             = ifort"        "FCFLAGS        = -O3 -axAVX  -align commons" \
+    "LDOPTIONS      = -O3 -axAVX  -align commons " \
+    "CFLAGS         = -I."          \
+    "LOCAL_LIBRARIES=  " ) ; \
 	else \
 	grep Darwin .tmpfile ; \
 	if [ $$? = 0 ]; then echo "Compiling for Darwin" ;              \
@@ -36,14 +36,15 @@ default:
 	"LN             = $(LN)"        "MACH           = DEC"          \
 	"MAKE           = $(MAKE)"      "CPP            = fpp"  \
 	"CPPFLAGS       = -I. -C "      \
-	"FC             = ifort"        "FCFLAGS        = -fast -axAVX  -align commons" \
-	"LDOPTIONS      = -fast -axAVX  -align commons " \
+	"FC             = ifort"        "FCFLAGS        = -fast -axAVX2  -align commons" \
+	"LDOPTIONS      = -fast -axAVX2  -align commons " \
 	"CFLAGS         = -I."          \
 	"LOCAL_LIBRARIES=  " ) ; \
 	else echo "Do not know how to compile for the `cat .tmpfile` machine." \
 	fi ; \
 	fi ; \
 	fi ; \
+	$(RM) .tmpfile
 
 pgi:
 	uname -a >  .tmpfile
@@ -74,6 +75,7 @@ pgi:
 	fi ; \
 	fi ; \
 	fi ; \
+	$(RM) .tmpfile
 
 # Ejecuta
 

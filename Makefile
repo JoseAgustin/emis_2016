@@ -3,9 +3,9 @@
 #	Macros, these should be generic for all machines
 
 .IGNORE:
-MAKE    =       make -i -f Makefile
-LN      =    ln -s
-CD      =       cd
+MAKE    =   make -i -f Makefile
+LN      =   ln -s
+CD      =   cd
 RM	=	/bin/rm -f 
 RM_LIST =	*.log
 #	Targets for supported architectures

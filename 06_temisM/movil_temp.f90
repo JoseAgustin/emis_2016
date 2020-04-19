@@ -476,6 +476,11 @@ subroutine storage
      end do
    end do
 	close(10)
+    deallocate(idcel,idcel2,mst)
+    deallocate(emiM)
+    deallocate(emis)
+    deallocate(evoc)
+    deallocate(epm2)
     print*,"*****  DONE MOBILE TEMPORAL *****"
 110 format(I7,",",A10,",",23(ES12.4,","),ES12.4)
 end subroutine storage

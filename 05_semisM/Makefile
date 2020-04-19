@@ -1,11 +1,6 @@
 #  
 #	Lower level Makefile for 05_semisM
 #
-#       Suffix rules and commands
-#######################
-FIX01 =
-#######################
-
 
 objects = movil_spatial.o
 
@@ -18,7 +13,7 @@ RM_LIST =       *.mod *.o core .tmpfile *.exe M_*.csv salida.csv
 INTEL_LIB =     /opt/intel/lib
 
 # Ejecuta
-default:
+intel:
 	uname -a > .tmpfile
 	grep Linux .tmpfile ; \
 	if [ $$? = 0 ]; then echo "Compiling for Linux" ;               \
@@ -26,8 +21,8 @@ default:
 	"RM             = $(RM)"        "RM_LIST        = $(RM_LIST)"   \
  	"LN             = $(LN)"        "MACH           = DEC"          \
 	"CPPFLAGS       = -I. -C "      \
-        "FC             = ifort"        "FCFLAGS        = -O2 -axAVX  -align commons" \
-	"LDOPTIONS      = -O2 -axAVX  -align commons " \
+        "FC             = ifort"        "FCFLAGS        = -O2 -axAVX2  -align commons" \
+	"LDOPTIONS      = -O2 -axAVX2  -align commons " \
         "CFLAGS         = -I."          \
         "LOCAL_LIBRARIES=  " ) ; \
 	else \
@@ -38,14 +33,15 @@ default:
 	"LN             = $(LN)"        "MACH           = DEC"          \
 	"MAKE           = $(MAKE)"      "CPP            = fpp"  \
 	"CPPFLAGS       = -I. -C "      \
-	"FC             = ifort"        "FCFLAGS        = -fast -axAVX  -align commons" \
-	"LDOPTIONS      = -fast -axAVX  -align commons " \
+	"FC             = ifort"        "FCFLAGS        = -fast -axAVX2  -align commons" \
+	"LDOPTIONS      = -fast -axAVX2  -align commons " \
 	"CFLAGS         = -I."          \
 	"LOCAL_LIBRARIES=  " ) ; \
 	else echo "Do not know how to compile for the `cat .tmpfile` machine." \
 	fi ; \
 	fi ; \
 	fi ; \
+	$(RM) .tmpfile
 
 pgi:
 	uname -a >  .tmpfile
@@ -76,6 +72,7 @@ pgi:
 	fi ; \
 	fi ; \
 	fi ; \
+	$(RM) .tmpfile
 
 all :	MSpatial.exe
 

@@ -1,23 +1,16 @@
 #  
 #	Lower level Makefile for 10_storage
 #
-#       Suffix rules and commands
-#######################
-FIX01 =
-#######################
-
-
-objec  = g_radm_2016.o
-objec1 = g_emiss.o
-objec2 = g_2016_racm.o
-objec3 = g_saprc_2016.o
-objec4 = g_cbm5_2016.o
+#
+#
+objec  = g_saprc_chimere.o
+objec1 = g_emis2.o
 
 RM_LIST = *.mod *.o core .tmpfile *.exe wrfchemi.*
 RM	=	/bin/rm -f 
 
 # Ejecuta
-default:
+intel:
 	uname -a > .tmpfile
 	grep Linux .tmpfile ; \
 	if [ $$? = 0 ]; then echo "Compiling for Linux" ;               \
@@ -27,8 +20,8 @@ default:
 	"MAKE           = $(MAKE)"      "CPP            = /lib/cpp"     \
 	"CPPFLAGS       = -I. -C -traditional"  \
 	"FC             = ifort"   "CFLAGS         = -I."       \
-	"LDOPTIONS      = -O2 -axAVX  -align commons  -lnetcdff -L$(NETCDF)/lib "          \
-	"FCFLAGS        = -O2 -axAVX  -align commons -I$(NETCDF)/include " \
+	"LDOPTIONS      = -O2 -axAVX2  -align commons  -lnetcdff -L$(NETCDF)/lib "          \
+	"FCFLAGS        = -O2 -axAVX2  -align commons -I$(NETCDF)/include " \
 	"LOCAL_LIBRARIES= " ) ; \
 	else \
 	grep Darwin .tmpfile ; \
@@ -39,13 +32,14 @@ default:
 	"MAKE           = $(MAKE)"      "CPP            = fpp"  \
 	"CPPFLAGS       = -I. -C "      \
 	"FC             = ifort"        "CFLAGS         = -I." \
-	"LDOPTIONS      = -fast -axAVX  -align commons  -lnetcdff -L$(NETCDF)/lib  " \
-	"FCFLAGS        = -fast -axAVX  -align commons -I$(NETCDF)/include"          \
+	"LDOPTIONS      = -fast -axAVX2  -align commons  -lnetcdff -L$(NETCDF)/lib  " \
+	"FCFLAGS        = -fast -axAVX2  -align commons -I$(NETCDF)/include"          \
 	"LOCAL_LIBRARIES=  " ) ; \
 	else echo "Do not know how to compile for the `cat .tmpfile` machine." \
 	fi ; \
 	fi ; \
 	fi ; \
+	$(RM) .tmpfile
 
 pgi:
 	uname -a >  .tmpfile
@@ -76,38 +70,55 @@ pgi:
 	fi ; \
 	fi ; \
 	fi ; \
+	$(RM) .tmpfile
+	
+gnu:	
+	uname -a >  .tmpfile
+	grep Linux .tmpfile ; \
+	if [ $$? = 0 ]; then echo "Compiling for Linux GNU" ;               \
+	( $(MAKE) all                          \
+    "RM             = $(RM)"        "RM_LIST        = $(RM_LIST)"   \
+    "LN             = $(LN)"        "MACH           = PGI"          \
+    "MAKE           = $(MAKE)"      "CPP            = fpp"  \
+    "CPPFLAGS       = -I.  "      \
+    "FC             = gfortran"        "FCFLAGS        = -O3 " \
+    "LDOPTIONS      = -O3 -lnetcdff -L$(NETCDF)/lib" \
+    "FCFLAGS        = -O3 -I$(NETCDF)/include"          \
+    "LOCAL_LIBRARIES=  " ) ; \
+    else \
+    grep Darwin .tmpfile ; \
+    if [ $$? = 0 ]; then echo "Compiling for Darwin GNU" ;              \
+    ( $(MAKE) all                          \
+    "RM             = $(RM)"        "RM_LIST        = $(RM_LIST)"   \
+    "LN             = $(LN)"        "MACH           = PGI"          \
+    "MAKE           = $(MAKE)"      "CPP            = fpp"  \
+    "CPPFLAGS       =  "      \
+    "FC             = gfortran"        "FCFLAGS        = -O3 " \
+    "LDOPTIONS      = -O3 -lnetcdff -L$(NETCDF)/lib" \
+    "FCFLAGS        = -O3 -I$(NETCDF)/include"          \
+    "LOCAL_LIBRARIES=  " ) ; \
+    else echo "Do not know how to compile for the `cat .tmpfile` machine." \
+    fi ; \
+    fi ; \
+    fi ; \
+	$(RM) .tmpfile
 
 # Ejecuta
-all :	radm2.exe racm2.exe saprc.exe cbm5.exe
+all :	emiss.exe
 
-radm2.exe: $(objec)
-	$(FC) -o $@ $(objec) $(LDOPTIONS)
-
-g_radm_2016.o: g_radm_2016.f90
-	$(FC) -c $< $(FCFLAGS)
-
-emis.exe: $(objec1)
+emiss.exe: $(objec1)
 	$(FC) -o $@ $(objec1) $(LDOPTIONS)
 
-g_emiss.o: g_emiss.F90
+g_emis2.o: g_emis2.F90
 	$(FC) -c $< $(FCFLAGS) 
-racm2.exe: $(objec2)
-	$(FC) -o $@ $(objec2) $(LDOPTIONS)
 
-g_2016_racm.o: g_2016_racm.f90
-	$(FC) -c $< $(FCFLAGS)
-
-saprc.exe: $(objec3)
+saprc.exe: $(objec)
 	$(FC) -o $@ $(objec3) $(LDOPTIONS)
 
-g_saprc_2016.o: g_saprc_2016.f90
+g_saprc_chimere.o: g_saprc_chimere.f90
 	$(FC) -c $< $(FCFLAGS)
 
-cbm5.exe: $(objec4)
-	$(FC) -o $@ $(objec4) $(LDOPTIONS)
 
-g_cbm5_2016.o: g_cbm5_2016.f90
-	$(FC) -c $< $(FCFLAGS)
 
 clean:
 		$(RM) $(RM_LIST)

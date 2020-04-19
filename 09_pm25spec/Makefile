@@ -1,11 +1,7 @@
 #  
 #	Lower level Makefile for 09_pm25spec
 #
-#       Suffix rules and commands
-#######################
-FIX01 =
-#######################
-
+#
 
 objec1 = pm25_speci_a.o
 objec2 = pm25_speci_m.o
@@ -13,7 +9,7 @@ objec3 = pm25_speci_p.o
 RM_LIST = *.mod *.o core .tmpfile *.exe G*txt O*.txt P*txt
 RM	=	/bin/rm -f 
 # Ejecuta
-default:
+intel:
 	uname -a > .tmpfile
 	grep Linux .tmpfile ; \
 	if [ $$? = 0 ]; then echo "Compiling for Linux" ;               \
@@ -22,8 +18,8 @@ default:
 	"LN             = $(LN)"        "MACH           = DEC"          \
 	"MAKE           = $(MAKE)"      "CPP            = /lib/cpp"     \
 	"CPPFLAGS       = -I. -C -traditional"  \
-	"FC             = ifort"        "FCFLAGS        = -axAVX  -align commons -O2 " \
-	"LDOPTIONS      = -axAVX  -align commons -O2"  "CFLAGS         = -I."          \
+	"FC             = ifort"        "FCFLAGS        = -axAVX2  -align commons -O2 " \
+	"LDOPTIONS      = -axAVX2  -align commons -O2"  "CFLAGS         = -I."          \
 	"LOCAL_LIBRARIES= " ) ; \
 	else \
 	grep Darwin .tmpfile ; \
@@ -33,14 +29,15 @@ default:
 	"LN             = $(LN)"        "MACH           = DEC"          \
 	"MAKE           = $(MAKE)"      "CPP            = fpp"  \
 	"CPPFLAGS       = -I. -C "      \
-	"FC             = ifort"        "FCFLAGS        = -fast -axAVX  -align commons" \
-	"LDOPTIONS      = -fast -axAVX  -align commons " \
+	"FC             = ifort"        "FCFLAGS        = -fast -axAVX2  -align commons" \
+	"LDOPTIONS      = -fast -axAVX2  -align commons " \
 	"CFLAGS         = -I."          \
 	"LOCAL_LIBRARIES=  " ) ; \
 	else echo "Do not know how to compile for the `cat .tmpfile` machine." \
 	fi ; \
 	fi ; \
 	fi ; \
+    $(RM) .tmpfile
 
 pgi:
 	uname -a >  .tmpfile
@@ -71,6 +68,7 @@ pgi:
 	fi ; \
 	fi ; \
 	fi ; \
+    $(RM) .tmpfile
 
 # Ejecuta
 

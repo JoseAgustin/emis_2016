@@ -204,7 +204,7 @@ wait
 echo ' Guarda'
 
 cd ../10_storage
-./emis2.exe  > ../${MECHA}.log
+./emiss.exe  > ../${MECHA}.log
  let dia=dia+1
 done
 mv wrfchemi?d01* ../inventario/$dominio/

@@ -1,11 +1,7 @@
 #  
 #	Lower level Makefile for 06_temisM
 #
-#       Suffix rules and commands
 #######################
-FIX01 =
-#######################
-
 
 objects = movil_temp.o
 
@@ -46,6 +42,7 @@ default:
 	fi ; \
 	fi ; \
 	fi ; \
+	$(RM) .tmpfile
 
 pgi:
 	uname -a >  .tmpfile
@@ -76,6 +73,7 @@ pgi:
 	fi ; \
 	fi ; \
 	fi ; \
+	$(RM) .tmpfile
 
 all :	Mtemporal.exe
 
