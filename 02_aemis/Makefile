@@ -34,6 +34,14 @@ RM_LIST =       *.mod *.o core .tmpfile *.exe A*_2014.csv
 INTEL_LIB =     /opt/intel/lib
 
 # Ejecuta
+default:
+	@echo " "
+	@echo "Type one of the following:"
+	@echo "make intel              for compiling with ifort"
+	@echo "make pgi                for PGI fortran"
+	@echo "make clean              to remove all .o files, the core file and the executable"
+	@echo " "
+
 intel:
 	uname -a > .tmpfile
 	grep Linux .tmpfile ; \
