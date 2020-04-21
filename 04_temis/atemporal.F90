@@ -190,6 +190,7 @@ subroutine lee
 		    profile(1,i,k)=imon
 		    profile(2,i,k)=iwk
 		    profile(3,i,k)=ipdy
+            exit
 		   end if
 		end do
 	  end do
@@ -213,6 +214,7 @@ subroutine lee
 	    do i=1,nscc(k)
 	      if(jscc.eq.profile(1,i,k)) then
 	        mes(i,k)=real(itfrc(month))/real(itfrc(13))
+            exit
 	      end if
 		end do !i
 	 end do
