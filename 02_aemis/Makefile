@@ -114,7 +114,9 @@ area_espacial.o: area_espacial.F90
 	$(FC) -c $*.F90 $(FCFLAGS) -D$(MACH)
  
 clean:
-		$(RM) $(RM_LIST)
+		-$(RM) $(RM_LIST)
+
+.PHONY:	clean
 
 #
 #

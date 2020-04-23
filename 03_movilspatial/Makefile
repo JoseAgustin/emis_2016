@@ -101,4 +101,6 @@ agrega.o: agrega.f90
 
 
 clean:
-		$(RM) $(RM_LIST)
+		-$(RM) $(RM_LIST)
+
+.PHONY:	clean
