@@ -84,4 +84,6 @@ atemporal.o: atemporal.F90
 	$(FC) -c $< $(FCFLAGS)
  
 clean:
-		$(RM) $(RM_LIST)
+		-$(RM) $(RM_LIST)
+
+.PHONY:	clean

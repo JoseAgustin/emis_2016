@@ -121,4 +121,6 @@ g_saprc_chimere.o: g_saprc_chimere.f90
 
 
 clean:
-		$(RM) $(RM_LIST)
+	-$(RM) $(RM_LIST)
+
+.PHONY:	clean

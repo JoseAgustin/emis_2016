@@ -92,4 +92,6 @@ agg_p.o: agg_p.f90
 	$(FC) -c $< $(FCFLAGS)
 
 clean:
-		$(RM) $(RM_LIST)
+		-$(RM) $(RM_LIST)
+
+.PHONY:	clean

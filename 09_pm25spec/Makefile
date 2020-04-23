@@ -94,4 +94,7 @@ pm25_speci_p.o: pm25_speci_p.F90
 
 
 clean:
-		$(RM) $(RM_LIST)
+		-$(RM) $(RM_LIST)
+
+.PHONY:	clean
+

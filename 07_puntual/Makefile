@@ -83,4 +83,6 @@ t_puntal.o: t_puntal.F90
 	$(FC) -c $< $(FCFLAGS) -D$(MACH)
  
 clean:
-		$(RM) $(RM_LIST)
+		-$(RM) $(RM_LIST)
+
+.PHONY:	clean
