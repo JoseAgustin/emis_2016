@@ -11,7 +11,7 @@
 !				to do speciation anad aggregation to the different
 !               species and Classes for an specific mechanism
 !
-!  compile: ifort -O2 -axAVX agg_m.f90 -o spm.exe
+!  compile: ifort -O2 -axAVX2 agg_m.f90 -o spm.exe
 !
 !   9/04/2020      namelist general
 !
@@ -223,18 +223,21 @@ subroutine count
   nn=size(profile)
   allocate(xl(nn))
   xl=.true.
-  do i=1,60!nn-1
-    do j=i+1,61!nn
-      if(profile(j).eq.profile(i).and.xl(j)) 	xl(j)=.false.
+  do i=1,nn-1
+    do j=i+1,nn
+      if(profile(j).eq.profile(i).and.xl(j)) then
+        xl(j)=.false.
+        exit
+      end if
     end do
   end do
   j=0
-  do i=1,61!nn
+  do i=1,nn
     if(xl(i)) j=j+1
   end do
   allocate(prof2(j),isp(j))
   j=0
-  do i=1,61!nn
+  do i=1,nn
     if(xl(i)) then
       j=j+1
       prof2(j)=profile(i)

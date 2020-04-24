@@ -371,7 +371,12 @@ subroutine lee
 	close(18)
     close(19)
 end subroutine lee
-!
+!                                  _
+!   ___ ___  _ __ ___  _ __  _   _| |_ ___
+!  / __/ _ \| '_ ` _ \| '_ \| | | | __/ _ \
+! | (_| (_) | | | | | | |_) | |_| | ||  __/
+!  \___\___/|_| |_| |_| .__/ \__,_|\__\___|
+!                     |_|
 subroutine compute
 	implicit none
 	integer i,j,k,l,ival,ii
@@ -421,61 +426,70 @@ subroutine compute
 		  end do
 	  end do
 	end subroutine compute
-!
+!      _
+!  ___| |_ ___  _ __ __ _  __ _  ___
+! / __| __/ _ \| '__/ _` |/ _` |/ _ \
+! \__ \ || (_) | | | (_| | (_| |  __/
+! |___/\__\___/|_|  \__,_|\__, |\___|
+!                         |___/
 subroutine storage
   implicit none
-  integer i,j,k,l
+  integer i,j,k,l,iun
   real suma
   character(len=3):: cdia(7)
   data cdia/'MON','TUE','WND','THR','FRD','SAT','SUN'/
-
+!$omp parallel sections num_threads (3) private(iun,i,l)
+!$omp section
   do k=1,nf-2
    print *,'Storing: ',casn(k),' ',efile(k)
-   open(unit=10,file=casn(k),action='write')
-   write(10,*)casn(k),',ID, Hr to Hr24,g/h'
-   write(10,'(I8,4A)')size(emis,dim=1),",",current_date,', ',cdia(daytype)
+   open(newunit=iun,file=casn(k),action='write')
+   write(iun,*)casn(k),',ID, Hr to Hr24,g/h'
+   write(iun,'(I8,4A)')size(emis,dim=1),",",current_date,', ',cdia(daytype)
    do i=1,size(emis,dim=1)
      suma=0
      do l=1,nh
      suma=suma+emis(i,k,l)
      end do
-     if(suma.gt.0) write(10,100)idcel2(i),(emis(i,k,l),l=1,nh)
+     if(suma.gt.0) write(iun,100)idcel2(i),(emis(i,k,l),l=1,nh)
    end do
-   close(unit=10)
+   close(unit=iun)
   end do
 100 format(I7,",",23(ES12.4,","),ES12.4)
+!$omp section
    k=nf-1
 ! WARNING iscc voc must be the last one to be read.
     print *,casn(k),efile(k)
-   open(unit=10,file=casn(k),action='write')
-   write(10,*)casn(k),'ID, SCC,  Hr to Hr24'
-   write(10,'(I8,4A)')size(epm2,dim=1)*nscc(k),', ',current_date,', ',cdia(daytype)
+   open(newunit=iun,file=casn(k),action='write')
+   write(iun,*)casn(k),'ID, SCC,  Hr to Hr24'
+   write(iun,'(I8,4A)')size(epm2,dim=1)*nscc(k),', ',current_date,', ',cdia(daytype)
    do i=1,size(epm2,dim=1)
      do j=1,nscc(k)
         suma=0
         do l=1,nh
           suma=suma+epm2(i,j,l)
         end do
-        if(suma.gt.0) write(10,110)idcel2(i),iscc(j),(epm2(i,j,l),l=1,nh)
+        if(suma.gt.0) write(iun,110)idcel2(i),iscc(j),(epm2(i,j,l),l=1,nh)
      end do
    end do
-	close(10)
+	close(iun)
+!$omp section
 ! WARNING iscc voc must be the last one to be read.
    k=nf
     print *,casn(k),efile(k)
-   open(unit=10,file=casn(k),action='write')
-   write(10,*)casn(k),'ID, SCC,  Hr to Hr24'
-   write(10,'(I8,4A)')size(evoc,dim=1)*nscc(k),', ',current_date,', ',cdia(daytype)
+   open(newunit=iun,file=casn(k),action='write')
+   write(iun,*)casn(k),'ID, SCC,  Hr to Hr24'
+   write(iun,'(I8,4A)')size(evoc,dim=1)*nscc(k),', ',current_date,', ',cdia(daytype)
    do i=1,size(evoc,dim=1)
      do j=1,nscc(k)
         suma=0
         do l=1,nh
         suma=suma+evoc(i,j,l)
         end do
-        if(suma.gt.0)write(10,110)idcel2(i),iscc(j),(evoc(i,j,l),l=1,nh)
+        if(suma.gt.0)write(iun,110)idcel2(i),iscc(j),(evoc(i,j,l),l=1,nh)
      end do
    end do
-	close(10)
+	close(iun)
+!$omp end parallel sections
     deallocate(idcel,idcel2,mst)
     deallocate(emiM)
     deallocate(emis)
@@ -484,6 +498,12 @@ subroutine storage
     print*,"*****  DONE MOBILE TEMPORAL *****"
 110 format(I7,",",A10,",",23(ES12.4,","),ES12.4)
 end subroutine storage
+!                        _
+!   ___ ___  _   _ _ __ | |_
+!  / __/ _ \| | | | '_ \| __|
+! | (_| (_) | |_| | | | | |_
+!  \___\___/ \__,_|_| |_|\__|
+!
 subroutine count
   integer i,j
   idcel2(1)=idcel(1)
@@ -544,6 +564,12 @@ integer function kverano(ida,mes)
     end if
 233 format("******  HORARIO de VERANO *******",/,3x,"Abril ",I2,x,"a Octubre ",I2)
 end function
+!  _                                          _ _     _
+! | | ___  ___     _ __   __ _ _ __ ___   ___| (_)___| |_
+! | |/ _ \/ _ \   | '_ \ / _` | '_ ` _ \ / _ \ | / __| __|
+! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_
+! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|
+!            |_____|
 subroutine lee_namelist
     implicit none
     NAMELIST /fecha_nml/ idia,month,anio,periodo
@@ -582,5 +608,4 @@ subroutine lee_namelist
     close(10)
 
 end subroutine lee_namelist
-
 end program atemporal

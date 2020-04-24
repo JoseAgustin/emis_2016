@@ -202,6 +202,7 @@ subroutine count
 	end do
   end do
   ii=0
+!dir$ loop count min(512)
   do i=1,nl
    if(xl(i)) then
    ii=ii+1

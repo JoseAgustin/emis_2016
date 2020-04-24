@@ -223,18 +223,21 @@ subroutine count
 	nn=size(profile)
 	allocate(xl(nn))
 	xl=.true.
-	do i=1,40!nn-1
-		do j=i+1,41!nn
-			if(profile(j).eq.profile(i).and.xl(j)) 	xl(j)=.false.
+	do i=1,nn-1
+		do j=i+1,nn
+			if(profile(j).eq.profile(i).and.xl(j))then
+                xl(j)=.false.
+                exit
+            end if
 		end do
 	end do
 	j=0
-	do i=1,41!nn
+	do i=1,nn
 		if(xl(i)) j=j+1
 	end do
 	allocate(prof2(j),isp(j))
 	j=0
-	do i=1,41!nn
+	do i=1,nn
 		if(xl(i)) then
 		j=j+1
 		prof2(j)=profile(i)
@@ -249,7 +252,10 @@ subroutine count
   xl=.true.
   do i=1,lfa-1
    do j=i+1,lfa
-   if(grid(j).eq.grid(i).and.xl(j)) xl(j)=.false.
+    if(grid(j).eq.grid(i).and.xl(j))then
+        xl(j)=.false.
+        exit
+    end if
    end do
   end do
   j=0

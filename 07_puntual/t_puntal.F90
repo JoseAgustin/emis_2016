@@ -6,7 +6,7 @@
 ! Proposito
 !          Distribución temporal de las emisiones de fuentes puntuales
 !
-! ifort -O3 -axAVX  t_puntal.F90 -o Puntual.exe
+! ifort -O2 -axAVX2 t_puntal.F90 -o Puntual.exe
 !
 !   modificado
 !   14/08/2012  nombre archivos de PM
@@ -159,7 +159,7 @@ implicit none
      call localization(xlat,xlon,nx,ny,lat,lon,ict,jct,nl)   ! Point Sources
     print *,'   >>>>>  Finding emissions in grid'
 
-!  REading and findig monthly, week and houry code profiles
+!  Reading and findig monthly, week and houry code profiles
     inquire(15,opened=fil1)
     if(.not.fil1) then
         canio="../01_datos/time/"//"temporal_01.txt"
@@ -203,7 +203,7 @@ implicit none
  210 continue
     ! print '(A3,<nl>(f6.3))','mon',(mes(i),i=1,nl)
 	 print *,'   Done Temporal_mon'
-!  REading and findig weekely  profile
+!  Reading and findig weekely  profile
     inquire(17,opened=fil1)
     if(.not.fil1) then
       canio="../01_datos/time/"//"temporal_week.txt"
@@ -230,7 +230,7 @@ implicit none
 	 print *,'   Done Temporal_week'
 	 nfilep='temporal_wkend.txt'
 	 nfile='temporal_wkday.txt'
-!  REading and findig houlry  profile
+!  Reading and findig houlry  profile
     inquire(18,opened=fil1)
     if(.not.fil1) then
       canio="../01_datos/time/"//nfile !"temporal_wkday.txt"
@@ -330,8 +330,7 @@ implicit none
 !    print '(A3,x,I3,x,<nscc(k)>(f7.4))','hr',l,(hCST(i,k,l),i=1,nscc(k))
 !    end do
 !
-end if
-
+    end if !daytype
     print *,'   Done ',nfile,daytype,fweek
 
 	close(15)
@@ -431,10 +430,11 @@ end subroutine guarda
 		  &clat(l) .ge. xlat(i,j)  .and. clat(l) .le. xlat(i,j+1))then
 		   ist(l)= i
 		   jst(l)= j
-
+          goto 987
 		end if
 		end do
 	  end do
+987 continue
    end do
    RETURN
    end subroutine localization

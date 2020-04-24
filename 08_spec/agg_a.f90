@@ -12,7 +12,7 @@
 !               species and Classes for an specific mechanism
 !
 !  compile:
-!  ifort -O2 -axAVX  agg_a.f90 -o spa.exe
+!  ifort -O2 -axAVX2  agg_a.f90 -o spa.exe
 !
 !   9/04/2020      namelist general
 !
@@ -113,12 +113,10 @@ subroutine lee
 	!print '(<nclass>(A,x))',cname
 	j=0
     isp=0
-!dir$ loop count min(512)
 	do
 		read(16,*,end=300,ERR=300)id
-!dir$ loop count min(256)
 		do i=1,size(prof2)
-		if(id.eq.prof2(i)) isp(i)=isp(i)+1
+            if(id.eq.prof2(i)) isp(i)=isp(i)+1
 		end do
 		j=j+1
 	end do
@@ -193,27 +191,27 @@ end subroutine calculos
 !
 subroutine guarda
 	implicit none
-	integer i,j,k
+	integer i,j,k,iun
     real suma
 	character(len=20)::fname
 	print *,maxval(emis),'Valor maximo'
-!dir$ loop count min(256)
+!$omp parallel do private(iun)
 	do j=1,size(emis,dim=2)
-    suma=0
-	fname=trim(cprof)//'_'//trim(cname(j))//'_A.txt'
-	open(unit=20,file=fname,action='write')
-	write(20,'(4A)')cname(j),',',trim(cprof),', Emissions'
-	write(20,*) size(emis,dim=1),current_date,', ',cdia
-		do k=1,size(emis,dim=1)
-			write(20,'(I7,",",24(ES11.4,","))')grid2(k),(emis(k,j,i),i=1,size(emis,dim=3))
-!dir$ loop count min(256)
-        do i=1,size(emis,dim=3)
-            suma=suma+emis(k,j,i)
-        end do
-		end do
-	close(20)
-    write (6,*)cname(j),',',suma
+        suma=0
+        fname=trim(cprof)//'_'//trim(cname(j))//'_A.txt'
+        open(newunit=iun,file=fname,action='write')
+        write(iun,'(4A)')cname(j),',',trim(cprof),', Emissions'
+        write(iun,*) size(emis,dim=1),current_date,', ',cdia
+            do k=1,size(emis,dim=1)
+             write(iun,'(I7,",",24(ES11.4,","))')grid2(k),(emis(k,j,i),i=1,size(emis,dim=3))
+            do i=1,size(emis,dim=3)
+                suma=suma+emis(k,j,i)
+            end do
+            end do
+        close(iun)
+        write (6,*)cname(j),',',suma
 	end do
+!$omp end parallel do
     print *,"*****   DONE SPECIATION AREA *****"
 end subroutine guarda
 !                        _
@@ -228,18 +226,21 @@ subroutine count
   nn=size(profile)
   allocate(xl(nn))
   xl=.true.
-  do i=1,60!nn-1
-    do j=i+1,61!nn
-      if(profile(j).eq.profile(i).and.xl(j))     xl(j)=.false.
+  do i=1,nn-1
+    do j=i+1,nn
+      if(profile(j).eq.profile(i).and.xl(j))then
+        xl(j)=.false.
+        exit
+      end if
     end do
   end do
   j=0
-  do i=1,61!nn
+  do i=1,nn
     if(xl(i)) j=j+1
   end do
   allocate(prof2(j),isp(j))
   j=0
-  do i=1,61!nn
+  do i=1,nn
    if(xl(i)) then
      j=j+1
      prof2(j)=profile(i)

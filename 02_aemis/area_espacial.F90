@@ -72,17 +72,26 @@ contains
 !  LLLLL EEEEE EEEEE
 subroutine lee
 implicit none
-    integer i,j,k
+    integer i,j,k,iun
     character(len=35):: cdum,fname
     cdum="../01_datos/"//trim(zona)//"/"
+!$omp parallel sections num_threads (4) private(fname)
+!$omp section
+    fname=trim(cdum)//'gri_pob.csv'
+    nl=cuenta_linea(fname)-1
+    allocate(grip(nl),idp(nl),fp1(nl),fp2(nl),fp3(nl))
+    call lee_file(fname,grip,idp,fp1,fp2,fp3)
+!$omp section
     fname=trim(cdum)//"bosque.csv"
       nl= cuenta_linea(fname)
       allocate (grib(nl),idb(nl),fb(nl))
       call lee_file (fname, grib,idb,fb)
+!$omp section
     fname=trim(cdum)//"agricola.csv"
       nl=cuenta_linea(fname)
       allocate (gria(nl),ida(nl),fa(nl))
       call lee_file(fname, gria,ida,fa)
+!$omp section
     fname=trim(cdum)//'aeropuerto.csv'
       nl=cuenta_linea(fname)
       allocate (grie(nl),ide(nl),fe(nl))
@@ -107,23 +116,21 @@ implicit none
       nl=cuenta_linea(fname)
       allocate(griv(nl),idv(nl),fv(nl))
       call lee_file(fname, griv,idv,fv)
-    fname=trim(cdum)//'gri_pob.csv'
-      nl=cuenta_linea(fname)-1
-      allocate(grip(nl),idp(nl),fp1(nl),fp2(nl),fp3(nl))
-      call lee_file(fname,grip,idp,fp1,fp2,fp3)
-!
+!$omp end parallel sections
     do k=1,nf
-        open (unit=10,file=efile(k),status='OLD',action='read')
-        read (10,'(A)') cdum
-        read (10,'(A)') cdum
+        open (newunit=iun,file=efile(k),status='OLD',action='read')
+        read (iun,'(A)') cdum
+        read (iun,'(A)') cdum
         print *,zona,"  ",efile(k)
-        read (10,*) nscc(k),cdum,(scc(k,i),i=1,nscc(k))
+        read (iun,*) nscc(k),cdum,(scc(k,i),i=1,nscc(k))
         print '(5(A10,x))',(scc(k,i),i=1,nscc(k))
         print *,k,nscc(k)
+!$omp parallel do
         do i=1,nm
-          read(10,*) edo,mun,iem(k,i),(emiss(i,j,k),j=1,nscc(k))
+          read(iun,*) edo,mun,iem(k,i),(emiss(i,j,k),j=1,nscc(k))
         end do ! i
-        close(10)
+!$omp end parallel do
+        close(iun)
     end do! k
 end subroutine lee
 !  CCC  AA  L     CCC U   U L     OOO   SSS
@@ -154,6 +161,8 @@ subroutine calculos
     evia=0.0
     print *," Inicia Calculos de Distribucion Espacial"
     Clase: do k=1,nf
+!$omp parallel sections num_threads (4) private(i,j,l)
+!$omp section
     print *,"     Agricola  ", efile(k)
     agricola: do j=1,size(fa) ! grid
     inven: do i=1,nm          ! municipality
@@ -172,6 +181,19 @@ subroutine calculos
         end if
     end do inven
     end do agricola
+!$omp section
+    print *,"     Bosque"
+    Bosque: do j=1,size(fb) ! grid
+    invenb: do i=1,nm       ! municipality
+        if(idb(j).eq.iem(k,i)) then
+            do l=1,nscc(k)      ! SCC
+    if(scc(k,l).eq.'2810001000') ebos(j,k,l)=emiss(i,l,k)*fb(j)*1e6 ! conversion de Mg to g.
+            end do
+            exit invenb
+         end if
+        end do invenb
+    end do Bosque
+!$omp section
 !   Aeropuertos
     print *,"     Aeropuertos"
    aerop: do j=1,size(fe) !grid
@@ -223,17 +245,6 @@ subroutine calculos
         end if
         end do invfcc
     end do pffc
-    print *,"     Bosque"
-    Bosque: do j=1,size(fb) ! grid
-    invenb: do i=1,nm       ! municipality
-        if(idb(j).eq.iem(k,i)) then
-           do l=1,nscc(k)      ! SCC
-             if(scc(k,l).eq.'2810001000') ebos(j,k,l)=emiss(i,l,k)*fb(j)*1e6 ! conversion de Mg to g.
-           end do
-           exit invenb
-        end if
-    end do invenb
-    end do Bosque
     print *,"     Terraceria"
     Terrac: do j=1,size(fr) ! grid
     invenr: do i=1,nm       ! municipality
@@ -257,6 +268,7 @@ subroutine calculos
         end if
     end do invenv
     end do Vialid
+!$omp section
         print *,"     Poblacion"
     poblacion: do j=1,size(grip)! grid
     invenp: do i=1,nm       ! municipality
@@ -314,6 +326,7 @@ subroutine calculos
         end if
     end do invenp
     end do poblacion
+!$omp end parallel sections
     end do Clase
 end subroutine calculos
 !  GGG  U   U  AA  RRRR  DDD   AA
@@ -323,13 +336,14 @@ end subroutine calculos
 !  GGG   UUU  A  A R  RR DDD  A  A
 subroutine guarda
     implicit none
-    integer i,k,l
+    integer i,k,l,iun
     real suma
     Print *,"   ***   Guarda   ***"
+!$omp parallel do
     do k=1,nf
-        open(unit=10,file=ofile(k),ACTION='write')
-        write(10,*)'grid,CID,Furb,Frural,SCCs'
-        write(10,300)nscc(k),(scc(k,i),i=1,nscc(k))
+        open(newunit=iun,file=ofile(k),ACTION='write')
+        write(iun,*)'grid,CID,Furb,Frural,SCCs'
+        write(iun,300)nscc(k),(scc(k,i),i=1,nscc(k))
         print *,"   Agricola ",ofile(k)
         do i=1,size(fa)
             suma=0
@@ -337,25 +351,25 @@ subroutine guarda
                suma=suma+eagr(i,k,l)
             end do
             if (suma.gt.0) &
-&           write(10,310) gria(i),ida(i),0.,fa(i),(eagr(i,k,l),l=1,nscc(k))
+&           write(iun,310) gria(i),ida(i),0.,fa(i),(eagr(i,k,l),l=1,nscc(k))
         end do
-        print *,"   Bosque"
+        print *,"   Bosque",k
         do i=1,size(fb)
             suma=0
             do l=1,nscc(k)
             suma=suma+ebos(i,k,l)
             end do
             if (suma.gt.0) &
-&            write(10,310) grib(i),idb(i),0.,fb(i),(ebos(i,k,l),l=1,nscc(k))
+&            write(iun,310) grib(i),idb(i),0.,fb(i),(ebos(i,k,l),l=1,nscc(k))
         end do
-        print *,"   Poblacion"
+        print *,"   Poblacion",k
         do i=1,size(fp1)
            suma=0
             do l=1,nscc(k)
             suma=suma+epob(i,k,l)
             end do
             if (suma.gt.0) &
-&            write(10,310) grip(i),idp(i),fp1(i),fp2(i),(epob(i,k,l),l=1,nscc(k))
+&            write(iun,310) grip(i),idp(i),fp1(i),fp2(i),(epob(i,k,l),l=1,nscc(k))
         end do
         print *,"   Aeropuerto"
         do i=1,size(fe)
@@ -364,7 +378,7 @@ subroutine guarda
             suma=suma+eaer(i,k,l)
             end do
             if (suma.gt.0) &
-&        write(10,310) grie(i),ide(i),fe(i),0.,(eaer(i,k,l),l=1,nscc(k))
+&        write(iun,310) grie(i),ide(i),fe(i),0.,(eaer(i,k,l),l=1,nscc(k))
         end do
         print *,"   Centrales Autobuses"
         do i=1,size(fu)
@@ -373,7 +387,7 @@ subroutine guarda
             suma=suma+ecen(i,k,l)
             end do
             if (suma.gt.0) &
-&        write(10,310) griu(i),idu(i),fu(i),0.,(ecen(i,k,l),l=1,nscc(k))
+&        write(iun,310) griu(i),idu(i),fu(i),0.,(ecen(i,k,l),l=1,nscc(k))
         end do
         print *,"   Puertos Maritimos"
         do i=1,size(fm)
@@ -382,7 +396,7 @@ subroutine guarda
             suma=suma+epue(i,k,l)
             end do
             if (suma.gt.0) &
-&        write(10,310) grim(i),idm(i),fm(i),0.,(epue(i,k,l),l=1,nscc(k))
+&        write(iun,310) grim(i),idm(i),fm(i),0.,(epue(i,k,l),l=1,nscc(k))
         end do
         print *,"   Ferrocarriles"
         do i=1,size(ft)
@@ -391,7 +405,7 @@ subroutine guarda
             suma=suma+etre(i,k,l)
             end do
             if (suma.gt.0) &
-&          write(10,310) grit(i),idt(i),ft(i),0.,(etre(i,k,l),l=1,nscc(k))
+&          write(iun,310) grit(i),idt(i),ft(i),0.,(etre(i,k,l),l=1,nscc(k))
         end do
     print *,"   Terraceria"
     do i=1,size(fr)
@@ -400,7 +414,7 @@ subroutine guarda
         suma=suma+eter(i,k,l)
         end do
         if (suma.gt.0) &
-&        write(10,310) grir(i),idr(i),fr(i),0.,(eter(i,k,l),l=1,nscc(k))
+&        write(iun,310) grir(i),idr(i),fr(i),0.,(eter(i,k,l),l=1,nscc(k))
         end do
     print *,"   Vialidades"
     do i=1,size(fv)
@@ -409,10 +423,11 @@ subroutine guarda
         suma=suma+evia(i,k,l)
         end do
         if (suma.gt.0) &
-&        write(10,310) griv(i),idv(i),fv(i),0.,(evia(i,k,l),l=1,nscc(k))
+&        write(iun,310) griv(i),idv(i),fv(i),0.,(evia(i,k,l),l=1,nscc(k))
         end do
     close(10)
     end do
+!$omp end parallel do
     deallocate (gria,ida,fa,eagr)
     deallocate (grib,idb,fb,ebos)
     deallocate (grip,idp,fp1,fp2,epob)
@@ -438,18 +453,19 @@ end subroutine guarda
 !                                    ____
 integer function cuenta_linea(archivo)
   implicit none
+  integer iun
   character (len=*), intent(in)::archivo
   character (len=24) ::cdum
   print *,'Lee ',archivo
-  open(unit=10,file=archivo,status='OLD',action='read')
-    read (10,*) cdum
+  open(newunit=iun,file=archivo,status='OLD',action='read')
+    read (iun,*) cdum
     cuenta_linea=0
     do
-      read(10,*,end=100) cdum
+      read(iun,*,end=100) cdum
       cuenta_linea=cuenta_linea+1
     end do
     100 print *,' Numero de lineas',cuenta_linea
-  close(10)
+  close(iun)
 end function
 ! L    EEEE EEEE     FFFF III L    EEEE
 ! L    E    E        F     I  L    E
@@ -460,24 +476,24 @@ end function
 subroutine lee_file(archivo,grid,id,frac,frac2,frac3)
     implicit none
     integer, dimension(:), intent(inout)::grid,id
-    integer i,nl
+    integer i,nl,iun
     real,dimension(:), intent(inout)::frac
     real,dimension(:), optional,intent(inout)::frac2,frac3
     character (len=*), intent(in)::archivo
     character (len=18):: cdum
-    open(unit=10,file=archivo,status='OLD',action='read')
-    read (10,*) cdum
+    open(newunit=iun,file=archivo,status='OLD',action='read')
+    read (iun,*) cdum
     if (present(frac2).and.present(frac3))then
-        read (10,*) cdum
+        read (iun,*) cdum
         do i=1,size(id)
-            read(10,*)grid(i),id(i),frac(i),frac2(i),frac3(i)
+            read(iun,*)grid(i),id(i),frac(i),frac2(i),frac3(i)
         end do
     else
         do i=1,size(id)
-            read(10,*)grid(i),id(i),frac(i)
+            read(iun,*)grid(i),id(i),frac(i)
         end do
     end if
-    close(10)
+    close(iun)
 end subroutine
 subroutine lee_namelist
     NAMELIST /region_nml/ zona

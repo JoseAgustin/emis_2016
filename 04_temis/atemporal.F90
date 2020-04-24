@@ -100,7 +100,7 @@ contains
 subroutine lee
 	implicit none 
 	integer i,j,k,l,m
-	integer idum,imon,iwk,ipdy
+	integer idum,imon,iwk,ipdy,iun
 	integer*8 jscc ! scc code from temporal file
 	integer,dimension(25) :: itfrc  !montly,weekely and hourly values and total
 	real rdum
@@ -139,20 +139,20 @@ subroutine lee
    call maxline(nmax)
 
 	do k=1,nf
-	open (unit=10,file="../02_aemis/"//efile(k),status='OLD',action='read')
-	read (10,'(A)') cdum
-	read (10,*) nscc(k),cdum,(iscc(i),i=1,nscc(k))
+	open (newunit=iun,file="../02_aemis/"//efile(k),status='OLD',action='read')
+	read (iun,'(A)') cdum
+	read (iun,*) nscc(k),cdum,(iscc(i),i=1,nscc(k))
 	!print '(5(I10,x))',(iscc(i),i=1,nscc(k))
 	!print *,cdum,nscc(k)
 	nm=0
 	do
-	   read(10,*,end=100) cdum
+	   read(iun,*,end=100) cdum
 	   nm=nm+1
 	end do
 100	 continue
      write(6,134)"  mn=",nm,"nmax=",nmax
     if (nm.gt.nmax) STOP "*** ERROR: nm larger than nmax edit code line 140"
-	 rewind(10)
+	 rewind(iun)
 	 if(k.eq.1) then
         allocate(idcel(nm),idcel2(nm),idcel3(nm))
         allocate(emiA(nf,nmax,nnscc),id5(nf,nmax),idsm(nf,nmax))
@@ -163,15 +163,15 @@ subroutine lee
         deallocate(idcel,idcel2,idcel3)
         allocate(idcel(nm),idcel2(nm),idcel3(nm))
 	end if
-	read (10,'(A)') cdum
-	read (10,'(A)') cdum
+	read (iun,'(A)') cdum
+	read (iun,'(A)') cdum
 	do i=1,nm
-		read(10,*) idcel(i),idsm(k,i),rdum,rdum,(emiA(k,i,j),j=1,nscc(k))
+		read(iun,*) idcel(i),idsm(k,i),rdum,rdum,(emiA(k,i,j),j=1,nscc(k))
       id5(k,i)=idcel(i)
 	        !print *,idcel(i),idsm(i),(emiA(k,i,j),j=1,16),nscc(k),k
 	end do
     idcel3=idcel
-	close(10)
+	close(iun)
   print *,"Done reading: ",efile(k),size(idcel3)
 !  REading and findig monthly, week and houry code profiles
     inquire(15,opened=fil1)
@@ -200,7 +200,7 @@ subroutine lee
 	  !print '(A3,<nscc(k)>(I3,x))','hr ',(profile(3,i,k),i=1,nscc(k))
 	 print *,'   Done Temporal_01'
 	 
-!  REading and findig monthly  profile
+!  Reading and findig monthly profile
     inquire(16,opened=fil1)
     if(.not.fil1) then
        canio="../01_datos/time/"//"temporal_mon.txt"
@@ -410,6 +410,8 @@ subroutine compute
 !
 ! For inorganics
 !
+!$omp parallel sections num_threads (3) private(k,ii,i,l,j)
+!$omp section
     print *,"   Compute Inorganics"
     emis=0
     mes=mes*fweek! weeks per month
@@ -434,6 +436,7 @@ subroutine compute
 !
 !  For PM2.5
 !
+!$omp section
     print *,"   Compute PM2.5"
     epm2=0
 	k=nf-1
@@ -454,6 +457,7 @@ subroutine compute
 !
 !  For VOCs
 !  
+!$omp section
     evoc=0
 	k=nf
 
@@ -472,6 +476,7 @@ print *,"   Compute  VOCs",size(idcel2)
       end if
      end do
     end do
+!$omp end parallel sections
 	end subroutine compute
 !
 !     _
@@ -482,57 +487,62 @@ print *,"   Compute  VOCs",size(idcel2)
 !                         |___/
 subroutine storage
   implicit none
-  integer i,j,k,l
+  integer i,j,k,l,iun
   real suma
   character(len=3):: cdia(7)
   data cdia/'MON','TUE','WND','THR','FRD','SAT','SUN'/
   print *,"Storage"
+!$omp parallel sections num_threads (3) private(k,i,l,j,iun)
+!$omp section
   do k=1,nf-2
-   open(unit=10,file=casn(k),action='write')
-   write(10,*)casn(k),'ID, Hr to Hr24'
-   write(10,'(I8,4A)')size(emis,dim=1),",",current_date,", ",cdia(daytype)
+   open(newunit=iun,file=casn(k),action='write')
+   write(iun,*)casn(k),'ID, Hr to Hr24'
+   write(iun,'(I8,4A)')size(emis,dim=1),",",current_date,", ",cdia(daytype)
    do i=1,size(emis,dim=1)
     suma=0
     do l=1,nh
         suma=suma+emis(i,k,l)
     end do
-        if(suma.gt.0) write(10,100)idcel2(i),(emis(i,k,l),l=1,nh)
+        if(suma.gt.0) write(iun,100)idcel2(i),(emis(i,k,l),l=1,nh)
     end do
-   close(unit=10)
+   close(unit=iun)
   end do
 100 format(I7,",",23(ES12.3,","),ES12.3)
+!$omp section
    k=nf-1
 ! WARNING iscc and pm25 must be the before last one to be read.
    print *," PM2.5"
-   open(unit=10,file=casn(k),action='write')
-   write(10,*)casn(k),'ID, SCC,  Hr to Hr24'
-   write(10,'(I8,4A)')size(epm2,dim=1)*nscc(k),",",current_date,', ',cdia(daytype)
+   open(newunit=iun,file=casn(k),action='write')
+   write(iun,*)casn(k),'ID, SCC,  Hr to Hr24'
+   write(iun,'(I8,4A)')size(epm2,dim=1)*nscc(k),",",current_date,', ',cdia(daytype)
    do i=1,size(epm2,dim=1)
      do j=1,nscc(k)
      suma=0
      do l=1,nh
        suma=suma+epm2(i,j,l)
      end do
-     if(suma.gt.0)  write(10,110)idcel2(i),iscc(j),(epm2(i,j,l),l=1,nh)
+     if(suma.gt.0)  write(iun,110)idcel2(i),iscc(j),(epm2(i,j,l),l=1,nh)
      end do
    end do
-	close(10)
+	close(iun)
+!$omp section
 	k=nf
 ! WARNING iscc and voc must be the last one to be read.
    print *," VOC"
-   open(unit=10,file=casn(k),action='write')
-   write(10,*)casn(k),'ID, SCC,  Hr to Hr24'
-   write(10,'(I8,4A)')size(evoc,dim=1)*nscc(k),",",current_date,', ',cdia(daytype)
+   open(newunit=iun,file=casn(k),action='write')
+   write(iun,*)casn(k),'ID, SCC,  Hr to Hr24'
+   write(iun,'(I8,4A)')size(evoc,dim=1)*nscc(k),",",current_date,', ',cdia(daytype)
    do i=1,size(evoc,dim=1)
      do j=1,nscc(k)
      suma=0
      do l=1,nh
        suma=suma+evoc(i,j,l)
      end do
-     if(suma.gt.0) write(10,110)idcel2(i),iscc(j),(evoc(i,j,l),l=1,nh)
+     if(suma.gt.0) write(iun,110)idcel2(i),iscc(j),(evoc(i,j,l),l=1,nh)
      end do
    end do
-	close(10)
+!$omp end parallel sections
+	close(iun)
     print *,"*****  DONE Temporal Area *****"
 110 format(I7,",",I10,",",23(ES12.3,","),ES12.3)
     deallocate(idcel,id5,idcel2,idsm,emiA,emis,epm2,evoc)

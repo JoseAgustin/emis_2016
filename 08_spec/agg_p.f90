@@ -231,7 +231,10 @@ subroutine count
     xl=.true.
     do i=1,nn-1
         do j=i+1,nn
-            if(profile(j).eq.profile(i).and.xl(j)) 	xl(j)=.false.
+            if(profile(j).eq.profile(i).and.xl(j)) then
+                xl(j)=.false.
+                exit
+            end if
         end do
     end do
     j=0
