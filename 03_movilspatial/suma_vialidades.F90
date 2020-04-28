@@ -38,10 +38,10 @@ contains
 subroutine lee
 implicit none
     integer i
-    character(len=30) ::fname
+    character(len=50) ::fname
     character (len=10) ::cdum
 
-    fname= "VIALIDADES.csv"
+    fname= "../01_datos/"//trim(zona)//"/"//"VIALIDADES.csv"
     open (unit=10,file=fname,status='OLD')
     read(10,*) cdum
     i=0
