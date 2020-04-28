@@ -73,7 +73,7 @@ contains
 subroutine lee
 implicit none
     integer i,j,k,iun
-    character(len=35):: cdum,fname
+    character(len=38):: cdum,fname
     cdum="../01_datos/"//trim(zona)//"/"
 !$omp parallel sections num_threads (4) private(fname)
 !$omp section
