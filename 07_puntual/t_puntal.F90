@@ -400,11 +400,11 @@ end subroutine calculos
 subroutine guarda
 	implicit none
 	integer:: i,k,l,iun
-	character(len=13) ::fname
+	character(len=14) ::fname
 	character(len=3):: cdia(7)
 	data cdia/'MON','TUE','WND','THR','FRD','SAT','SUN'/
    Write(6,*)"Guarda"
-!$omp parallel do private(iun,i,k,l)
+!$omp parallel do private(iun,i,k,l,fname)
 	do k=1,nsp
 		fname='T_'//trim(cvar(k))//'.csv'
 		open(newunit=iun,file=fname,action='write')
