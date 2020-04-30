@@ -125,11 +125,9 @@ implicit none
         read (iun,*) nscc(k),cdum,(scc(k,i),i=1,nscc(k))
         print '(5(A10,x))',(scc(k,i),i=1,nscc(k))
         print *,k,nscc(k)
-!$omp parallel do
         do i=1,nm
           read(iun,*) edo,mun,iem(k,i),(emiss(i,j,k),j=1,nscc(k))
         end do ! i
-!$omp end parallel do
         close(iun)
     end do! k
 end subroutine lee
