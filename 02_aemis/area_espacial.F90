@@ -75,7 +75,7 @@ implicit none
     integer i,j,k,iun
     character(len=38):: cdum,fname
     cdum="../01_datos/"//trim(zona)//"/"
-!$omp parallel sections num_threads (4) private(fname)
+!$omp parallel sections num_threads (4) private(fname,nl)
 !$omp section
     fname=trim(cdum)//'gri_pob.csv'
     nl=cuenta_linea(fname)-1
