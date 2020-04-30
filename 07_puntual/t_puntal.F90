@@ -55,13 +55,14 @@ end module vars
 !
 program t_puntual
 use vars
+
     call lee_namelist
 
-	call lee
-	
-	call calculos
-	
-	call guarda
+    call lee
+
+    call calculos
+
+    call guarda
 
 contains
 !  _
@@ -72,7 +73,7 @@ contains
 !
 subroutine lee
 implicit none
-	integer :: i,j,k,l,m
+	integer :: i,j,k,l,m,iun
 	integer :: idum, imon,iwk,ipdy
 	integer*8:: jscc
 	integer,dimension(25) :: itfrc  !montly,weekely and hourly values and total
@@ -88,76 +89,90 @@ implicit none
     iverano=0
     if(lsummer) iverano=kverano(idia,month)
     print *,'Current Date: ',current_date,month,idia,fweek
+
 !
-!   Days in 2016 year
+!   Days in year
 !
     write(canio,'("../01_datos/time/anio",I4,".csv")')anio
     print *," READING FILE: ",canio
-    open (unit=10,file=canio,status='OLD',action='read')
-    daytype=0
-    read(10,*)cdum
-        do
-        read(10,*,end=95)imon,ipdy,idum,cdum
-		if(imon.eq.month.and. ipdy.eq.idia) then
-		 daytype=idum
-		 print *,'Day type :',daytype,cdum
-		 exit
-		 end if
-        end do
-95  continue
-    close(10)
-	if(daytype.eq.0) STOP 'Error in daytype=0'
 
-	open(unit=10,file='puntual.csv',status='old',action='read')
+    open (newunit=m,file=canio,status='OLD',action='read')
+    daytype=0
+    read(m,*)cdum
+!$omp parallel sections num_threads (2)
+!$omp section
+    do
+      read(m,*,end=95)imon,ipdy,idum,cdum
+      if(imon.eq.month.and. ipdy.eq.idia) then
+        daytype=idum
+        print *,'Day type :',daytype,cdum
+        exit
+      end if
+    end do
+95  continue
+    close(m)
+	if(daytype.eq.0) STOP 'Error in daytype=0'
+!$omp section
+	open(newunit=iun,file='puntual.csv',status='old',action='read')
 	i=0
-	read (10,*) cdum
+	read (iun,*) cdum
 	do
-		read(10,*,end=100) cdum
+		read(iun,*,end=100) cdum
 		i=i+1
 	end do
 100 continue
-	nl=i
-	print *,'numero de lineas ',nl
-	allocate(iscc(i),capa(i,2),lat(i),lon(i),e_mis(i,nsp))
-	allocate(mes(nl),dia(nl),diap(nl))
+    nl=i
+!$omp end parallel sections
+    print *,'**  Numero de lineas ',nl
+    allocate(iscc(nl),capa(nl,2),lat(nl),lon(nl),e_mis(nl,nsp))
+    allocate(mes(nl),dia(nl),diap(nl))
     allocate(hEST(nl,nh),hCST(nl,nh),hMST(nl,nh),hPST(nl,nh))
-	allocate(emis(i,nsp,nh))
-	allocate(profile(3,nl))
-	allocate(ict(nl),jct(nl))
+    allocate(emis(i,nsp,nh))
+    allocate(profile(3,nl))
+    allocate(ict(nl),jct(nl))
     e_mis=0
-	do i=1,nl  ! Defaul values for temporal profile
-		profile(1,i)=262
-		profile(2,i)=7
-		profile(3,i)=24
-	end do
-	rewind(10)
-	read (10,*) cdum,cdum,cdum,(cvar(i),i=1,nsp)
-	do i=1,nl
-	 read(10,*,err=110)lat(i),lon(i),iscc(i),(e_mis(i,j),j=1,nsp),capa(i,1),capa(i,2)
-	end do
-	close(10)
-        e_mis=e_mis*1000000 !para g desde (Mg) TON
-        print *,'Done puntual.csv ',cvar,maxval(e_mis)
+!$omp parallel do
+    do i=1,nl  ! Defaul values for temporal profile
+      profile(1,i)=262
+      profile(2,i)=7
+      profile(3,i)=24
+    end do
+!$omp end parallel do
+    rewind(iun)
+    read (iun,*) cdum,cdum,cdum,(cvar(i),i=1,nsp)
+    do i=1,nl
+      read(iun,*,err=110)lat(i),lon(i),iscc(i),(e_mis(i,j),j=1,nsp),capa(i,1),capa(i,2)
+    end do
+    close(iun)
+    e_mis=e_mis*1000000 !para g desde (Mg) TON
+    print *,'Done puntual.csv '!,cvar,maxval(e_mis)
 !
 !	temporal_01.txt
 !
    cdum="../01_datos/"//trim(zona)//"/"//"localiza.csv"
-	write(6,*)' >>>> Reading file -',cdum,' ---------'
-
-	open (unit=10,file=cdum,status='old',action='read')
-	read (10,*) cdum  !Header
-	read (10,*) nx,ny  !Header
+	write(6,*)' >>>> Reading file - ',cdum,' ----'
+	open (newunit=iun,file=cdum,status='old',action='read')
+	read (iun,*) cdum  !Header
+	read (iun,*) nx,ny  !Header
 	allocate(idcg(nx,ny),xlon(nx,ny),xlat(nx,ny),mcst(nx,ny))
 	do j=1,ny
 		do i=1,nx
-			read(10,*) idcg(i,j),xlon(i,j),xlat(i,j),mcst(i,j)
+			read(iun,*) idcg(i,j),xlon(i,j),xlat(i,j),mcst(i,j)
 		end do
 	end do
 	!print *,ncel
-	close(10)
-    print *,'   >>>>>  Finding i,j for each cell localization'
-     call localization(xlat,xlon,nx,ny,lat,lon,ict,jct,nl)   ! Point Sources
-    print *,'   >>>>>  Finding emissions in grid'
+    close(iun)
+!$omp parallel sections num_threads (3)
+!$omp section
+  print *,'   >>>>>  Finding emissions in grid'
+    call localiza(xlat,xlon,nx,ny,lat,lon,ict,jct,1,nl/3)   ! Point Sources
+!$omp section
+    print *,'   >>>>>  Finding emissions in grid 2'
+    call localiza(xlat,xlon,nx,ny,lat,lon,ict,jct,nl/3+1,2*nl/3)   ! Point Sources
+!$omp section
+  print *,'   >>>>>  Finding emissions in grid 3'
+  call localiza(xlat,xlon,nx,ny,lat,lon,ict,jct,2*nl/3+1,nl)   ! Point Sources
+!$omp end parallel sections
 
 !  Reading and findig monthly, week and houry code profiles
     inquire(15,opened=fil1)
@@ -168,22 +183,26 @@ implicit none
         rewind(15)
 	end if
 	read (15,'(A)') cdum
-      do
-	  read(15,*,END=200)jscc,imon,iwk,ipdy
-	    do i=1,nl
-		  if(iscc(i).eq.jscc) then
-		    profile(1,i)=imon
-		    profile(2,i)=iwk
-		    profile(3,i)=ipdy
-		   end if
-		end do
-	  end do
+    do
+      read(15,*,END=200)jscc,imon,iwk,ipdy
+      if(jscc.gt.0) then
+!$omp parallel do
+        do i=1,nl
+          if(iscc(i).eq.jscc) then
+            profile(1,i)=imon
+            profile(2,i)=iwk
+            profile(3,i)=ipdy
+          end if
+        end do
+!$omp end parallel do
+      end if
+    end do
  200 continue
-      !print '(A3,<nl>(I5))','mon',(profile(1,i),i=1,nl)
-      !print '(A3,<nl>(I3,x))','day',(profile(2,i),i=1,nl)
-	  !print '(A3,<nl>(I3,x))','hr ',(profile(3,i),i=1,nl)
+     !print '(A3,<nl>(I5))','mon',(profile(1,i),i=1,6)
+     !print '(A3,<nl>(I4,x))','day',(profile(2,i),i=1,6)
+	  !print '(A3,<nl>(I3,x))','hr ',(profile(3,i),i=1,6)
 	 print *,'   Done Temporal_01'
-!  REading and findig monthly  profile
+!  Reading and findig monthly  profile
     inquire(16,opened=fil1)
     if(.not.fil1) then
         canio="../01_datos/time/"//"temporal_mon.txt"
@@ -194,11 +213,13 @@ implicit none
 	read (16,'(A)') cdum
      do
 	    read(16,*,END=210)jscc,(itfrc(l),l=1,13)
+!$omp parallel do
 	    do i=1,nl
 	      if(jscc.eq.profile(1,i)) then
 	        mes(i)=real(itfrc(month))/real(itfrc(13))
 	      end if
 		end do !i
+!$omp end parallel do
 	 end do
  210 continue
     ! print '(A3,<nl>(f6.3))','mon',(mes(i),i=1,nl)
@@ -227,7 +248,8 @@ implicit none
 	 end do
  220 continue
      !print '(A3,<nl>(f6.3))','day',(dia(i),i=1,nl)
-	 print *,'   Done Temporal_week'
+	 print *,'   Done Temporal_week',canio
+
 	 nfilep='temporal_wkend.txt'
 	 nfile='temporal_wkday.txt'
 !  Reading and findig houlry  profile
@@ -331,67 +353,81 @@ implicit none
 !    end do
 !
     end if !daytype
-    print *,'   Done ',nfile,daytype,fweek
-
-	close(15)
-	close(16)
-	close(17)
-	close(18)
+    print *,'   Done ',nfile,canio,daytype,fweek
+    close(15)
+    close(16)
+    close(17)
+    close(18)
     close(19)
 
 	return
 110	print *,'Error en ',i
     STOP
 end subroutine lee
-
+!            _            _
+!   ___ __ _| | ___ _   _| | ___  ___
+!  / __/ _` | |/ __| | | | |/ _ \/ __|
+! | (_| (_| | | (__| |_| | | (_) \__ \
+!  \___\__,_|_|\___|\__,_|_|\___/|___/
+!
 subroutine calculos
 	implicit none
 	integer i,j,kk,l,ival,ii
 !
 	print *,'Calculos'
     mes=mes*fweek
-      do i=1,nl
-	if(ict(i).ne.0 .or.jct(i).ne.0) then
-       do kk=1,nsp
-	!print *,'k=',kk
-	do l=1,nh
-	if(mcst(ict(i),jct(i)).eq.6 )emis(i,kk,l)=e_mis(i,kk)*mes(i)*hCST(i,l) ! Mg to kg
-	if(mcst(ict(i),jct(i)).eq.7 )emis(i,kk,l)=e_mis(i,kk)*mes(i)*hMST(i,l)
-	if(mcst(ict(i),jct(i)).eq.8 )emis(i,kk,l)=e_mis(i,kk)*mes(i)*hPST(i,l)
-	end do
-	end do
-    end if 
-	end do
+!$omp parallel do
+  do i=1,nl
+    if(ict(i).ne.0 .or.jct(i).ne.0) then
+      do kk=1,nsp
+      !print *,'k=',kk
+        do l=1,nh
+    if(mcst(ict(i),jct(i)).eq.6 )emis(i,kk,l)=e_mis(i,kk)*mes(i)*hCST(i,l) ! Mg to kg
+    if(mcst(ict(i),jct(i)).eq.7 )emis(i,kk,l)=e_mis(i,kk)*mes(i)*hMST(i,l)
+    if(mcst(ict(i),jct(i)).eq.8 )emis(i,kk,l)=e_mis(i,kk)*mes(i)*hPST(i,l)
+        end do
+      end do
+    end if
+  end do
+!$omp end parallel do
 end subroutine calculos
+!                            _
+!   __ _ _   _  __ _ _ __ __| | __ _
+!  / _` | | | |/ _` | '__/ _` |/ _` |
+! | (_| | |_| | (_| | | | (_| | (_| |
+!  \__, |\__,_|\__,_|_|  \__,_|\__,_|
+!  |___/
 subroutine guarda
 	implicit none
-	integer:: i,j,k,l
+	integer:: i,k,l,iun
 	character(len=13) ::fname
 	character(len=3):: cdia(7)
 	data cdia/'MON','TUE','WND','THR','FRD','SAT','SUN'/
    Write(6,*)"Guarda"
+!$omp parallel do private(iun,i,k,l)
 	do k=1,nsp
 		fname='T_'//trim(cvar(k))//'.csv'
-		open(unit=10,file=fname,action='write')
+		open(newunit=iun,file=fname,action='write')
 		if(k.ne.nsp .and. k.ne.4) then
-		write(10,*)cvar(k),'Lat,Lon,Capa 1, H1,H2,H3,H4,H5,H6,H7,H8,H9,to Hr24, Capa2'
+		write(iun,*)cvar(k),'Lat,Lon,Capa 1, H1,H2,H3,H4,H5,H6,H7,H8,H9,to Hr24, Capa2'
 		else
-		write(10,*)cvar(k),'SCC,Lat,Lon,Capa 1, H1,H2,H3,H4,H5,H6,H7,H8,H9,to Hr24,Capa 2'
+		write(iun,*)cvar(k),'SCC,Lat,Lon,Capa 1, H1,H2,H3,H4,H5,H6,H7,H8,H9,to Hr24,Capa 2'
 		end if
-		write(10,'(I6,4A)') nl,', ',current_date,', ',cdia(daytype) 
+		write(iun,'(I6,4A)') nl,', ',current_date,', ',cdia(daytype)
 			do i=1,nl
 			if(ict(i).ne.0 .or.jct(i).ne.0)then
 				if(k.ne.ivoc.and.k.ne.ipm) then
-					!write(10,220)lat(i),lon(i),capa(i),(emis(i,k,l),l=1,nh)
-					write(10,210) idcg(ict(i),jct(i)),capa(i,1),(emis(i,k,l),l=1,nh),capa(i,2)
+					!write(iun,220)lat(i),lon(i),capa(i),(emis(i,k,l),l=1,nh)
+					write(iun,210) idcg(ict(i),jct(i)),capa(i,1),(emis(i,k,l),l=1,nh),capa(i,2)
 				else ! For VOC and PM2.5
-					!write(10,300)iscc(i),lat(i),lon(i),capa(i),(emis(i,k,l),l=1,nh)
-					write(10,310)iscc(i),idcg(ict(i),jct(i)),capa(i,1),(emis(i,k,l),l=1,nh),capa(i,2)
+					!write(iun,300)iscc(i),lat(i),lon(i),capa(i),(emis(i,k,l),l=1,nh)
+					write(iun,310)iscc(i),idcg(ict(i),jct(i)),capa(i,1),(emis(i,k,l),l=1,nh),capa(i,2)
 				end if
 			end if
 			end do
-		close(unit=10)
+		close(unit=iun)
 	end do
+!$omp end parallel do
      print *,"****** DONE PUNTUAL *****"
     deallocate(iscc,capa,lat,lon,e_mis)
     deallocate(mes,dia,diap)
@@ -414,13 +450,20 @@ subroutine guarda
 #endif
 end subroutine guarda
 !
-   Subroutine localization(xlat,xlon,mi,mj,clat,clon,ist,jst,nst)
-   implicit none
-   integer :: mi,mj,nst,i,j,l
-   integer,dimension(nst):: ist,jst
-   real,dimension(mi,mj):: xlat,xlon
-   real,dimension(nst):: clat,clon
-   do l=1,nst
+!  _                 _ _
+! | | ___   ___ __ _| (_)______ _
+! | |/ _ \ / __/ _` | | |_  / _` |
+! | | (_) | (_| (_| | | |/ / (_| |
+! |_|\___/ \___\__,_|_|_/___\__,_|
+!
+  Subroutine localiza(xlat,xlon,mi,mj,clat,clon,ist,jst,inst,nst)
+  implicit none
+  integer,intent(IN) :: mi,mj,nst,inst
+  integer ::i,j,l
+  integer,dimension(:),intent(out):: ist,jst
+  real,dimension(:,:),intent(IN):: xlat,xlon
+  real,dimension(:),intent(IN):: clat,clon
+   do l=inst,nst
 		! Out of the region 
    ist(l)=0
    jst(l)=0
@@ -437,11 +480,12 @@ end subroutine guarda
 987 continue
    end do
    RETURN
-   end subroutine localization
-!  _  ____   _____ ___    _   _  _  ___
-! | |/ /\ \ / / __| _ \  /_\ | \| |/ _ \
-! | ' <  \ V /| _||   / / _ \| .` | (_) |
-! |_|\_\  \_/ |___|_|_\/_/ \_\_|\_|\___/
+   end subroutine localiza
+!  _
+! | | ____   _____ _ __ __ _ _ __   ___
+! | |/ /\ \ / / _ \ '__/ _` | '_ \ / _ \
+! |   <  \ V /  __/ | | (_| | | | | (_) |
+! |_|\_\  \_/ \___|_|  \__,_|_| |_|\___/
 !
 integer function kverano(ida,mes)
     implicit none
@@ -469,6 +513,12 @@ integer function kverano(ida,mes)
     end if
 233 format("******  HORARIO de VERANO *******",/,3x,"Abril ",I2,x,"a Octubre ",I2)
 end function
+!  _                                          _ _     _
+! | | ___  ___     _ __   __ _ _ __ ___   ___| (_)___| |_
+! | |/ _ \/ _ \   | '_ \ / _` | '_ ` _ \ / _ \ | / __| __|
+! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_
+! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|
+!            |_____|
 subroutine lee_namelist
     implicit none
     NAMELIST /region_nml/ zona
