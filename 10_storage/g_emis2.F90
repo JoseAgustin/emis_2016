@@ -873,7 +873,7 @@ end subroutine lee_localiza
 subroutine lee_emis(ii,borra)
     implicit none
     integer,INTENT(in):: ii
-    integer :: i,ih,is,j,k,levl,levld
+    integer :: i,ih,is,j,k,levl,levld,iun
     real ::rdum, constant
     real,dimension(nh)::edum
     character (len=15)::ruta
@@ -881,17 +881,19 @@ subroutine lee_emis(ii,borra)
     logical,INTENT(in) ::borra
     if (borra) eft =0
     !print *,fnameA(ii),fnameM(ii),fnameP(ii),ii
+!$omp parallel sections num_threads (3) private(i,j,ih,k,idcf,constant,is,iun,edum,ruta)
+!$omp section
     if (ii.le.5 .or. (ii.ge.ipm-2 .and. ii.le.ipm).or.ii.eq.icn .or. ii .eq.imt)then
         ruta="../04_temis/"
     else if( ii.gt. ipm) then; ruta="../09_pm25spec/"
     else;     ruta="../08_spec/"; end if
-    open(11,file=trim(ruta)//fnameA(ii),status='OLD',action='READ')
-    read(11,*)cdum
+    open(newunit=iun,file=trim(ruta)//fnameA(ii),status='OLD',action='READ')
+    read(iun,*)cdum
     if (ii.eq.1)then
-        read(11,*)j,current_date,cday  !j number of lines in file
+        read(iun,*)j,current_date,cday  !j number of lines in file
         print *,current_date,' ',cday
     else
-        read(11,*)j,current_date
+        read(iun,*)j,current_date
     end if
     if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
     if(ii.eq.imt) is=jmt
@@ -899,9 +901,9 @@ subroutine lee_emis(ii,borra)
     write(6,'(i4,x,A,A,2ES11.1)') ii,ruta//fnameA(ii),current_date(1:13),constant
     do
         if(ii.eq.ipm) then
-            read(11,*,END=100) idcf,rdum,(edum(ih),ih=1,nh)
+            read(iun,*,END=100) idcf,rdum,(edum(ih),ih=1,nh)
         else
-            read(11,*,END=100) idcf,(edum(ih),ih=1,nh)
+            read(iun,*,END=100) idcf,(edum(ih),ih=1,nh)
         end if
         k=0
         busca: do j=1,ny
@@ -917,18 +919,19 @@ subroutine lee_emis(ii,borra)
         end do
         end do busca
     end do
-100 close(11)
+100 close(iun)
+!$omp section
     if (ii.le.5 .or. (ii.ge.ipm-2 .and. ii.le.ipm).or.ii.eq.icn .or. ii .eq.imt)then
         ruta="../06_temisM/"
     else if( ii.gt. ipm) then; ruta="../09_pm25spec/"
     else;     ruta="../08_spec/"; end if
-    open(11,file=trim(ruta)//fnameM(ii),status='OLD',action='READ')
-    read(11,*)cdum
+    open(newunit=iun,file=trim(ruta)//fnameM(ii),status='OLD',action='READ')
+    read(iun,*)cdum
     if (ii.eq.1)then
-        read(11,*)j,current_date,cday  !j number of lines in file
+        read(iun,*)j,current_date,cday  !j number of lines in file
         !print *,current_date,cday
     else
-        read(11,*)j,current_date
+        read(iun,*)j,current_date
     end if
     if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
     if(ii.eq.imt) is=jmt
@@ -936,9 +939,9 @@ subroutine lee_emis(ii,borra)
     constant=scalm(ii)*SUPF1/WTM(is)
     do
         if(ii.eq.ipm) then !for PM2.5
-            read(11,*,END=200) idcf,crdum,(edum(ih),ih=1,nh)
+            read(iun,*,END=200) idcf,crdum,(edum(ih),ih=1,nh)
         else
-            read(11,*,END=200) idcf,(edum(ih),ih=1,nh)
+            read(iun,*,END=200) idcf,(edum(ih),ih=1,nh)
         end if
         k=0
         busca2: do j=1,ny
@@ -954,21 +957,22 @@ subroutine lee_emis(ii,borra)
             end do
         end do busca2
     end do
-200 close(11)
+200 close(iun)
 !
 !  For point sources
 !    if (ii.ne.2) then
+!$omp section
     if (ii.le.5 .or. (ii.ge.ipm-2 .and. ii.le.ipm).or.ii.eq.icn .or. ii .eq.imt)then
         ruta="../07_puntual/"
     else if( ii.gt. ipm) then; ruta="../09_pm25spec/"
     else;     ruta="../08_spec/"; end if
-    open(11,file=trim(ruta)//fnameP(ii),status='OLD',action='READ')
-    read(11,*)cdum
+    open(newunit=iun,file=trim(ruta)//fnameP(ii),status='OLD',action='READ')
+    read(iun,*)cdum
     if (ii.eq.1)then
-        read(11,*)j,current_date,cday  !j number of lines in file
+        read(iun,*)j,current_date,cday  !j number of lines in file
         !print *,current_date,cday
     else
-        read(11,*)j,current_date
+        read(iun,*)j,current_date
     end if
     if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
     if(ii.eq.imt) is=jmt
@@ -977,10 +981,10 @@ subroutine lee_emis(ii,borra)
     rdum=SUPF1/WTM(is)
     do
         if(ii.eq.ipm) then   !for PM2.5
-            read(11,*,END=300) idcf,rdum,levl,(edum(ih),ih=1,nh),levld
+            read(iun,*,END=300) idcf,rdum,levl,(edum(ih),ih=1,nh),levld
         !print *,idcf,rdum,levl,(edum(ih),ih=1,nh)
         else
-            read(11,*,END=300) idcf,levl,(edum(ih),ih=1,nh),levld
+            read(iun,*,END=300) idcf,levl,(edum(ih),ih=1,nh),levld
         end if
       if(levl.gt.zlev .or.levld.gt.zlev) Stop "*** Change dimension line  allocate(eft.."
         k=0
@@ -1010,8 +1014,8 @@ subroutine lee_emis(ii,borra)
         end do busca3
     end do
 300 continue
-
-close(11)
+close(iun)
+!$omp end parallel sections
 end subroutine lee_emis
 !                      _ _
 !   ___  ___  ___ _ __(_) |__   ___  __   ____ _ _ __
