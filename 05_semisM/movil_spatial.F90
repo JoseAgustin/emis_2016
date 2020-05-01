@@ -41,10 +41,6 @@ end module vars
 program movil_spatial
 use vars
 
-!    call lee_e
-
-!    call guarda
-
     call lee
 
     call computations
@@ -53,21 +49,26 @@ use vars
 	
 contains
 subroutine imprime
-    integer i,j,k
+    integer i,j,k,iun
 	character(len=15) ::name
 	do i=1,npol
 	name='M_'//trim(pol(i))//'.csv'
-	open(10,file=name)
-	write(10,*)'GRIDCODE emissions in g per year'
-	write(10,210)size(jscc),(jscc(j),j=1,size(jscc))
+	open(newunit=iun,file=name)
+	write(iun,*)'GRIDCODE emissions in g per year'
+	write(iun,210)size(jscc),(jscc(j),j=1,size(jscc))
 	do k=1,size(grid2)
-	  write(10,220) grid2(k),(1000000*pemi(k,i,j),j=1,size(jscc)),im2(k)
+	  write(iun,220) grid2(k),(1000000*pemi(k,i,j),j=1,size(jscc)),im2(k)
 	end do
-	close(10)
+	close(iun)
 	end do
     print *,"+++++   DONE SPATIAL MOVIL +++++"
+#ifndef PGI
 210 format(i8,",",<size(jscc)>(A11,","))
 220 format(i8,",",<size(jscc)>(ES12.4,","),I2)
+#else
+210 format(i8,",",30(A11,","))
+220 format(i8,",",30(ES12.4,","),I2)
+#endif
 end subroutine imprime
 !
 subroutine computations
@@ -78,6 +79,7 @@ implicit none
 	call count  ! counts grids and scc different values
 	print *,'end count'
 	ii=1
+!$omp parallel do private(k,i,j,l,ii)
    do k=1, size(grid2)
 	do i=1,nl2 ! gri_movil
        if(grid2(k).eq.grid(i))then
@@ -96,6 +98,7 @@ implicit none
       end if! grid
 	end do !i
 end do! k
+!$omp end parallel do
 end subroutine computations
 !
 subroutine lee
@@ -188,21 +191,21 @@ subroutine count
 	end if
   end do
 
-  !print *,'Number of different cells',j
+  print *,'Number of different cells',j
   deallocate(xl)
 !
 ! From emissions file F_moviles.csv
   allocate(xl(size(iscc)))
 
   xl=.true.
-  
+!$omp parallel do private(i)
   do ii=1,nl-1
     do i=ii+1,nl
     if(iscc(ii).eq.iscc(i).and.xl(i)) xl(i)=.false.
 	end do
   end do
+!$omp end parallel do
   ii=0
-!dir$ loop count min(512)
   do i=1,nl
    if(xl(i)) then
    ii=ii+1

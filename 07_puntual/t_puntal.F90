@@ -14,6 +14,7 @@
 !   12/07/2017  para 2014 y hEST
 !   18/07/2017  Incluye CO2, CN y CH4, dos alturas.
 !   06/04/2020  Incluye Horario de verano
+!   29/04/2020  Para openmp
 !
 module vars
 integer, parameter::nsp=10 !number of compounds
@@ -162,6 +163,7 @@ implicit none
 	end do
 	!print *,ncel
     close(iun)
+#ifdef _OPENMP
 !$omp parallel sections num_threads (3)
 !$omp section
   print *,'   >>>>>  Finding emissions in grid'
@@ -173,7 +175,10 @@ implicit none
   print *,'   >>>>>  Finding emissions in grid 3'
   call localiza(xlat,xlon,nx,ny,lat,lon,ict,jct,2*nl/3+1,nl)   ! Point Sources
 !$omp end parallel sections
-
+#else
+    print *,'   >>>>>  Finding emissions in grid'
+    call localiza(xlat,xlon,nx,ny,lat,lon,ict,jct,1,nl)   ! Point Sources
+#endif
 !  Reading and findig monthly, week and houry code profiles
     inquire(15,opened=fil1)
     if(.not.fil1) then
@@ -235,6 +240,7 @@ implicit none
 	read (17,'(A)') cdum
      do
 	    read(17,*,END=220)jscc,(itfrc(l),l=1,8)
+!$omp parallel do
 	    do i=1,nl
 	      if(jscc.eq.profile(2,i)) then
 	        dia(i)=real(itfrc(daytype))/real(itfrc(8))
@@ -245,10 +251,11 @@ implicit none
             end if
 	      end if
 		end do !i
+!$omp end parallel do
 	 end do
  220 continue
      !print '(A3,<nl>(f6.3))','day',(dia(i),i=1,nl)
-	 print *,'   Done Temporal_week',canio
+	 print *,'   Done Temporal_week'
 
 	 nfilep='temporal_wkend.txt'
 	 nfile='temporal_wkday.txt'
@@ -353,7 +360,7 @@ implicit none
 !    end do
 !
     end if !daytype
-    print *,'   Done ',nfile,canio,daytype,fweek
+    print *,'   Done ',nfile
     close(15)
     close(16)
     close(17)
