@@ -21,6 +21,8 @@
 !  Modification
 !
 !  Inclusion of 2 layers
+!   09/04/2020  sin ligas
+!   30/04/2020  for OPENMP
 !
 module var_spmp
 integer :: nh     !number of hours in a day
@@ -146,7 +148,7 @@ end subroutine lee
 !   ___ __ _| | ___ _   _| | ___  ___
 !  / __/ _` | |/ __| | | | |/ _ \/ __|
 ! | (_| (_| | | (__| |_| | | (_) \__ \
-! \___\__,_|_|\___|\__,_|_|\___/|___/
+!  \___\__,_|_|\___|\__,_|_|\___/|___/
 !
 subroutine calculos
 implicit none
@@ -157,6 +159,7 @@ implicit none
 	emis=0
 	ng =size(grid2)
 	ns =size(prof2)
+!$omp parallel do private(i,j,k,l,ih)
 	do ii=1,lfa
 	  do k=1,ng		! grid
 		if(grid(ii).eq.grid2(k)) then
@@ -172,44 +175,46 @@ implicit none
 		end if
 	  end do
 	end do
-
+!$omp end parallel do
 end subroutine calculos
 !                            _
 !   __ _ _   _  __ _ _ __ __| | __ _
 !  / _` | | | |/ _` | '__/ _` |/ _` |
 ! | (_| | |_| | (_| | | | (_| | (_| |
-! \__, |\__,_|\__,_|_|  \__,_|\__,_|
-! |___/
+!  \__, |\__,_|\__,_|_|  \__,_|\__,_|
+!  |___/
 !
 subroutine guarda
-implicit none
-	integer i,j,k
-    real suma
-	character(len=20)::fname
-	print *,maxval(emis),'Valor maximo'
-	do j=1,size(emis,dim=2)
+  implicit none
+  integer i,j,k,iun
+  real suma
+  character(len=20)::fname
+  print *,maxval(emis),'Valor maximo'
+!$omp parallel do private(iun,k,j,i,suma,fname)
+  do j=1,size(emis,dim=2)
     suma=0.
-	fname=trim(cname(j))//'_P.txt'
-	open(unit=20,file=fname,action='write')
-	write(20,'(A,A)')cname(j), 'Emissions'
-	write(20,*) size(grid2),current_date,', ',cdia
-		do k=1,size(emis,dim=1)
-            if(emis(k,j,1).ne.0 .and. emis(k,j,12).ne.0 .and. emis(k,j,23).ne.0 )then
-                write(20,200)grid2(k),capa(k,1),(emis(k,j,i),i=1,size(emis,dim=3)),capa(k,2)
-                do i=1,size(emis,dim=3)
-                    suma=suma+emis(k,j,i)
-                end do
-           end if
-		end do
+    fname=trim(cname(j))//'_P.txt'
+    open(newunit=iun,file=fname,action='write')
+    write(iun,'(A,A)')cname(j), 'Emissions'
+    write(iun,*) size(grid2),current_date,', ',cdia
+    do k=1,size(emis,dim=1)
+    if(emis(k,j,1).ne.0 .and. emis(k,j,12).ne.0 .and. emis(k,j,23).ne.0 )then
+    write(iun,200)grid2(k),capa(k,1),(emis(k,j,i),i=1,size(emis,dim=3)),capa(k,2)
+      do i=1,size(emis,dim=3)
+        suma=suma+emis(k,j,i)
+      end do
+    end if
+    end do
     write(6,*)cname(j),",",suma
-	close(20)
-	end do
+    close(iun)
+  end do
+!$omp end parallel do
+  print *,"*****  DONE PM2.5 POINT SPECIATION  *****"
 #ifndef PGI
 200 format(I7,x,I3,x,<nh>(ES11.4,x),I3)
 #else
 200 format(I7,x,I3,x,24(ES11.4,x),I3)
 #endif
-    print *,"*****  DONE PM2.5 POINT SPECIATION  *****"
 end subroutine guarda
 !                       _
 !  ___ ___  _   _ _ __ | |_
@@ -222,6 +227,7 @@ subroutine count
 	nn=size(profile)
 	allocate(xl(nn))
 	xl=.true.
+!$omp parallel do private(j)
 	do i=1,nn-1
 		do j=i+1,nn
 			if(profile(j).eq.profile(i).and.xl(j)) then
@@ -230,6 +236,7 @@ subroutine count
             end if
 		end do
 	end do
+!$omp end parallel do
 	j=0
 	do i=1,nn
 		if(xl(i)) j=j+1
@@ -249,6 +256,7 @@ subroutine count
   allocate(xl(size(iscc)))
 
   xl=.true.
+!$omp parallel do private(j)
   do i=1,lfa-1
    do j=i+1,lfa
     if(grid(j).eq.grid(i).and.xl(j)) then
@@ -257,6 +265,7 @@ subroutine count
     end if
    end do
   end do
+!$omp end parallel do
   j=0
   do i=1,lfa
     if(xl(i)) j=j+1
