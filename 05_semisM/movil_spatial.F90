@@ -1,6 +1,6 @@
 !  movil_spatial.f90
 !
-!  ifort -O3 -axAVX -o MSpatial.exe movil_spatial.f90
+!  ifort -O3 -axAVX -o MSpatial.exe movil_spatial.F90
 !
 !  Creado por Jose Agustin Garcia Reynoso el 1/11/2017
 ! 
@@ -172,11 +172,16 @@ subroutine count
   logical,allocatable::xl(:)
   allocate(xl(size(grid)))
   xl=.true.
+!$omp parallel do private(j)
   do i=1,nl2-1
    do j=i+1,nl2
-   if(grid(j).eq.grid(i).and.xl(j)) xl(j)=.false.
+   if(grid(j).eq.grid(i).and.xl(j)) then
+    xl(j)=.false.
+    exit
+    end if
    end do
   end do
+!$omp end parallel do
   j=0
   do i=1,nl2
     if(xl(i)) j=j+1
