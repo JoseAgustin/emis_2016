@@ -1,8 +1,8 @@
 !
-!	agg_m.f90
+!	agg_a.f90
 !	
 !
-!  Creado por Jose Agustin Garcia Reynoso el 31/05/12.
+!  Creado por Jose Agustin Garcia Reynoso el31/05/12.
 !
 ! Proposito:
 !               Especiacion y agreacion en diferenes especies y
@@ -11,34 +11,35 @@
 !				to do speciation anad aggregation to the different
 !               species and Classes for an specific mechanism
 !
-!  compile: ifort -O2 -axAVX2 agg_m.f90 -o spm.exe
+!  compile:
+!  ifort -O2 -axAVX2  agg_a.f90 -o spa.exe
 !
 !   9/04/2020      namelist general
 !
-module var_agg
+module var_agga
 integer,parameter :: nh=24     !number of hours in a day
 integer,parameter :: nspecies=292 ! max number species in profile 0 (292)
 integer,parameter :: ncat=40 ! max number chemical species
-integer :: nclass !number of clasess in profiles_spc.txt
+integer :: nclass !number the clasess in profiles_spc.txt
 integer lfa  ! line number in area file TCOV_2016.txt
 integer,allocatable ::grid(:)   ! grid id from emissions file
 integer,allocatable ::grid2(:)   ! different grid id from emissions file
 integer,allocatable :: isp(:)   ! number of chemical species in profile j
 integer,allocatable ::profile(:),prof2(:) ! profile ID from file scc-profiles
-real,allocatable :: ea(:,:)      ! emissions in TCOV file grid , nh
+real,allocatable :: ea(:,:)      ! emissions en TCOV file grid , nh
 real,allocatable :: emis(:,:,:)  ! emissions id cel, category, hours
 real,allocatable :: fclass(:,:,:)! aggregation factor by size(prof2), species, nclass
 character (len=10), allocatable:: iscc(:) !SCC from emissions file
 character(len=4),allocatable::cname(:)
-character(len=3) :: cday
+character(len=3) ::cdia
 character(len=7) ::mecha
 character (len=19) :: current_date,cprof
 
-common /date/ current_date,cday,cprof,mecha
-end module var_agg
+common /date/ current_date,cdia,cprof,mecha
+end module var_agga
 
-program agg_m
-use var_agg
+program agg_a
+use var_agga
 
     call lee_namelist
 
@@ -58,52 +59,51 @@ contains
 subroutine lee
 	implicit none
 	integer :: i,j,id,idum,l
-    real,dimension(ncat)::fagg ! aggregation factor for 34 species
+    real,dimension(ncat)::fagg ! aggregation factor for 40 species
     character(len=10)::isccf ! SCC prom profile file
 	character(len=10)::cdum
 	logical :: lfil
-    print *,"Inicia lectura"
-	print *,"../06_temisM/TMCOV_2016.csv"
-	open (unit=10,file='../06_temisM/TMCOV_2016.csv',status='old',action='read')
+	print *,"Inicia lectura"
+    print *,"  ../04_temis/TAVOC_2016.csv"
+	open (unit=10,file='../04_temis/TAVOC_2016.csv',status='old',action='read')
 	read(10,*) cdum  ! header
-	print *, cdum
-    read(10,*) lfa,current_date,cday  ! header
-    print *,lfa,current_date,cday
+	read(10,*) lfa,current_date,cdia  ! header
 	i=0
 	do 
-        read(10,*,end=100) cdum
-        i=i+1
+	read(10,*,end=100) cdum 
+	i=i+1
 	end do
 100 continue
-	print *,'Number in TMCOV_2016',i
+	print *,'  Number of rows in TAVOC_2016',i
 	lfa=i
 	allocate(grid(lfa),iscc(lfa),ea(lfa,nh),profile(lfa))
 	rewind(10)
 	read (10,*) cdum  ! header 1
 	read (10,*) cdum  ! header 2
 	do i=1,lfa
-        read (10,*)grid(i),iscc(i),(ea(i,j),j=1,nh)
+	read (10,*)grid(i),iscc(i),(ea(i,j),j=1,nh)
 	end do
 	close(10)
-! READING  and findign profiles
+! READING  and finding profiles
 	open(unit=15,file='scc-profiles.txt',status='old',action='read')
 	do
 		read(15,*,END=200) isccf,cdum,j
+!dir$ loop count min(512)
 		do i=1,lfa
 		 if (isccf.eq.iscc(i)) profile(i)=j
 		end do
 	end do
 200 continue
-    close(15)
+	close(15)
 	!print '(15I5)',(profile(i),i=1,lfa)
-	print *,'Start count'
+	print *,'  Start count'
 	call count  ! counts the number of different profiles
-	print *,'Finishing count'
+	print *,'  Finishing count'
 ! READING  and findign speciation for profiles
 	open(unit=16,file='profile_'//trim(mecha)//'.csv',status='old',action='read')
 	read(16,*)cdum,cprof
 	read(16,*) nclass
-	print *,'Speciation for Mechanism: ',trim(cprof),"->",mecha
+	print *,'  Speciation for Mechanism: ',trim(cprof),"->",mecha
 	if(nclass.gt.ncat) stop "Change size in fagg dimension ncat"
 	rewind(16)
 	allocate(cname(nclass))
@@ -121,7 +121,7 @@ subroutine lee
 		j=j+1
 	end do
 300 continue
-	!print *,isp,maxval(isp)
+	!print *,"isp,maxval",isp,maxval(isp)
 	allocate(fclass(size(prof2),maxval(isp),nclass))
 	rewind(16)
 	read(16,*)cdum  ! Header 1
@@ -139,20 +139,19 @@ subroutine lee
 		end do
 	end do
 400 continue
-    print *,'done reading profiles'
 !	i=1
-!	do j=1,isp(i)			
+!	do j=1,isp(i)
 !		print '(2i,<nclass>F)',prof2(i),j,(fclass(i,j,l),l=1,nclass)
 !	end do
 
 	close(16)
-      print *,'done lee'
+print *,'Fin lectura'
 end subroutine lee
 !            _            _
 !   ___ __ _| | ___ _   _| | ___  ___
 !  / __/ _` | |/ __| | | | |/ _ \/ __|
 ! | (_| (_| | | (__| |_| | | (_) \__ \
-! \___\__,_|_|\___|\__,_|_|\___/|___/
+!  \___\__,_|_|\___|\__,_|_|\___/|___/
 !
 subroutine calculos
 	implicit none
@@ -163,6 +162,7 @@ subroutine calculos
 	emis=0
 	ng =size(grid2)
 	ns =size(prof2)
+!$omp parallel do private(k,i,j,l,ih)
 	do ii=1,lfa
 	  do k=1,ng		! grid
 		if(grid(ii).eq.grid2(k)) then
@@ -180,36 +180,40 @@ subroutine calculos
 		end if
 	  end do
 	end do
+!$omp end parallel do
 end subroutine calculos
-!                            _
-!   __ _ _   _  __ _ _ __ __| | __ _
-!  / _` | | | |/ _` | '__/ _` |/ _` |
-! | (_| | |_| | (_| | | | (_| | (_| |
+!                           _
+!  __ _ _   _  __ _ _ __ __| | __ _
+! / _` | | | |/ _` | '__/ _` |/ _` |
+!| (_| | |_| | (_| | | | (_| | (_| |
 ! \__, |\__,_|\__,_|_|  \__,_|\__,_|
 ! |___/
 !
 subroutine guarda
 	implicit none
-	integer i,j,k
-   real suma
+	integer i,j,k,iun
+    real suma
 	character(len=20)::fname
 	print *,maxval(emis),'Valor maximo'
+!$omp parallel do private(iun,k,j,i,suma,fname)
 	do j=1,size(emis,dim=2)
-    suma=0
-	fname=trim(cprof)//'_'//trim(cname(j))//'_M.txt'
-	open(unit=20,file=fname,action='write')
-	write(20,'(4A)')cname(j),',',trim(cprof),', Emissions'
-	write(20,*) size(emis,dim=1),',',current_date,',',cday
-		do k=1,size(emis,dim=1)
-			write(20,'(I7,",",24(ES12.5,","))')grid2(k),(emis(k,j,i),i=1,size(emis,dim=3))
-        do i=1,size(emis,dim=3)
-            suma=suma+emis(k,j,i)
-        end do
-		end do
-	close(20)
-    write (6,*)cname(j),',',suma
+        suma=0
+        fname=trim(cprof)//'_'//trim(cname(j))//'_A.txt'
+        open(newunit=iun,file=fname,action='write')
+        write(iun,'(4A)')cname(j),',',trim(cprof),', Emissions'
+        write(iun,*) size(emis,dim=1),current_date,', ',cdia
+            do k=1,size(emis,dim=1)
+             write(iun,701)grid2(k),(emis(k,j,i),i=1,size(emis,dim=3))
+            do i=1,size(emis,dim=3)
+                suma=suma+emis(k,j,i)
+            end do
+            end do
+        close(iun)
+        write (6,*)cname(j),',',suma
 	end do
-    print *,"*****  DONE MOVIL SPECIATION *****"
+!$omp end parallel do
+    print *,"*****   DONE SPECIATION AREA *****"
+701 format(I7,",",24(ES11.4,","))
 end subroutine guarda
 !                        _
 !   ___ ___  _   _ _ __ | |_
@@ -218,19 +222,21 @@ end subroutine guarda
 !  \___\___/ \__,_|_| |_|\__|
 !
 subroutine count
-  integer i,j,nn
+  integer i,j,nn,iun
   logical,allocatable::xl(:)
   nn=size(profile)
   allocate(xl(nn))
   xl=.true.
+!$omp parallel do private(j)
   do i=1,nn-1
     do j=i+1,nn
-      if(profile(j).eq.profile(i).and.xl(j)) then
+      if(profile(j).eq.profile(i).and.xl(j))then
         xl(j)=.false.
         exit
       end if
     end do
   end do
+!$omp end parallel do
   j=0
   do i=1,nn
     if(xl(i)) j=j+1
@@ -238,38 +244,23 @@ subroutine count
   allocate(prof2(j),isp(j))
   j=0
   do i=1,nn
-    if(xl(i)) then
-      j=j+1
-      prof2(j)=profile(i)
-    end if
+   if(xl(i)) then
+     j=j+1
+     prof2(j)=profile(i)
+   end if
   end do
 !
-  print *,'Number different profiles',j !,prof2
+  print *,'   Number different profiles',j !,prof2
 !
   deallocate(xl)
-  allocate(xl(size(iscc)))
-
-  xl=.true.
-  do i=1,lfa-1
-    do j=i+1,lfa
-      if(grid(j).eq.grid(i).and.xl(j)) xl(j)=.false.
-    end do
-  end do
-  j=0
-  do i=1,lfa
-    if(xl(i)) j=j+1
-  end do
+  open(newunit=iun,file='../04_temis/index.csv',status='old')
+  read(iun,*)j
   allocate(grid2(j))
-  j=0
-  do i=1,lfa
-    if(xl(i)) then
-      j=j+1
-      grid2(j)=grid(i)
-    end if
+  do i=1,j
+    read(iun,*)grid2(i)
   end do
-
-  print *,'Number of different cells',j
-  deallocate(xl)
+  close(iun)
+print *,'   Number of different cells',j,size(grid2)
 end subroutine count
 !  _                                          _ _     _
 ! | | ___  ___     _ __   __ _ _ __ ___   ___| (_)___| |_
@@ -301,5 +292,6 @@ subroutine lee_namelist
     else
         stop '***** No namelist_emis.nml in .. directory'
     end if
+
 end subroutine lee_namelist
-end program agg_m
+end program agg_a

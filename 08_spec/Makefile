@@ -76,19 +76,19 @@ all :	spa.exe spm.exe spp.exe
 spa.exe: $(objec1)
 	$(FC) -o $@ $(objec1) $(LDOPTIONS)
 
-agg_a.o: agg_a.f90
+agg_a.o: agg_a.F90
 	$(FC) -c $< $(FCFLAGS)
  
 spm.exe: $(objec2)
 	$(FC) -o $@ $(objec2) $(LDOPTIONS)
 
-agg_m.o: agg_m.f90
+agg_m.o: agg_m.F90
 	$(FC) -c $< $(FCFLAGS)
 
 spp.exe: $(objec3)
 	$(FC) -o $@ $(objec3) $(LDOPTIONS)
 
-agg_p.o: agg_p.f90
+agg_p.o: agg_p.F90
 	$(FC) -c $< $(FCFLAGS)
 
 clean:

@@ -54,7 +54,7 @@ module land
 end module land
 
 program area_espacial
-use land
+       use land
 
        call lee_namelist
 
@@ -65,11 +65,12 @@ use land
        call guarda
 
 contains
-!  L     EEEEE EEEEE
-!  L     E     E
-!  L     EEE   EEE
-!  L     E     E
-!  LLLLL EEEEE EEEEE
+!  _     _____ _____
+! | |   | ____| ____|
+! | |   |  _| |  _|
+! | |___| |___| |___
+! |_____|_____|_____|
+!
 subroutine lee
 implicit none
     integer i,j,k,iun
@@ -337,7 +338,7 @@ subroutine guarda
     integer i,k,l,iun
     real suma
     Print *,"   ***   Guarda   ***"
-!$omp parallel do
+!$omp parallel do private(iun,i,l,suma)
     do k=1,nf
         open(newunit=iun,file=ofile(k),ACTION='write')
         write(iun,*)'grid,CID,Furb,Frural,SCCs'
