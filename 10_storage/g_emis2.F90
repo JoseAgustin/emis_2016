@@ -69,6 +69,9 @@ end module vars_emis
 !  \__, |\__,_|\__,_|_|  \__,_|\__,_|___|_| |_|\___|
 !  |___/                           |_____|
 program guarda_nc
+#ifdef _OPENMP
+    use omp_lib
+#endif
     use vars_emis
     use netcdf
 
@@ -614,8 +617,9 @@ print *,"Inicializa archivo de salida ",FILE_NAME(1:40)
     iTime=current_date
     JULDAY=juliano(anio,month,idia)
 ! Open NETCDF emissions file
-    call check( nf90_create(path =FILE_NAME,cmode = NF90_CLOBBER, ncid = ncid) )
-!   all check( nf90_create(path =FILE_NAME,cmode = NF90_NETCDF4,ncid = ncid) )
+!    call check( nf90_create(path =FILE_NAME,cmode = or(nf90_clobber,nf90_64bit_offset), ncid = ncid) )
+   call check( nf90_create(path =FILE_NAME,cmode = NF90_NETCDF4,ncid = ncid) )
+!   call check( nf90_create(path =FILE_NAME,cmode = NF90_CLASSIC_MODEL,ncid = ncid) )
 !     Define dimensiones
     dim=(/1,19,nx,ny,1,zlev/)
     !print *, "    Dimensions definition ****"
@@ -960,7 +964,6 @@ subroutine lee_emis(ii,borra)
 200 close(iun)
 !
 !  For point sources
-!    if (ii.ne.2) then
 !$omp section
     if (ii.le.5 .or. (ii.ge.ipm-2 .and. ii.le.ipm).or.ii.eq.icn .or. ii .eq.imt)then
         ruta="../07_puntual/"
