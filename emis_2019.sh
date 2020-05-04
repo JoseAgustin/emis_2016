@@ -20,11 +20,11 @@
 ProcessDir=$PWD
 echo "Directorio actual "$ProcessDir
 # Selecciona area de modelacion
-#  bajio     cdjuarez     colima      
-#  ecaim    guadalajara  mexicali
-#  mexico    monterrey    queretaro   tijuana
+# cdjuarez    colima      mexicali    monterrey   monterrey3
+# bajio       ecaim       guadalajara mexico      tijuana
+# bajio3      ecaim3      jalisco     mexico9     queretaro
 #
-dominio=mexico9
+dominio=ecaim3
 HacerArea=1
 #
 # Selecciona mecanismo
@@ -33,18 +33,21 @@ HacerArea=1
 MECHA=radm2
 #  Build the namelist_emis.nml file
 # Cambiar aqui la fecha
-mes=4
-dia=10
-dia2=10
+mes=5
+dia=21
+dia2=21
 dia1=$dia 
 #
 #    Aqui cambiar el año a modelar
 #
-nyear=2020
+nyear=2017
 #
 #   Si se desea un archivo de 24 hrs  nfile=1
 #              dos archivos de 12 hrs nfile=2
 nfile=1
+#
+# ******* No cambiar hacia abajo   ******
+#
 #  Revisa que exista el dominio
 cd 01_datos
 existe=0
@@ -67,9 +70,9 @@ cat << End_Of_File > namelist_emis.nml
 &region_nml
 zona ="$dominio"
 !
-! bajio     cdjuarez     colima
-! ecaim     guadalajara  mexicali
-! mexico    monterrey    queretaro   tijuana
+! cdjuarez    colima      mexicali    monterrey   monterrey3
+! bajio       ecaim       guadalajara mexico      tijuana
+! bajio3      ecaim3      jalisco     mexico9     queretaro
 /
 &fecha_nml
 ! Se indica el dia y el mes a calcular
@@ -99,23 +102,23 @@ lsummer = .true.
 mecha='$MECHA'
 /
 End_Of_File
-
-cd 02_aemis
+#
 if [ $HacerArea -eq 1 ]; then
 echo "     Haciendo distribucion espacial en Fuentes de area"
+cd $ProcessDir/02_aemis
 ./ASpatial.exe >../area.log &
-fi
-cd ../03_movilspatial
-if [ $HacerArea -eq 1 ]; then
+PIDa=$!
 echo "     Haciendo distribucion espacial en Fuentes de Moviles"
+cd $ProcessDir/03_movilspatial
 ./vial.exe > ../movil.log &
+PIDm=$!
 ./carr.exe >> ../movil.log&
-wait
-./agrega.exe > ../movil.log 
+wait $PIDm
+./agrega.exe > ../movil.log
 cd ../05_semisM
 ./MSpatial.exe > ../movil.log
+wait
 fi
-
 fi
 #
 # Inicia Loop de Tiempo
@@ -133,9 +136,9 @@ cat << End_Of_File > namelist_emis.nml
 &region_nml
 zona ="$dominio"
 !
-! bajio     cdjuarez     colima
-! ecaim     guadalajara  mexicali
-! mexico    monterrey    queretaro   tijuana
+! cdjuarez    colima      mexicali    monterrey   monterrey3
+! bajio       ecaim       guadalajara mexico      tijuana
+! bajio3      ecaim3      jalisco     mexico9     queretaro
 /
 &fecha_nml
 ! Se indica el dia y el mes a calcular
@@ -167,40 +170,50 @@ mecha='$MECHA'
 End_Of_File
 
 cd $ProcessDir/04_temis
-echo 'Area Temporal distribution'
+echo 'Area  Temporal distribution'
 ./Atemporal.exe  > ../area.log &
-echo 'Point Temporal distribution'
-cd ../07_puntual/
-./Puntual.exe >& ../puntual.log 
+PIDa=$!
 echo 'Movil Temporal distribution'
 cd ../06_temisM/
 ./Mtemporal.exe > ../movil.log &
-wait
+PIDm=$!
+echo 'Point Temporal distribution'
+cd ../07_puntual/
+./Puntual.exe > ../puntual.log &
+PIDp=$!
+
+
 #
 #echo 'Biogenic'
 #cd ../12_biogenic
 #./Btemporal.exe > biog.log&
 #
-echo 'Speciation distribution PM2.5'
+echo 'Speciation distribution'
+echo '   '$MECHA' *****'
 #
 cd ../09_pm25spec
-./spm25p.exe >> ../puntual.log &
+wait $PIDm
+echo 'Movile PM2.5'
 ./spm25m.exe >> ../movil.log &
-./spm25a.exe >> ../area.log&
-#
-
-echo 'Speciation distribution VOCs'
-#
 cd ../08_spec
-echo '   '$MECHA' *****'
-echo 'Movile'
+echo 'Movile VOC'
 ./spm.exe >> ../movil.log &
-echo 'Puntual'
+wait $PIDp
+echo 'Puntual PM2.5'
+cd ../09_pm25spec
+./spm25p.exe >> ../puntual.log &
+echo 'Puntual VOC'
+cd ../08_spec
 ./spp.exe >> ../puntual.log  &
-echo 'Area '
-./spa.exe >> ../area.log
+wait $PIDa
+echo 'Area  PM2.5'
+cd ../09_pm25spec
+./spm25a.exe >> ../area.log&
+cd ../08_spec
+echo 'Area  VOC'
+./spa.exe >> ../area.log &
+#
 wait
-
 echo ' Guarda'
 
 cd ../10_storage
