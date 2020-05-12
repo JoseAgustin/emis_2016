@@ -9,8 +9,8 @@
 !            Guarda los datos del inventario para el
 !            mecanismo los diferentes mecanismos en formato netcdf y con NAMELIST
 !
-! ifort g_emis2.F90 -O2 -axAVX -lnetcdff -L$NETCDF/lib -I$NETCDF/include  -o emis2.exe
-!
+! ifort g_emis2.F90 -O2 -axAVX -lnetcdff -L$NETCDF/lib -I$NETCDF/include -qopenmp -o emis2.exe
+! gfortran -L/usr/local/lib -I/usr/local/include -lnetcdff -fopenmp g_emis2.F90
 !
 !   09/04/2020   Version 1.1
 !   12/04/2020   Version 2.0
