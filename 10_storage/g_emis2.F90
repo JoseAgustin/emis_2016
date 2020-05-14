@@ -584,9 +584,10 @@ end subroutine setup_mecha
 ! \__ \  __/ |_| |_| | |_) |  |  _| | |  __/
 ! |___/\___|\__|\__,_| .__/___|_| |_|_|\___|
 !                    |_| |_____|
-subroutine setup_file(FILE_NAME,ncid)
+subroutine setup_file(FILE_NAME,istart,ncid)
     IMPLICIT NONE
     character(len=*),intent(IN):: FILE_NAME
+    integer,intent(in) :: istart
     integer,intent(out) :: ncid
     integer, parameter :: NDIMS=6
     integer :: i,j,k,Layer
@@ -612,14 +613,14 @@ print *,"Inicializa archivo de salida ",FILE_NAME(1:40)
     write(current_date(1:5),'(I4,"-")') anio
     write(current_date(6:8),'(I2.2,"-")') month
     write(current_date(9:11),'(I2.2,"_")') idia
-    write(current_date(12:19),'("00:00:00")')
+    write(current_date(12:19),'(I2.2,":00:00")') istart
 !
     iTime=current_date
     JULDAY=juliano(anio,month,idia)
 ! Open NETCDF emissions file
 !    call check( nf90_create(path =FILE_NAME,cmode = or(nf90_clobber,nf90_64bit_offset), ncid = ncid) )
-   call check( nf90_create(path =FILE_NAME,cmode = NF90_NETCDF4,ncid = ncid) )
-!   call check( nf90_create(path =FILE_NAME,cmode = NF90_CLASSIC_MODEL,ncid = ncid) )
+!   call check( nf90_create(path =FILE_NAME,cmode = NF90_NETCDF4,ncid = ncid) )
+   call check( nf90_create(path =FILE_NAME,cmode = NF90_CLASSIC_MODEL,ncid = ncid) )
 !     Define dimensiones
     dim=(/1,19,nx,ny,1,zlev/)
     !print *, "    Dimensions definition ****"
@@ -1049,7 +1050,7 @@ subroutine escribe_var(ikk)
         &trim(zona(1:8))//'_'//iTime
     end if
     if(ikk.eq.1) then
-      call setup_file(FILE_NAME,ncid)
+      call setup_file(FILE_NAME,0,ncid)
         if (periodo.eq. 1) then
           tiempo: do it=iit,eit
             write(current_date(12:13),'(I2.2)') it-1
@@ -1061,7 +1062,7 @@ subroutine escribe_var(ikk)
             call check( nf90_put_var(ncid, id_varpop,pob,  start=(/1,1,it/)) )
           end do TIEMPO
         else
-        call setup_file(FILE_NAME2,ncid2)
+        call setup_file(FILE_NAME2,12,ncid2)
           do it=iit,eit
         write(current_date(12:13),'(I2.2)') it-1
         Times(1,1)=current_date(1:19)
@@ -1145,6 +1146,7 @@ end subroutine termina
 subroutine copia
 IMPLICIT NONE
 integer i,j,k,l,ll
+!$omp parallel do private(j,k,l,ll)
 do i=1,nx
     do j=1,ny
         do k=1,zlev
@@ -1155,5 +1157,6 @@ do i=1,nx
         end do
     end do
 end do
+!$omp end parallel do
 end subroutine
 end program guarda_nc
