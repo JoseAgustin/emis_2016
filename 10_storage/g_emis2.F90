@@ -63,6 +63,7 @@ id_unlimit,id_utmx,id_utmy,id_utmz,ncid,ncid2
 common /date/ current_date,cday,mecha,titulo
 common /nlm_vars/month,idia,anio,periodo
 end module vars_emis
+!                            _
 !   __ _ _   _  __ _ _ __ __| | __ _     _ __   ___
 !  / _` | | | |/ _` | '__/ _` |/ _` |   | '_ \ / __|
 ! | (_| | |_| | (_| | | | (_| | (_| |   | | | | (__
