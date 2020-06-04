@@ -1,6 +1,6 @@
-!
+/!
 !	movil_temp.f90
-!	
+!
 !
 !  Creado por Jose Agustin Garcia Reynoso el 25/05/12.
 !
@@ -74,17 +74,17 @@ end module
 !  Make the temporal distribution of movile emissions
 !
 
-program atemporal 
+program atemporal
    use variables
 
    call lee_namelist
 
    call lee
-   
+
    call compute
-   
+
    call storage
-   
+
 contains
 !  _
 ! | | ___  ___
@@ -93,16 +93,16 @@ contains
 ! |_|\___|\___|
 !
 subroutine lee
-	implicit none 
+	implicit none
 	integer i,j,k,l,m,iprof
 	integer idum,imon,iwk,ipdy
 	integer,dimension(25) :: itfrc  !montly,weekely and hourly values and total
 	real rdum
 	logical fil1,fil2
-    character (len=10):: jscc ! scc code from temporal file
+  character (len=10):: jscc ! scc code from temporal file
 	character(len=4):: cdum
 	character(len=18):: nfile,nfilep
-    character(len=35):: canio
+  character(len=35):: canio
 
     write(current_date,'(I4,"-",I2.2,"-",I2.2,A9)')anio,month,idia,'_00:00:00'
     fweek=7./daym(month) !weeks per month
@@ -176,8 +176,8 @@ subroutine lee
 		end do
 	  end do
  200 continue
-     !print '(A3,<nscc(k)>(I5))','mon',(profile(1,i,k),i=1,nscc(k))      
-     !print '(A3,<nscc(k)>(I4,x))','day',(profile(2,i,k),i=1,nscc(k))      
+     !print '(A3,<nscc(k)>(I5))','mon',(profile(1,i,k),i=1,nscc(k))
+     !print '(A3,<nscc(k)>(I4,x))','day',(profile(2,i,k),i=1,nscc(k))
 	 !print '(A3,<nscc(k)>(I4,x))','hr ',(profile(3,i,k),i=1,nscc(k))
 	 print *,'   Done Temporal_01'
 !  REading and findig monthly  profile
@@ -400,7 +400,7 @@ subroutine compute
 	  end do
 	end do
 !  For PM2.5
-!  
+!
 	k=nf-1
    do i=1,nm
 		  do l=1,nh
@@ -413,7 +413,7 @@ subroutine compute
 		  end do
 	  end do
 !  For VOCs
-!  
+!
 	k=nf
    do i=1,nm
 		  do l=1,nh
@@ -513,7 +513,7 @@ subroutine count
     j=j+1
 	idcel2(j)=idcel(i)
 	end if
-	 
+
   end do
   print *,'Number of different cells',j
   allocate(emis(j,nf-2,nh))
