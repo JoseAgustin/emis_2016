@@ -1,6 +1,6 @@
 !
 !	atemporal.F90
-!	
+!
 !
 !   Creado por Jose Agustin Garcia Reynoso 12/07/2017.
 !
@@ -37,7 +37,6 @@ integer :: idia     ! dia para el calculo de emisiones
 integer :: anio     ! anio de las emisiones 2016
 integer ::periodo! =1 uno 24 hr, =2 dos de 12hrs c/u
 integer,dimension(nf) :: nscc ! number of scc codes per file
-integer*8,dimension(nnscc) ::iscc 
 integer, allocatable :: idcel(:),idcel2(:),idcel3(:)
 integer, allocatable :: idsm(:,:) ! state municipality IDs emiss and usoH
 integer,dimension(12) :: daym ! days in a month
@@ -52,6 +51,7 @@ real,dimension(nnscc,nf) :: mes,dia,diap ! dia currentday, diap previous day
 real,dimension(nnscc,nf,nh):: hCST,hMST,hPST,hEST
 integer,dimension(3,nnscc,nf):: profile  ! 1=mon 2=weekday 3=hourly
 integer,allocatable :: id5(:,:) ! index per file
+character(len=10),dimension(nnscc) ::iscc
 character(len=3),dimension(juliano):: cdia
 character (len=19) :: current_date
 logical :: lsummer
@@ -79,17 +79,17 @@ end module
 !
 !  Make the temporal distribution of emissions
 !
-program atemporal 
+program atemporal
    use variables
 
    call lee_namelist
 
    call lee
-   
+
    call compute
-   
+
    call storage
-   
+
 contains
 !  _
 ! | | ___  ___
@@ -98,16 +98,17 @@ contains
 ! |_|\___|\___|
 !
 subroutine lee
-	implicit none 
+	implicit none
 	integer i,j,k,l,m
 	integer idum,imon,iwk,ipdy,iun
-	integer*8 jscc ! scc code from temporal file
+	integer iprof ! scc code from temporal file
 	integer,dimension(25) :: itfrc  !montly,weekely and hourly values and total
 	real rdum
 	logical fil1,fil2
+  character(len=10):: jscc
 	character(len=4):: cdum
 	character(len=18):: nfile,nfilep
-    character(len=35):: canio
+  character(len=35):: canio
 
     write(current_date,'(I4,"-",I2.2,"-",I2.2,A9)')anio,month,idia,'_00:00:00'
     fweek= 7./daym(month)   !semanas en el mes
@@ -195,11 +196,11 @@ subroutine lee
 		end do
 	  end do
  200 continue
-      !print '(A3,<nscc(k)>(I5))','mon',(profile(1,i,k),i=1,nscc(k))      
-      !print '(A3,<nscc(k)>(I3,x))','day',(profile(2,i,k),i=1,nscc(k))      
+      !print '(A3,<nscc(k)>(I5))','mon',(profile(1,i,k),i=1,nscc(k))
+      !print '(A3,<nscc(k)>(I3,x))','day',(profile(2,i,k),i=1,nscc(k))
 	  !print '(A3,<nscc(k)>(I3,x))','hr ',(profile(3,i,k),i=1,nscc(k))
 	 print *,'   Done Temporal_01'
-	 
+
 !  Reading and findig monthly profile
     inquire(16,opened=fil1)
     if(.not.fil1) then
@@ -210,9 +211,9 @@ subroutine lee
 	end if
 	read (16,'(A)') cdum
      do
-	    read(16,*,END=210)jscc,(itfrc(l),l=1,13)
+	    read(16,*,END=210)iprof,(itfrc(l),l=1,13)
 	    do i=1,nscc(k)
-	      if(jscc.eq.profile(1,i,k)) then
+	      if(iprof.eq.profile(1,i,k)) then
 	        mes(i,k)=real(itfrc(month))/real(itfrc(13))
             exit
 	      end if
@@ -233,9 +234,9 @@ subroutine lee
 	end if
 	read (17,'(A)') cdum
     do
-	    read(17,*,END=220)jscc,(itfrc(l),l=1,8)
+	    read(17,*,END=220)iprof,(itfrc(l),l=1,8)
     week: do i=1,nscc(k)
-	      if(jscc.eq.profile(2,i,k)) then
+	      if(iprof.eq.profile(2,i,k)) then
 	        dia(i,k)=real(itfrc(daytype))/real(itfrc(8))
             if(daytype.eq.1) then
              diap(i,k)=real(itfrc(daytype+6))/real(itfrc(8))
@@ -266,9 +267,9 @@ subroutine lee
 
 !dir$ loop count min(256)
      do
-	    read(18,*,END=230)jscc,(itfrc(l),l=1,25)
+	    read(18,*,END=230)iprof,(itfrc(l),l=1,25)
     dias: do i=1,nscc(k)
-	      if(jscc.eq.profile(3,i,k)) then
+	      if(iprof.eq.profile(3,i,k)) then
             m=4-iverano
             do l=1,nh
             if(m+l.gt.nh) then
@@ -318,9 +319,9 @@ print *,'   Done ',nfile,daytype,maxval(hCST)!,maxval(hPST),maxval(hMST)
         end if
         read (19,'(A)') cdum
        do
-        read(19,*,END=240)jscc,(itfrc(l),l=1,25)
+        read(19,*,END=240)iprof,(itfrc(l),l=1,25)
     fds: do i=1,nscc(k)
-         if(jscc.eq.profile(3,i,k)) then
+         if(iprof.eq.profile(3,i,k)) then
             m=4-iverano
             do l=1,nh
          if(daytype.eq.1 )then
@@ -456,7 +457,7 @@ subroutine compute
     end do
 !
 !  For VOCs
-!  
+!
 !$omp section
     evoc=0
 	k=nf
@@ -544,7 +545,7 @@ subroutine storage
 !$omp end parallel sections
 	close(iun)
     print *,"*****  DONE Temporal Area *****"
-110 format(I7,",",I10,",",23(ES12.3,","),ES12.3)
+110 format(I7,",",A10,",",23(ES12.4,","),ES12.4)
     deallocate(idcel,id5,idcel2,idsm,emiA,emis,epm2,evoc)
 end subroutine storage
 !                       _

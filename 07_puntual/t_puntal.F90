@@ -1,6 +1,6 @@
 !
 !	t_puntal.F90
-!	
+!
 !
 !  Creado por Jose Agustin Garcia Reynoso el 06/06/12.
 ! Proposito
@@ -23,9 +23,9 @@ integer,parameter:: ipm=2  ! PM2.5
 integer,parameter:: ivoc=6  ! VOC position in puntual.csv
 integer :: month
 integer :: daytype ! tipo de dia 1 lun a 7 dom
-integer*8,allocatable:: iscc(:)
 integer,allocatable :: capa(:,:),ict(:),jct(:),idcg(:,:)
 integer,allocatable :: profile(:,:),mcst(:,:)
+integer :: iprof
 integer :: nl,nx,ny
 integer :: iverano  ! si es en periodo de verano
 integer :: idia     ! dia para el calculo de emisiones
@@ -40,6 +40,7 @@ real,allocatable :: e_mis(:,:),emis(:,:,:)! line compounds nsp
 real,allocatable :: mes(:),dia(:),diap(:)
 real,allocatable :: hEST(:,:),hCST(:,:),hMST(:,:),hPST(:,:)
 logical :: lsummer
+character(len=10),allocatable::iscc(:)
 character(len=12):: zona
 character (len=7) :: cvar(nsp)
 character (len=19) :: current_date
@@ -76,11 +77,11 @@ subroutine lee
 implicit none
 	integer :: i,j,k,l,m,iun
 	integer :: idum, imon,iwk,ipdy
-	integer*8:: jscc
 	integer,dimension(25) :: itfrc  !montly,weekely and hourly values and total
 	real,allocatable ::xlat(:,:),xlon(:,:)
 	real rdum
 	logical fil1,fil2
+  character(len=10)::jscc
 	character(len=35)::cdum,canio
 	character(len=18):: nfile,nfilep
 
@@ -190,7 +191,7 @@ implicit none
 	read (15,'(A)') cdum
     do
       read(15,*,END=200)jscc,imon,iwk,ipdy
-      if(jscc.gt.0) then
+      if(trim(jscc).ne."0") then
 !$omp parallel do
         do i=1,nl
           if(iscc(i).eq.jscc) then
@@ -217,10 +218,10 @@ implicit none
 	end if
 	read (16,'(A)') cdum
      do
-	    read(16,*,END=210)jscc,(itfrc(l),l=1,13)
+	    read(16,*,END=210)iprof,(itfrc(l),l=1,13)
 !$omp parallel do
 	    do i=1,nl
-	      if(jscc.eq.profile(1,i)) then
+	      if(iprof.eq.profile(1,i)) then
 	        mes(i)=real(itfrc(month))/real(itfrc(13))
 	      end if
 		end do !i
@@ -239,10 +240,10 @@ implicit none
 	end if
 	read (17,'(A)') cdum
      do
-	    read(17,*,END=220)jscc,(itfrc(l),l=1,8)
+	    read(17,*,END=220)iprof,(itfrc(l),l=1,8)
 !$omp parallel do
 	    do i=1,nl
-	      if(jscc.eq.profile(2,i)) then
+	      if(iprof.eq.profile(2,i)) then
 	        dia(i)=real(itfrc(daytype))/real(itfrc(8))
             if(daytype.eq.1) then
                 diap(i)=real(itfrc(daytype+6))/real(itfrc(8))
@@ -269,9 +270,9 @@ implicit none
 	end if
 	read (18,'(A)') cdum
      do
-	    read(18,*,END=230)jscc,(itfrc(l),l=1,25)
+	    read(18,*,END=230)iprof,(itfrc(l),l=1,25)
 	    do i=1,nl
-	      if(jscc.eq.profile(3,i)) then
+	      if(iprof.eq.profile(3,i)) then
             m=4-iverano
             do l=1,nh
             if(m+l.gt.nh) then
@@ -321,9 +322,9 @@ implicit none
         end if
         read (19,'(A)') cdum
         do
-          read(19,*,END=240)jscc,(itfrc(l),l=1,25)
+          read(19,*,END=240)iprof,(itfrc(l),l=1,25)
           do i=1,nl
-            if(jscc.eq.profile(3,i)) then
+            if(iprof.eq.profile(3,i)) then
               m=4-iverano
                 do l=1,nh
                 if(m+l.gt.nh) then
@@ -447,13 +448,13 @@ subroutine guarda
 #ifndef PGI
 210 format(I8,',',I3,',',23(ES,","),ES,",",I3)
 220 format(f10.6,',',f10.4,',',I3,',',23(ES,","),ES)
-300 format(I10,',',f10.6,',',f10.4,',',I3,',',23(ES,","),ES)
-310 format(I10,',',I8,',',I3,',',23(ES,","),ES,",",I3)
+300 format(A10,',',f10.6,',',f10.4,',',I3,',',23(ES,","),ES)
+310 format(A10,',',I8,',',I3,',',23(ES,","),ES,",",I3)
 #else
 210 format(I8,',',I3,',',23(E,","),E,",",I3)
 220 format(f10.6,',',f10.4,',',I3,',',23(E,","),E)
-300 format(I10,',',f10.6,',',f10.4,',',I3,',',23(E,","),E)
-310 format(I10,',',I8,',',I3,',',23(E,","),E,",",I3)
+300 format(A10,',',f10.6,',',f10.4,',',I3,',',23(E,","),E)
+310 format(A10,',',I8,',',I3,',',23(E,","),E,",",I3)
 #endif
 end subroutine guarda
 !
@@ -471,7 +472,7 @@ end subroutine guarda
   real,dimension(:,:),intent(IN):: xlat,xlon
   real,dimension(:),intent(IN):: clat,clon
    do l=inst,nst
-		! Out of the region 
+		! Out of the region
    ist(l)=0
    jst(l)=0
 	  do i = 1,mi-1
