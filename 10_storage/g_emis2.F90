@@ -737,7 +737,7 @@ subroutine guarda_variables
     call lee_localiza
     allocate(eft(nx,ny,zlev,nh))
     if(periodo.eq.2) allocate(efs(nx,ny,zlev,nh/2))
-    eft=0
+    eft=0.
     do i=1,nf
         if(i.eq.icn .or. i.eq.imt) cycle
         if(i.eq.jcn ) then
@@ -986,7 +986,7 @@ subroutine lee_emis(ii,borra)
     rdum=SUPF1/WTM(is)
     do
         if(ii.eq.ipm) then   !for PM2.5
-            read(iun,*,END=300) idcf,rdum,levl,(edum(ih),ih=1,nh),levld
+            read(iun,*,END=300) crdum,idcf,levl,(edum(ih),ih=1,nh),levld
         !print *,idcf,rdum,levl,(edum(ih),ih=1,nh)
         else
             read(iun,*,END=300) idcf,levl,(edum(ih),ih=1,nh),levld
