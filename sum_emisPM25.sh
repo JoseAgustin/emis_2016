@@ -1,19 +1,19 @@
 #!/bin/bash
 #
 # BC analysis
-echo Area
+echo Area CN
 awk -F"," -f suma_Apm25s.awk 04_temis/TACN__2016.csv
-echo Mobile
+echo Mobile CN 
 awk -F"," -f suma_Apm25s.awk 06_temisM/TMCN__2016.csv
-echo Puntual
+echo Puntual CN
 awk -F"," -f suma_Apm25s.awk 07_puntual/T_ANNCN.csv
 
 # PM10 analysis
-echo Area
+echo Area PM10
 awk -F"," -f suma_Apm25s.awk 04_temis/TAPM102016.csv
-echo Mobile
+echo Mobile PM10
 awk -F"," -f suma_Apm25s.awk 06_temisM/TMPM102016.csv
-echo Puntual
+echo Puntual PM10
 awk -F"," -f suma_Apm25s.awk 07_puntual/T_ANNPM10.csv
 #
 #  Analysis of PM2.5 emissions
