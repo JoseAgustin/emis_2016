@@ -196,9 +196,9 @@ subroutine setup_mecha
     'C3+Aldehydes    ','Ethene          ','Ethane          ','Ethanol         ',&
     'Internal OLE    ','Methanol        ','Formaldehyde    ','Isoprene        ',&
     'TOB (R-C=C)     ','Paraffin (C-C)  ','Terpenes        ','Toluene+others  ',&
-    'Xylene+others   ','Carbon Dioxide  ','PM_10           ','PM_25           ',&
-    'Sulfates        ','Nitrates        ','PM25I           ','Organic         ',&
-    'Elemental Carbon','SulfatesJ       ','NitratesJ       ','PM25J           ',&
+    'Xylene+others   ','Carbon Dioxide  ','PM 10um mode    ','PM 2.5um mode   ',&
+    'Sulfates        ','Nitrates        ','PM2.5I          ','Organic         ',&
+    'Elemental Carbon','Sulfates J mode ','Nitrates J mode ','PM2.5 J mode    ',&
     'Organic Carbon  ','Elemental Carbon'/)
     fnameA=(/'TACO__2016.csv   '  ,&
     'TANH3_2016.csv   ','TANOx_2016.csv   ','TANOx_2016.csv   ','TASO2_2016.csv   ',&
@@ -267,7 +267,7 @@ subroutine setup_mecha
     'Glyoxal         ','Formic Acid     ','Isoprene        ','Methacrolein    ',&
     'Methyl Ethyl Ket','Methanol        ','Methyl Glyoxal  ','Methyl Vinyl Ket',&
     'Toluene         ','Xylenes         ','Carbon Dioxide  ','PM_10           ',&
-    'PM_25           ','Sulfates        ','Nitrates        ','OTHER           ',&
+    'PM_2.5um        ','Sulfates        ','Nitrates        ','OTHER           ',&
     'Organic Carbon  ','Elemental Carbon','SulfatesJ       ','NitratesJ       ',&
     'OTHER           ','Organic Carbon  ','Elemental Carbon'/)
     fnameA=(/'TACO__2016.csv   ','TANOx_2016.csv   ','TANOx_2016.csv   ',&
@@ -352,10 +352,10 @@ subroutine setup_mecha
     'Methyl vinyl ket','Methacrolein    ','Organic nitrate ','Glyoxal CHOCHO  ',&
     'Methylglyoxal an','Unsaturated alde','Acetaldehyde    ','Acetic acid and ',&
     'Acetylene       ','Benzaldehyde and','Ethanol         ','Ethylene glycol ',&
-    'Formic acid     ','Methanol        ','Carbon Dioxide  ','PM_10           ',&
-    'PM_25           ','Sulfates Particl','Nitrates Particl','OTHER PM25I     ',&
-    'Organic Carbon  ','Elemental Carbon','SulfatesJ Partic','NitratesJ Partic',&
-    'OTHER PM25J     ','OrganicJ Carbon ','Elemental CarboJ'/)
+    'Formic acid     ','Methanol        ','Carbon Dioxide  ','PM 10um mode    ',&
+    'PM 2.5um mode   ','Sulfates Particl','Nitrates Particl','PM2.5 I mode    ',&
+    'Organic Carbon  ','Elemental Carbon','Sulfates J mode ','Nitrates J mode ',&
+    'PM2.5 J mode    ','Organic J Carbon','Elemental CarboJ'/)
     fnameA=(/'TACO__2016.csv   ','TANH3_2016.csv   ','TANOx_2016.csv   ','TANOx_2016.csv   ',&
     'TASO2_2016.csv   ','RACM2_CH4_A.txt  ','RACM2_ETH_A.txt  ','RACM2_HC3_A.txt  ',&
     'RACM2_HC5_A.txt  ','RACM2_HC8_A.txt  ','RACM2_ETE_A.txt  ','RACM2_OLI_A.txt  ',&
@@ -438,9 +438,9 @@ subroutine setup_mecha
     'Ethane          ','Glyoxal         ','HC3             ','HC5             ','HC8             ',&
     'HCHO            ','ISOPRENE        ','Acetone         ','Acrolein        ','MGLY            ',&
     'Methyl Vinil Ket','Alkenes         ','alkenes         ','Terminal Alkynes','Formic Acid     ',&
-    'Acetic Acid     ','TOLUENE         ','XYLENE          ','Carbon Dioxide  ','PM_10           ',&
-    'PM_25           ','Sulfates        ','Nitrates        ','PM25I           ','Organic         ',&
-    'Elemental Carbon','SulfatesJ       ','NitratesJ       ','PM25J           ','Organic         ',&
+    'Acetic Acid     ','TOLUENE         ','XYLENE          ','Carbon Dioxide  ','PM 10um         ',&
+    'PM 2.5um        ','Sulfates        ','Nitrates        ','PM 2.5 I        ','Organic         ',&
+    'Elemental Carbon','Sulfates J mode ','Nitrates J mode ','PM 2.5 J mode   ','Organic J mode  ',&
     'Elemental Carbon'/)
     fnameA=['TACO__2016.csv   ',&
      'TANH3_2016.csv   ','TANOx_2016.csv   ','TANOx_2016.csv   ','TASO2_2016.csv   ',&
@@ -515,9 +515,9 @@ subroutine setup_mecha
     'Lumped isoprene ','Ketones and othe','Methanol        ','Methacrolein    ',&
     'Methyl Glyoxal  ','Methyl Vinyl Ket','Alkenes 1       ','Alkenes 2       ',&
     'Phenol          ','Ketones + other ','Lumped C3+ Aldeh','Higher Carboxyl ',&
-    'Terpenes        ','Carbon Dioxide  ','PM_10           ','PM_25           ',&
+    'Terpenes        ','Carbon Dioxide  ','PM_10           ','PM 2.5 um mode  ',&
     'Sulfates Particl','Nitrates Particl','OTHER Particles ','Organic C partic',&
-    'Elemental Carbon','SulfatesJ       ','NitratesJ       ','OTHER           ',&
+    'Elemental Carbon','Sulfates J mode ','Nitrates J mode ','OTHER           ',&
     'Organic Carbon  ','Elemental Carbon']
     fnameA=(/'TACO__2016.csv    ',&
     'TANOx_2016.csv    ','TANOx_2016.csv    ','TANH3_2016.csv    ','TASO2_2016.csv    ',&
