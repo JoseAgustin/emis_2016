@@ -56,88 +56,89 @@ contains
 ! |_|\___|\___|
 !
 subroutine lee
-	implicit none
-	integer :: i,j,id,idum,l
+    implicit none
+    integer :: i,j,id,idum,l
+    integer:: iunit
     real,dimension(ncat)::fagg ! aggregation factor for 34 species
     character(len=10)::isccf ! SCC prom profile file
-	character(len=10)::cdum
-	logical :: lfil
+    character(len=10)::cdum
+    logical :: lfil
     print *,"Inicia lectura"
-	print *,"../06_temisM/TMCOV_2016.csv"
-	open (unit=10,file='../06_temisM/TMCOV_2016.csv',status='old',action='read')
-	read(10,*) cdum  ! header
-	print *, cdum
-    read(10,*) lfa,current_date,cday  ! header
+    print *,"../06_temisM/TMCOV_2016.csv"
+    open (newunit=iunit,file='../06_temisM/TMCOV_2016.csv',status='old',action='read')
+    read(iunit,*) cdum  ! header
+    print *, cdum
+    read(iunit,*) lfa,current_date,cday  ! header
     print *,lfa,current_date,cday
-	i=0
-	do 
-        read(10,*,end=100) cdum
+    i=0
+    do
+        read(iunit,*,end=100) cdum
         i=i+1
-	end do
+    end do
 100 continue
 	print *,'Number in TMCOV_2016',i
 	lfa=i
 	allocate(grid(lfa),iscc(lfa),ea(lfa,nh),profile(lfa))
-	rewind(10)
-	read (10,*) cdum  ! header 1
-	read (10,*) cdum  ! header 2
+	rewind(iunit)
+	read (iunit,*) cdum  ! header 1
+	read (iunit,*) cdum  ! header 2
 	do i=1,lfa
-        read (10,*)grid(i),iscc(i),(ea(i,j),j=1,nh)
+        read (iunit,*)grid(i),iscc(i),(ea(i,j),j=1,nh)
 	end do
-	close(10)
+	close(iunit)
 ! READING  and findign profiles
-	open(unit=15,file='scc-profiles.txt',status='old',action='read')
+	open(newunit=iunit,file='scc-profiles.txt',status='old',action='read')
 	do
-		read(15,*,END=200) isccf,cdum,j
+		read(iunit,*,END=200) isccf,cdum,j
 		do i=1,lfa
 		 if (isccf.eq.iscc(i)) profile(i)=j
 		end do
 	end do
 200 continue
-    close(15)
-	!print '(15I5)',(profile(i),i=1,lfa)
-	print *,'Start count'
-	call count  ! counts the number of different profiles
-	print *,'Finishing count'
-! READING  and findign speciation for profiles
-	open(unit=16,file='profile_'//trim(mecha)//'.csv',status='old',action='read')
-	read(16,*)cdum,cprof
-	read(16,*) nclass
-	print *,'Speciation for Mechanism: ',trim(cprof),"->",mecha
-	if(nclass.gt.ncat) stop "Change size in fagg dimension ncat"
-	rewind(16)
-	allocate(cname(nclass))
-	read(16,*)cdum
-	read(16,*) nclass,cdum,(cname(i),i=1,nclass)
-	!print *,nclass
-	!print '(<nclass>(A,x))',cname
-	j=0
+    close(iunit)
+    !print '(15I5)',(profile(i),i=1,lfa)
+    print *,'Start count'
+    call count  ! counts the number of different profiles
+    print *,'Finishing count'
+    ! READING  and findign speciation for profiles
+    open(unit=16,file='profile_'//trim(mecha)//'.csv',status='old',action='read')
+    read(16,*)cdum,cprof
+    read(16,*) nclass
+    print *,'Speciation for Mechanism: ',trim(cprof),"->",mecha
+    if(nclass.gt.ncat) stop "Change size in fagg dimension ncat"
+    rewind(16)
+    allocate(cname(nclass))
+    read(16,*)cdum
+    read(16,*) nclass,cdum,(cname(i),i=1,nclass)
+    !print *,nclass
+    !print '(<nclass>(A,x))',cname
+    j=0
     isp=0
-	do
-		read(16,*,end=300,ERR=300)id
-		do i=1,size(prof2)
+    do
+      read(16,*,end=300,ERR=300)id
+      do i=1,size(prof2)
             if(id.eq.prof2(i)) isp(i)=isp(i)+1
-		end do
-		j=j+1
-	end do
+      end do
+      j=j+1
+    end do
 300 continue
-	!print *,isp,maxval(isp)
-	allocate(fclass(size(prof2),maxval(isp),nclass))
-	rewind(16)
-	read(16,*)cdum  ! Header 1
-	read(16,*)cdum	! Header 2
-	isp=0
-	do
-		read(16,*,end=400,ERR=400)id,idum,(fagg(i),i=1,nclass)
-		do i=1,size(prof2)
-		if(id.eq.prof2(i)) then
-			isp(i)=isp(i)+1
-			do l=1,nclass
-				fclass(i,isp(i),l)=fagg(l)
-			end do
-		end if
-		end do
-	end do
+    !print *,isp,maxval(isp)
+    allocate(fclass(size(prof2),maxval(isp),nclass))
+    rewind(16)
+    read(16,*)cdum  ! Header 1
+    read(16,*)cdum	! Header 2
+    isp=0
+    do
+      read(16,*,end=400,ERR=400)id,idum,(fagg(i),i=1,nclass)
+      do i=1,size(prof2)
+        if(id.eq.prof2(i)) then
+           isp(i)=isp(i)+1
+           do l=1,nclass
+              fclass(i,isp(i),l)=fagg(l)
+           end do
+        end if
+      end do
+    end do
 400 continue
     print *,'done reading profiles'
 !	i=1
