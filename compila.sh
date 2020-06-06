@@ -1,13 +1,11 @@
 #!/bin/bash
-#
-#  Creado por Jose Agustin Garcia Reynoso el 26/07/17.
-#
-#  Proposito:
-#         Compila los programas que se requieren para hacer la conversion
-#
-#  Modificaciones:
-#         27/07/2017 Actualizacion para IE del 2014
-#         10/12/2019 Actualizado para 2016
+#: Title       : Compila
+#: Date        : 26/07/17
+#: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
+#: Version     : 1.0  27/07/2017 Actualizacion para IE del 2014
+#                1.1  10/12/2019 Actualizado para 2016
+#: Description : Compila los programas que se requieren para hacer la conversion
+#: Options     : None
 #
 export ProcessDir=$PWD
 echo $ProcessDir
@@ -65,7 +63,7 @@ cd ../05_semisM
     ifort -O3 -axAVX -o MSpatial.exe movil_spatial.F90 
     ./MSpatial.exe >> ../ejecuta.log &
 cd ../06_temisM
-    ifort -O3 movil_temp.f90 -o Mtemporal.exe &
+    ifort -O2 -axAVX movil_temp.f90 -o Mtemporal.exe &
 cd ../07_puntual
     ifort -O3 -axAVX  t_puntal.F90 -o Puntual.exe &
 cd ../08_spec

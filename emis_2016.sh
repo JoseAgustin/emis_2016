@@ -1,17 +1,14 @@
 #!/bin/bash
+#: Title       : emis_2016.sh
+#: Date        : 26/07/2017
+#: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
+#: Version     : 1.0  26/04/2020 Actualizacion para IE del 2016
+#: Description : Realiza la secuencia de pasos para generar diferentes fechas
+#                del inventario de emisiones.
+#: Options     : None
 #
 # bsub -q q_hpc -oo salida_postwrf -n2 -R "span[hosts=1]" './febrero_2019.csh'
-#  febrero_2019.csh
 #
-#
-#  Creado por Jose Agustin Garcia Reynoso el 26/07/17.
-#
-#  Proposito:
-#         Realiza la secuencia de pasos para generar diferentes fechas
-#         del inventario de emisiones.
-#  Modificaciones:
-#         14/08/2013 Actualizacion para IE del 2014
-#         14/10/2017 para bash
 #SBATCH -J emi_2016
 #SBATCH -o emi_2016%j.o
 #SBATCH -n 4
@@ -24,7 +21,7 @@ echo "Directorio actual "$ProcessDir
 #  ecaim    guadalajara  mexicali
 #  mexico    monterrey    queretaro   tijuana
 #
-dominio=tijuana
+dominio=ecaim
 HacerArea=1
 #
 # Selecciona mecanismo
@@ -33,18 +30,18 @@ HacerArea=1
 MECHA=radm2
 #  Build the namelist_emis.nml file
 # Cambiar aqui la fecha
-mes=4
-dia=10
-dia2=10
+mes=5
+dia=9
+dia2=9
 dia1=$dia 
 #
 #    Aqui cambiar el año a modelar
 #
-nyear=2020
+nyear=2016
 #
 #   Si se desea un archivo de 24 hrs  nfile=1
 #              dos archivos de 12 hrs nfile=2
-nfile=1
+nfile=2
 #  Revisa que exista el dominio
 cd 01_datos
 existe=0
@@ -103,7 +100,7 @@ End_Of_File
 cd 02_aemis
 if [ $HacerArea -eq 1 ]; then
 echo "     Haciendo distribucion espacial en Fuentes de area"
-./ASpatial.exe >../area.log &
+./ASpatial.exe >../area.log
 fi
 cd ../03_movilspatial
 if [ $HacerArea -eq 1 ]; then
@@ -113,7 +110,8 @@ echo "     Haciendo distribucion espacial en Fuentes de Moviles"
 wait
 ./agrega.exe > ../movil.log 
 cd ../05_semisM
-./MSpatial.exe > ../movil.log
+./MSpatial.exe > ../movil.log &
+wait
 fi
 
 fi
@@ -171,7 +169,7 @@ echo 'Area Temporal distribution'
 ./Atemporal.exe  > ../area.log &
 echo 'Point Temporal distribution'
 cd ../07_puntual/
-./Puntual.exe >& ../puntual.log 
+./Puntual.exe > ../puntual.log &
 echo 'Movil Temporal distribution'
 cd ../06_temisM/
 ./Mtemporal.exe > ../movil.log &
@@ -204,7 +202,7 @@ wait
 echo ' Guarda'
 
 cd ../10_storage
-./emiss.exe  > ../${MECHA}.log
+./emis2.exe  > ../${MECHA}.log
  let dia=dia+1
 done
 mv wrfchemi?d01* ../inventario/$dominio/
