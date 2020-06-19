@@ -9,7 +9,7 @@
 !   ifort -O3 -axAVX atemporal.F90 -o Atemporal.exe
 !   -c -parallel -guide
 !  -parallel -Dtest_gap -opt-report=1 -opt-report-phase=par -opt-report-file=stdout atemporal.F90
-!
+! gfortran -DPGI  -fopenmp -O2 atemporal.F90 -o Atemporal.exe
 !
 !   modificado
 !   14/08/2012  Nombre archivos de PM
@@ -185,7 +185,6 @@ subroutine lee
 	read (15,'(A)') cdum
       do
 	  read(15,*,END=200)jscc,imon,iwk,ipdy
-!dir$ loop count min(512)
 	    do i=1,nscc(k)
 		  if(iscc(i).eq.jscc) then
 		    profile(1,i,k)=imon
@@ -265,7 +264,6 @@ subroutine lee
 !
 	read (18,'(A)') cdum
 
-!dir$ loop count min(256)
      do
 	    read(18,*,END=230)iprof,(itfrc(l),l=1,25)
     dias: do i=1,nscc(k)
@@ -418,7 +416,6 @@ subroutine compute
     mes=mes*fweek! weeks per month
     do k=1,nf-2
       print *,efile(k)
-!dir$ loop count min(512)
 	  do ii=1,size(idcel2)
 	  do i=1,size(id5,2)
 		 if(idcel2(ii).eq.id5(k,i))then
