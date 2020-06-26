@@ -1,17 +1,14 @@
 #!/bin/bash
 #
+#: Title       : emis_2019.sh
+#: Date        : 26/07/2017
+#: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
+#: Version     : 1.0  26/04/2020 Actualizacion para IE del 2016
+#: Description : Realiza la secuencia de pasos para generar diferentes fechas
+#                del inventario de emisiones.
+#: Options     : None
 # bsub -q q_hpc -oo salida_postwrf -n2 -R "span[hosts=1]" './febrero_2019.csh'
-#  febrero_2019.csh
-#
-#
-#  Creado por Jose Agustin Garcia Reynoso el 26/07/17.
-#
-#  Proposito:
-#         Realiza la secuencia de pasos para generar diferentes fechas
-#         del inventario de emisiones.
-#  Modificaciones:
-#         14/08/2013 Actualizacion para IE del 2014
-#         14/10/2017 para bash
+# 
 #SBATCH -J emi_2016
 #SBATCH -o emi_2016%j.o
 #SBATCH -n 4
@@ -24,7 +21,7 @@ echo "Directorio actual "$ProcessDir
 # bajio       ecaim       guadalajara mexico      tijuana
 # bajio3      ecaim3      jalisco     mexico9     queretaro
 #
-dominio=ecaim3
+dominio=mexicali
 HacerArea=1
 #
 # Selecciona mecanismo
@@ -33,9 +30,9 @@ HacerArea=1
 MECHA=radm2
 #  Build the namelist_emis.nml file
 # Cambiar aqui la fecha
-mes=5
-dia=21
-dia2=21
+mes=3
+dia=9
+dia2=9
 dia1=$dia 
 #
 #    Aqui cambiar el año a modelar

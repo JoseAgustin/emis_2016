@@ -1,6 +1,11 @@
 #!/bin/bash
 #
-#  Programa de emisiones con funciones
+#: Title       : corre.sh
+#: Date        : 26/04/2020
+#: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
+#: Version     : 1.0  26/04/2020 Actualizacion para IE del 2014
+#: Description : Programa de emisiones con funciones
+#: Options     : None
 #
 ProcessDir=$PWD
 echo "Directorio actual "$ProcessDir
@@ -9,13 +14,13 @@ echo "Directorio actual "$ProcessDir
 # bajio3      ecaim3      jalisco     mexico9     queretaro
 
 variables_set () {
-dominio=ecaim3
+dominio=mexico
 HacerArea=1
 #
 # Selecciona mecanismo
-# Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 sapcr99
+# Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99
 #
-MECHA=radm2
+MECHA=saprc99
 #  Build the namelist_emis.nml file
 # Cambiar aqui la fecha
 mes=4

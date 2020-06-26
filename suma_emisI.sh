@@ -1,6 +1,10 @@
 #!/bin/bash
-#
-#  Suma emisiones 
+#: Title       : Suma emisiones del inventario
+#: Date        : 06-05-2020
+#: Author      : "Agustin Garcia"<agustin@atmosfera.unam.mx>
+#: Version     : 1.0
+#: Description : Obtain the total area emissions before spatial distribution
+#: Options     : None#
 #
 cd 02_aemis
 ainv=(I*csv imet*)
