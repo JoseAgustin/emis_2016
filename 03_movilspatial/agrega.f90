@@ -1,10 +1,18 @@
+!> @brief Combines street and Higway fractional areas in one.
+!>  salida.csv contains  Higway fractional areas
+!>  salida2.csv contains  Street fractional areas
+!> gri_movil.csv  combined Highway and street fractional areas
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !   Programa agrega.f90
 !
 !  Creado por Jose Agustin Garcia Reynoso el 12/05/2012
 !
 !  ifort -O2 -axAVX agrega.f90 -o agrega.exe
 ! Proposito:
-!  Lee las fracciones de vialidad y carretera y genera un archivo
+!  Lee las fracciones de vialidad y carretera (salida.csv)y genera un archivo
 !  combinado de ambas
 !
 !  Modificaciones
@@ -12,6 +20,21 @@
 !   9/Sep/2014  se actualiza salida para varios municipios
 !   2/Ago/2012  se incluye en la salida la clave del municipio
 !
+!> @param nm    GRIDCODE number in Highway file
+!> @param nm2   GRIDCODE number in Streets file
+!> @param nm3   GRIDCODE number in combined Highway and street file
+!> @param grid  Array of GRIDCODEs  in Highway file
+!> @param grid2 Array of GRIDCODEs  in Street file
+!> @param grid3 Array of GRIDCODEs  in combined Highway and street file
+!> @param icve  Array of Municipality ID in Highway file
+!> @param icve2 Array of Municipality ID in Street file
+!> @param icve3 Array of Municipality ID in Highway and street file
+!> @param fcc  Array of fractional surface Highway area in Highway file
+!> @param fcv Array of fractional surface Street area in Street file
+!> @param fc3 Fractional surface Highway area in combined Highway and street array
+!> @param fv3 Fractional surface Street area in combined Highway and street array
+!> @param smc Total Highway surface area in Highway file
+!> @param smv Total Street surface area in Street file
 module vars2
 integer nm,nm2,nm3
 integer,allocatable :: grid(:),icve(:)
@@ -34,6 +57,12 @@ use vars2
     call guarda
 
 contains
+!> @brief Reads street and Highway fractional area files.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+!
 	subroutine lee
 	implicit none
     integer ::i
@@ -81,6 +110,11 @@ contains
      print *,'Max number of lines ',nm3
 	end subroutine lee
 !
+!> @brief Allocates fractional areas in each GRIDCODE.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 	subroutine calcula
 	implicit none
     integer imax,imin
@@ -141,6 +175,11 @@ end do !i
        nm3=m-1
 	end subroutine calcula
 !
+!> @brief Stores GRIDCODE fractional areas in gri_movil.csv.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 	subroutine guarda
 	implicit none
     integer i,var

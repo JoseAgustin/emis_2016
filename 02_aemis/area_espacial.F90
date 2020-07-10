@@ -1,29 +1,81 @@
 !
 !	area_espacial.f90
-!	
 !
+!> @brief variables description used in spatial area emissions distribution
+!> Currently uses 59 categories and considers 2,458 municipalities in Mexico
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !	Created by Agustin on 14/08/12.
 !	Copyright 2012 CCA-UNAM. All rights reserved.
 !
-!  Reads lan use fracction per cell and land use tyepe and converts
+!  Reads land use fraction per cell and land use tyepe and converts
 !  to a one line.
 !  ifort -o ASpatial.exe -O3 area_espacial.F90
-!
-!  4/03/2015  Correction in Terminasl 2801500002 and agricultural fires 2801500250
-!  8/07/2017  For 2014 from 57 to 58 categories (ladrilleras), 2457 Municipalidades
-!  4/06/2019  For 2016 59 categories, 2458 municipalities  
-!
+!> @param gria GRIDCODE ID for agriculture land use data
+!> @param ida  Agriculture municipality ID
+!> @param fa   Agriculture area fraction in grid
+!> @param grib GRIDCODE ID for vegetation land use data
+!> @param idb  Vegetation municipality ID
+!> @param fb   Vegetation area fraction in grid
+!> @param grie GRIDCODE ID for airport land use data
+!> @param ide  Airport municipality ID
+!> @param fe   Airport area fraction in grid
+!> @param grim GRIDCODE ID for seaports land use data
+!> @param idm  Seaports municipality ID
+!> @param fm   Seaports area fraction in grid
+!> @param grip GRIDCODE ID for population  data
+!> @param idp  Population municipality ID
+!> @param fp1 Urban population number fraction in grid
+!> @param fp1 Rural population number fraction in grid
+!> @param fp1 Total population number fraction in grid
+!> @param grir GRIDCODE ID for unpaved streets land use data
+!> @param idr  Unpaved streets municipality ID
+!> @param fr   Unpaved streets area fraction in grid
+!> @param grit GRIDCODE ID for train stations land use data
+!> @param idt  Train stations municipality ID
+!> @param ft   Train stations area fraction in grid
+!> @param griu GRIDCODE ID for bus terminals land use data
+!> @param idu  Bus terminals municipality ID
+!> @param fu   Bus terminals fraction in grid
+!> @param griv GRIDCODE ID for streets land cover data
+!> @param idv  Streets municipality ID
+!> @param fv   Streets area fraction in grid
+!> @param nm  Number of municipalities
+!> @param nf  Number of pollutant files
+!> @param nnscc Number of emissions categories for SCC
+!> @param nscc Number of emissions categories per pollutant file
+!> @param nl Number of lines in surrogate file
+!> @param edo State ID
+!> @param mun Municpaity ID in the state
+!> @param iem State ID + Municpaity ID
+!> @param eagr Emissions from agricultural sources array
+!> @param ebos Emissions from vegetation sources array
+!> @param epob Emissions related to population  array
+!> @param eaer Emissions from airports sources array
+!> @param ecen Emissions from bus terminals sources array
+!> @param eaer Emissions from airports sources array
+!> @param epue Emissions from seaports sources array
+!> @param etre Emissions from train stations sources array
+!> @param eter Emissions from unpaved streets sources array
+!> @param evia Emissions from  streets sources array
+!> @param emiss Emissions array per pollutant, SCC and municipality
+!> @param scc   SCC array per polluntan and source
+!> @param efile Input emission file name
+!> @param ofile Output emission file name
+!> @param zona Geographical area selected in namelist_emis
 module land
-    integer nl,nf,nm,nnscc,edo, mun
-    parameter (nm=2458,nf=10,nnscc=59)
-    integer,allocatable :: grib(:),idb(:)  ! Bosque
+    integer nl,edo, mun
+    integer, parameter :: nm=2458,nf=10,nnscc=59
     integer,allocatable :: gria(:),ida(:)  ! Agricola
-    integer,allocatable :: grip(:),idp(:)  ! Poblacion
+    integer,allocatable :: grib(:),idb(:)  ! Bosque
     integer,allocatable :: grie(:),ide(:)  ! Aeropuertos
-    integer,allocatable :: griu(:),idu(:)  ! Centrales Autobuses
     integer,allocatable :: grim(:),idm(:)  ! Puertos Maritimos
-    integer,allocatable :: grit(:),idt(:)  ! Ferrocarriles
+    integer,allocatable :: grip(:),idp(:)  ! Poblacion
     integer,allocatable :: grir(:),idr(:)  ! Terraceria
+    integer,allocatable :: grit(:),idt(:)  ! Ferrocarriles
+    integer,allocatable :: griu(:),idu(:)  ! Centrales Autobuses
     integer,allocatable :: griv(:),idv(:)  ! Vialidades
 
     integer,dimension(nf) :: nscc
@@ -52,7 +104,13 @@ module land
 &          'APM25_2016.csv','ACO2_2016.csv','ACN__2016.csv', &
 &          'ACH4_2016.csv'/
 end module land
-
+!>	@brief  Uses spatially distributed population information,
+!> land cover, roads, trains, airports, seaports and
+!> buses terminals to distribute area emissions.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program area_espacial
        use land
 
@@ -65,6 +123,13 @@ program area_espacial
        call guarda
 
 contains
+!>	@brief Reads distributed population information,
+!> land cover, roads, trains, airports, seaports and
+!> buses terminals to distribute area emissions.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !  _     _____ _____
 ! | |   | ____| ____|
 ! | |   |  _| |  _|
@@ -132,6 +197,13 @@ implicit none
         close(iun)
     end do! k
 end subroutine lee
+!>	@brief Allocates emissions using distributed population information,
+!> land cover, roads, trains, airports, seaports and
+!> buses terminals to distribute area emissions.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !  CCC  AA  L     CCC U   U L     OOO   SSS
 ! C    A  A L    C    U   U L    O   O S
 ! C    AAAA L    C    U   U L    O   O  SSS
@@ -328,6 +400,11 @@ subroutine calculos
 !$omp end parallel sections
     end do Clase
 end subroutine calculos
+!>	@brief Stores pollutan emissions, columns contains SCC and rows GRIDID.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !  GGG  U   U  AA  RRRR  DDD   AA
 ! G     U   U A  A R   R D  D A  A
 ! G  GG U   U AAAA RRRR  D  D AAAA
@@ -444,6 +521,11 @@ subroutine guarda
 310 format(I9,",",I6,",",F7.4,",",F7.4,60(",",ES12.5))
 #endif
 end subroutine guarda
+!>	@brief Counts the number of lines per surrogate file.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !   CCC U   U EEEE N   N TTTTTT  AA      L    III N   N EEEE  AA
 !  C    U   U E    NN  N   TT   A  A     L     I  NN  N E    A  A
 !  C    U   U EEE  N N N   TT   AAAA     L     I  N N N EEE  AAAA
@@ -466,6 +548,11 @@ integer function cuenta_linea(archivo)
     100 print *,' Numero de lineas',cuenta_linea
   close(iun)
 end function
+!>	@brief Reads area fraction data from the surrogate file.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 ! L    EEEE EEEE     FFFF III L    EEEE
 ! L    E    E        F     I  L    E
 ! L    EEE  EEE      FFF   I  L    EEE
@@ -494,6 +581,11 @@ subroutine lee_file(archivo,grid,id,frac,frac2,frac3)
     end if
     close(iun)
 end subroutine
+!>	@brief Reads global namelis input file for setting up the spatial allocation.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine lee_namelist
     NAMELIST /region_nml/ zona
     integer unit_nml
@@ -521,4 +613,3 @@ subroutine lee_namelist
 
 end subroutine lee_namelist
 end program area_espacial
-
