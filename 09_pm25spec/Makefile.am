@@ -12,7 +12,7 @@ endif
 # Additional files to be cleaned with 'make clean'
 CLEANFILES = *.o *.mod *~
 
-spm25a_exe_SOURCES = pm25_speci_a.F90
-spm25m_exe_SOURCES = pm25_speci_m.F90
-spm25p_exe_SOURCES = pm25_speci_p.F90
+spm25a_exe_SOURCES = e_pm25_mod.F90 pm25_speci_a.F90
+spm25m_exe_SOURCES = e_pm25_mod.F90 pm25_speci_m.F90
+spm25p_exe_SOURCES = e_pm25_mod.F90 pm25_speci_p.F90
 

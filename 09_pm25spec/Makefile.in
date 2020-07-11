@@ -99,13 +99,13 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_spm25a_exe_OBJECTS = pm25_speci_a.$(OBJEXT)
+am_spm25a_exe_OBJECTS = e_pm25_mod.$(OBJEXT) pm25_speci_a.$(OBJEXT)
 spm25a_exe_OBJECTS = $(am_spm25a_exe_OBJECTS)
 spm25a_exe_LDADD = $(LDADD)
-am_spm25m_exe_OBJECTS = pm25_speci_m.$(OBJEXT)
+am_spm25m_exe_OBJECTS = e_pm25_mod.$(OBJEXT) pm25_speci_m.$(OBJEXT)
 spm25m_exe_OBJECTS = $(am_spm25m_exe_OBJECTS)
 spm25m_exe_LDADD = $(LDADD)
-am_spm25p_exe_OBJECTS = pm25_speci_p.$(OBJEXT)
+am_spm25p_exe_OBJECTS = e_pm25_mod.$(OBJEXT) pm25_speci_p.$(OBJEXT)
 spm25p_exe_OBJECTS = $(am_spm25p_exe_OBJECTS)
 spm25p_exe_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -267,9 +267,9 @@ top_srcdir = @top_srcdir@
 
 # Additional files to be cleaned with 'make clean'
 CLEANFILES = *.o *.mod *~
-spm25a_exe_SOURCES = pm25_speci_a.F90
-spm25m_exe_SOURCES = pm25_speci_m.F90
-spm25p_exe_SOURCES = pm25_speci_p.F90
+spm25a_exe_SOURCES = e_pm25_mod.F90 pm25_speci_a.F90
+spm25m_exe_SOURCES = e_pm25_mod.F90 pm25_speci_m.F90
+spm25p_exe_SOURCES = e_pm25_mod.F90 pm25_speci_p.F90
 all: all-am
 
 .SUFFIXES:
