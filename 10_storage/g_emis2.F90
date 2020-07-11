@@ -665,7 +665,7 @@ print *,"Inicializa archivo de salida ",FILE_NAME(1:40)
     !  Define las variables
     call check( nf90_def_var(ncid, "Times", NF90_CHAR, dimids2,id_unlimit ) )
     !  Attributos para cada variable
-    call check( nf90_def_var(ncid, "XLONG", NF90_REAL,(/id_dim(3),id_dim(4),id_dim(1)/),id_varlong ) )
+    call check( nf90_def_var(ncid, "XLONG", NF90_REAL,(/id_dim(3),id_dim(4),id_dim(1)/),id_varlong) )
     ! Assign  attributes
     call check( nf90_put_att(ncid, id_varlong, "FieldType", 104 ) )
     call check( nf90_put_att(ncid, id_varlong, "MemoryOrder", "XYZ") )
@@ -1086,7 +1086,7 @@ subroutine escribe_var(ikk)
         if(periodo.eq.1) then
 call check( nf90_put_var(ncid, id_var(isp(ikk)),eft,start=(/1,1,1,1/),count=(/nx,ny,zlev,24/)))
         else
-call copia
+call copy_val_12to23
 !$omp parallel sections num_threads (2)
 !$omp section
 call check( nf90_put_var(ncid, id_var(isp(ikk)),eft,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
@@ -1100,7 +1100,7 @@ call check( nf90_put_var(ncid2,id_var(isp(ikk)),efs,start=(/1,1,1,1/),count=(/nx
      call check( nf90_put_var(ncid, id_var(isp(ikk)),eft*0.8,start=(/1,1,1,1/)) )
      call check( nf90_put_var(ncid, id_var(isp(ikk+5)),eft*0.2,start=(/1,1,1,1/)) )
     else
-      call copia
+      call copy_val_12to23
 !$omp parallel sections num_threads (2)
 !$omp section
       call check( nf90_put_var(ncid ,id_var(isp(ikk)),eft*0.8,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
@@ -1131,20 +1131,21 @@ subroutine termina
     deallocate(idcg)
     deallocate(xlon,xlat,pob)
     deallocate(utmxd,utmyd,utmzd)
-    if(allocated(isp)) deallocate(efs)
+    if(allocated(efs)) deallocate(efs)
     write(6,122)
 
 122 format("*******************",/,"***   Termina   ***",/,&
           &"*******************")
 
 end subroutine termina
-!                  _
-!   ___ ___  _ __ (_) __ _
-!  / __/ _ \| '_ \| |/ _` |
-! | (_| (_) | |_) | | (_| |
-!  \___\___/| .__/|_|\__,_|
-!           |_|
-subroutine copia
+!                                     _
+!   ___ ___  _ __  _   _  __   ____ _| |
+!  / __/ _ \| '_ \| | | | \ \ / / _` | |
+! | (_| (_) | |_) | |_| |  \ V / (_| | |
+!  \___\___/| .__/ \__, |___\_/ \__,_|_|
+!           |_|    |___/_____|
+!
+subroutine copy_val_12to23
 IMPLICIT NONE
 integer i,j,k,l,ll
 !$omp parallel do private(j,k,l,ll)
