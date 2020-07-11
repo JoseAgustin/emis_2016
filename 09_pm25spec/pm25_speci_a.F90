@@ -5,15 +5,21 @@
 !
 !  compile: ifort -O2 -axAVX e_pm25_mod.F90 test_a.F90 -o spm25a.exe
 !
-!>  @brief do AREA emissions PM2.5 speciation
+!>  @brief does AREA emissions PM2.5 speciation
 !>
-!> Speciation of PM2.5 in different categories
-!> @par Profile #  Profile Name  SPEC  POA  PEC  GSO4  PNO3  OTHER
-!> @par POA Primary organic aerosol
-!> @par PEC elemental carbon
-!> @par PNO3 primary nitrate
-!> @par GSO4  primary sulfate
-!> @par OTHER PMFINE, generally crustal
+!> Speciation of PM2.5 in different categories:
+!>
+!> Profile #  Profile Name  SPEC  POA  PEC  GSO4  PNO3  OTHER
+!>
+!>  POA Primary organic aerosol
+!>
+!>  PEC elemental carbon
+!>
+!>  PNO3 primary nitrate
+!>
+!>  GSO4  primary sulfate
+!>
+!>  OTHER PMFINE, generally crustal
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  07/11/2020
 !>   @version  2.2

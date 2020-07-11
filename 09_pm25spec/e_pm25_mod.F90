@@ -1,4 +1,4 @@
-!>  @brief For program pm25_speci_a.F90 . PM2.5 AREA emisions speciation
+!>  @brief For programs pm25_speci_a.F90, pm25_speci_m.F90 and pm25_speci_p.F90. PM2.5  emisions speciation
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  2020/06/20
 !>   @version  2.1
@@ -10,8 +10,8 @@ integer lfa  ;!>   grid id from emissions file
 integer,allocatable ::grid(:)   ;!> different grid id from emissions file
 integer,allocatable ::grid2(:)  ;!> number of chemical species in profile j
 integer,allocatable :: isp(:)   ;!> profile ID from file scc-profiles
-integer,allocatable ::profile(:),prof2(:) ;!> SCC from emissions file
-integer,allocatable :: capa(:,:)   ! level of the emission
+integer,allocatable ::profile(:),prof2(:);!> level of the emission
+integer,allocatable :: capa(:,:) ;!> SCC from emissions file
 integer*8, allocatable:: iscc(:) ;!>emissions en TPM25 file grid , nh
 real,allocatable :: ea(:,:)      ;!> emissions id cel, category, hours
 real,allocatable :: emis(:,:,:)  ;!>aggregation factor by size(prof2), nclass
