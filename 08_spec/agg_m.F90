@@ -1,51 +1,60 @@
 !
-!	agg_m.f90
-!	
-!
 !  Creado por Jose Agustin Garcia Reynoso el 31/05/12.
 !
 ! Proposito:
 !               Especiacion y agreacion en diferenes especies y
 !               clases de un mecanismo especifico
 !
-!				to do speciation anad aggregation to the different
-!               species and Classes for an specific mechanism
+!				to do VOC speciation anad aggregation to the different
+!               species and classes for an specific mechanism
 !
-!  compile: ifort -O2 -axAVX2 agg_m.f90 -o spm.exe
+!  compile: ifort -O2 -axAVX2 agg_m.F90 -o spm.exe
 !
 !   9/04/2020      namelist general
-!
-module var_agg
-integer,parameter :: nh=24     !number of hours in a day
-integer,parameter :: nspecies=292 ! max number species in profile 0 (292)
-integer,parameter :: ncat=40 ! max number chemical species
-integer :: nclass !number of clasess in profiles_spc.txt
-integer lfa  ! line number in area file TCOV_2016.txt
-integer,allocatable ::grid(:)   ! grid id from emissions file
-integer,allocatable ::grid2(:)   ! different grid id from emissions file
-integer,allocatable :: isp(:)   ! number of chemical species in profile j
-integer,allocatable ::profile(:),prof2(:) ! profile ID from file scc-profiles
-real,allocatable :: ea(:,:)      ! emissions in TCOV file grid , nh
-real,allocatable :: emis(:,:,:)  ! emissions id cel, category, hours
-real,allocatable :: fclass(:,:,:)! aggregation factor by size(prof2), species, nclass
-character (len=10), allocatable:: iscc(:) !SCC from emissions file
-character(len=4),allocatable::cname(:)
-character(len=3) :: cday
+!>  @brief For program agg_m.F90 . VOC mobile emisions speciation
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+module var_agg      ;!> number of hours in a day
+integer,parameter :: nh=24     ;!> max number species in profile 0 (292)
+integer,parameter :: nspecies=292 ;!> max number chemical species
+integer,parameter :: ncat=40 ;!> number of clasess in profiles_spc.txt
+integer :: nclass  ;!> line number in area file TCOV_2016.txt
+integer lfa        ;!> grid id from emissions file
+integer,allocatable ::grid(:) ;!> different grid id from emissions file
+integer,allocatable ::grid2(:) ;!> number of chemical species in profile j
+integer,allocatable :: isp(:)  ;!> profile ID from file scc-profiles
+integer,allocatable ::profile(:);!> differnt profiles ID from file scc-profiles
+integer,allocatable ::prof2(:)  ;!> emissions in TCOV file grid , nh
+real,allocatable :: ea(:,:)     ;!> emissions id cel, category, hours
+real,allocatable :: emis(:,:,:) ;!>aggregation factor by size(prof2), species, nclass
+real,allocatable :: fclass(:,:,:);!>SCC from emissions file
+character (len=10), allocatable:: iscc(:) !> Mechanism class name
+character(len=4),allocatable::cname(:) ;!> Type of day (lun, mar, mie, ..., dom)
+character(len=3) :: cday ;!> Selected photochemical mecanism
 character(len=7) ::mecha
-character (len=19) :: current_date,cprof
+character (len=19) :: current_date
+!> Photochemical mecanism in profile_MECHA.csv file
+character (len=19) ::cprof
 
 common /date/ current_date,cday,cprof,mecha
 end module var_agg
-
+!>  @brief do MOBILE emissions VOC speciation and aggregation to the different
+!>split in chemical species and agregates into classes for an specific mechanism
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program agg_m
 use var_agg
 
     call lee_namelist
 
 	call lee
-	
+
 	call calculos
-	
+
 	call guarda
 
 contains
@@ -54,7 +63,11 @@ contains
 ! | |/ _ \/ _ \
 ! | |  __/  __/
 ! |_|\___|\___|
-!
+!>  @brief Reads area emissions and SCC profiles
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine lee
     implicit none
     integer :: i,j,id,idum,l
@@ -142,7 +155,7 @@ subroutine lee
 400 continue
     print *,'done reading profiles'
 !	i=1
-!	do j=1,isp(i)			
+!	do j=1,isp(i)
 !		print '(2i,<nclass>F)',prof2(i),j,(fclass(i,j,l),l=1,nclass)
 !	end do
 
@@ -154,7 +167,11 @@ end subroutine lee
 !  / __/ _` | |/ __| | | | |/ _ \/ __|
 ! | (_| (_| | | (__| |_| | | (_) \__ \
 !  \___\__,_|_|\___|\__,_|_|\___/|___/
-!
+!>  @brief VOC species aggregation in calsess
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine calculos
 	implicit none
 	integer i,j,k,l,ih
@@ -190,7 +207,11 @@ end subroutine calculos
 ! | (_| | |_| | (_| | | | (_| | (_| |
 !  \__, |\__,_|\__,_|_|  \__,_|\__,_|
 !  |___/
-!
+!>  @brief Stores mechanism classes
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine guarda
 	implicit none
 	integer i,j,k,iun
@@ -223,6 +244,11 @@ end subroutine guarda
 ! | (_| (_) | |_| | | | | |_
 !  \___\___/ \__,_|_| |_|\__|
 !
+!>  @brief Counts the number of differnt profiles
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine count
   integer i,j,nn
   logical,allocatable::xl(:)
@@ -287,6 +313,11 @@ end subroutine count
 ! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_
 ! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|
 !            |_____|
+!>  @brief Reads global namelist input file for chemical settings.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine lee_namelist
     NAMELIST /chem_nml/ mecha
     integer unit_nml

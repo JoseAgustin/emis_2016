@@ -779,7 +779,7 @@ integer function kverano(ida,mes)
     end if
 233 format("******  HORARIO de VERANO *******",/,3x,"Abril ",I2,x,"a Octubre ",I2)
 end function
-!>  @brief Reads global namelis input file for setting up the temporal settings.
+!>  @brief Reads global namelist input file for setting up the temporal settings.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  2020/06/20
 !>   @version  2.1

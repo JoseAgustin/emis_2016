@@ -1,6 +1,6 @@
 !
 !                    pm25_speci_a.F90
-!	
+!
 !
 !  Creado por Jose Agustin Garcia Reynoso el 11/06/12.
 !
@@ -19,23 +19,27 @@
 !  compile: ifort -O2 -axAVX  pm25_speci_a.F90 -o spm25a.exe
 !
 !   modificado
-!   10/07/2017  Para 2014 
+!   10/07/2017  Para 2014
 !   30/07/2019  Para 2016
 !   09/04/2020  sin ligas
 !   30/04/2020  for OPENMP
-!
-module var_spma
-integer :: nh     !number of hours in a day
-integer :: nclass !number the clasess in profiles_spc.txt
-integer lfa  ! line number in area file TPM252016.txt
-integer,allocatable ::grid(:)   ! grid id from emissions file
-integer,allocatable ::grid2(:)   ! different grid id from emissions file
-integer,allocatable :: isp(:)   ! number of chemical species in profile j
-integer,allocatable ::profile(:),prof2(:) ! profile ID from file scc-profiles
-integer*8, allocatable:: iscc(:) !SCC from emissions file
-real,allocatable :: ea(:,:)      ! emissions en TPM25 file grid , nh
-real,allocatable :: emis(:,:,:)  ! emissions id cel, category, hours
-real,allocatable :: fclass(:,:)! aggregation factor by size(prof2), nclass
+!>  @brief For program pm25_speci_a.F90 . PM2.5 AREA emisions speciation
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+module var_spma ;!>number of hours in a day
+integer :: nh     ;!> number the clasess in profiles_spc.txt
+integer :: nclass ;!> line number in area file TPM252016.txt
+integer lfa  ;!>   grid id from emissions file
+integer,allocatable ::grid(:)   ;!> different grid id from emissions file
+integer,allocatable ::grid2(:)  ;!> number of chemical species in profile j
+integer,allocatable :: isp(:)   ;!> profile ID from file scc-profiles
+integer,allocatable ::profile(:),prof2(:) ;!> SCC from emissions file
+integer*8, allocatable:: iscc(:) ;!>emissions en TPM25 file grid , nh
+real,allocatable :: ea(:,:)      ;!> emissions id cel, category, hours
+real,allocatable :: emis(:,:,:)  ;!>aggregation factor by size(prof2), nclass
+real,allocatable :: fclass(:,:)  ;!> Category name used for file name
 character(len=4),allocatable::cname(:)
 character(len=3) ::cdia
 character (len=19) :: current_date
@@ -45,13 +49,18 @@ parameter (nspecies=5,nh=24)
 common /date/ current_date,cdia
 
 end module var_spma
+!>  @brief do AREA emissions PM2.5 speciation
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program pm25_speciation
 use var_spma
 
 	call lee
-	
+
 	call calculos
-	
+
 	call guarda
 
 contains
@@ -60,7 +69,11 @@ contains
 ! | |/ _ \/ _ \
 ! | |  __/  __/
 ! |_|\___|\___|
-!
+!>  @brief Reads emissions PM2.5 and speciation profiles based on SCC
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine lee
 	implicit none
 	integer :: i,j,id,idun,l
@@ -75,8 +88,8 @@ subroutine lee
 	read(10,*) cdum  ! header
 	read(10,*) lfa,current_date,cdia  ! header
 	i=0
-	do 
-	read(10,*,end=100) cdum 
+	do
+	read(10,*,end=100) cdum
 	i=i+1
 	end do
 100 continue
@@ -107,7 +120,7 @@ subroutine lee
 	end do
 	close(15)
 	!print '(15I5)',(profile(i),i=1,lfa)
-	print *,'Start count'	
+	print *,'Start count'
 	call count  ! counts the number of different profiles
 	print *,'Finishing count'
 ! READING  and finding speciation for profiles
@@ -151,7 +164,11 @@ end subroutine lee
 !  / __/ _` | |/ __| | | | |/ _ \/ __|
 ! | (_| (_| | | (__| |_| | | (_) \__ \
 !  \___\__,_|_|\___|\__,_|_|\___/|___/
-!
+!>  @brief Split PM2.5 emissions in categories clasess
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine calculos
 implicit none
 	integer i,j,k,l,ih
@@ -167,7 +184,7 @@ implicit none
 		if(grid(ii).eq.grid2(k)) then
 			do i=1,ns  !profiles
 			if(prof2(i).eq.profile(ii)) then
-					do l=1,nclass ! mechanism classes
+					do l=1,nclass ! PM2.5 classes
 					 do ih=1,nh   ! hours
 	if(fclass(i,l).ne.0) emis(k,l,ih)=emis(k,l,ih)+fclass(i,l)*ea(ii,ih)
 					 end do
@@ -185,7 +202,11 @@ end subroutine calculos
 ! | (_| | |_| | (_| | | | (_| | (_| |
 !  \__, |\__,_|\__,_|_|  \__,_|\__,_|
 !  |___/
-!
+!>  @brief Stores PM2.5 emissions in files by categories clasess
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine guarda
 implicit none
   integer i,j,k,iun
@@ -222,7 +243,11 @@ end subroutine guarda
 !  / __/ _ \| | | | '_ \| __|
 ! | (_| (_) | |_| | | | | |_
 !  \___\___/ \__,_|_| |_|\__|
-!
+!>  @brief Identifies the different PM2.5 profiles and cells
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine count
 	integer i,j,nn
 	logical,allocatable::xl(:)

@@ -617,7 +617,7 @@ end function
 ! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_
 ! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|
 !            |_____|
-!>  @brief Reads global namelis input file for setting up the temporal settings.
+!>  @brief Reads global namelist input file for setting up the temporal settings.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  2020/06/20
 !>   @version  2.1

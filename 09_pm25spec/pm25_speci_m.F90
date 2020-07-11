@@ -1,7 +1,4 @@
 !
-!	pm25_speci_m.F90
-!	
-!
 !  Creado por Jose Agustin Garcia Reynoso el 11/06/12.
 !
 ! Proposito:
@@ -23,7 +20,11 @@
 !   30/07/2019     Para 2016, scc como caracter
 !   9/04/2020      namelist general
 !   30/04/2020  for OPENMP
-!
+!>  @brief For program pm25_speci_m.F90 . PM2.5 MOBILE emisions speciation
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 module var_spmm
 integer :: nh     !number of hours in a day
 integer :: nclass !number the clasess in profiles_spc.txt
@@ -45,13 +46,18 @@ parameter (nspecies=5,nh=24)
 common /date/ current_date,cdia
 
 end module var_spmm
+!>  @brief do MOBILE source emissions PM2.5 speciation
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program pm25_speci_m
 use var_spmm
 
 	call lee
-	
+
 	call calculos
-	
+
 	call guarda
 
 contains
@@ -60,7 +66,11 @@ contains
 ! | |/ _ \/ _ \
 ! | |  __/  __/
 ! |_|\___|\___|
-!
+!>  @brief Reads emissions PM2.5 and speciation profiles based on SCC
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine lee
 	implicit none
 	integer :: i,j,id,idun,l
@@ -75,8 +85,8 @@ subroutine lee
 	read(10,*) cdum  ! header
 	read(10,*) lfa,current_date,cdia  ! header
 	i=0
-	do 
-	read(10,*,end=100) cdum 
+	do
+	read(10,*,end=100) cdum
 	i=i+1
 	end do
 100 continue
@@ -107,7 +117,7 @@ subroutine lee
 	end do
 	close(15)
 	!print '(15I5)',(profile(i),i=1,lfa)
-	print *,'Start count'	
+	print *,'Start count'
 	call count  ! counts the number of different profiles
 	print *,'Finishing count'
 ! READING  and finding speciation for profiles
@@ -150,7 +160,11 @@ end subroutine lee
 !  / __/ _` | |/ __| | | | |/ _ \/ __|
 ! | (_| (_| | | (__| |_| | | (_) \__ \
 ! \___\__,_|_|\___|\__,_|_|\___/|___/
-!
+!>  @brief Split PM2.5 emissions in categories clasess
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine calculos
 implicit none
 	integer i,j,k,l,ih
@@ -184,7 +198,11 @@ end subroutine calculos
 ! | (_| | |_| | (_| | | | (_| | (_| |
 !  \__, |\__,_|\__,_|_|  \__,_|\__,_|
 !  |___/
-!
+!>  @brief Stores PM2.5 emissions in files by categories clasess
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine guarda
 implicit none
   integer i,j,k,iun
@@ -220,7 +238,11 @@ end subroutine guarda
 !  / __/ _ \| | | | '_ \| __|
 ! | (_| (_) | |_| | | | | |_
 !  \___\___/ \__,_|_| |_|\__|
-!
+!>  @brief Identifies the different PM2.5 profiles and cells
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine count
 	integer i,j,nn
 	logical,allocatable::xl(:)

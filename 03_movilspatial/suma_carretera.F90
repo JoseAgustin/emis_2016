@@ -13,7 +13,7 @@
 !
 !   2/Ago/2012  se considera la vialidad en todo el municipio rlm
 !   9/Abr/2020  usa namelist global
-!> @brief for suma_carretera.F90 program. For aggregatin higway fractions in cells.
+!> @brief for suma_carretera.F90 program. For aggregation Highway fractions in cells.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  2020/06/20
 !>   @version  2.1

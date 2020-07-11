@@ -588,7 +588,7 @@ subroutine lee_file(archivo,grid,id,frac,frac2,frac3)
     end if
     close(iun)
 end subroutine
-!>	@brief Reads global namelis input file for setting up the spatial allocation.
+!>	@brief Reads global namelist input file for setting up the spatial allocation.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  2020/06/20
 !>   @version  2.1
