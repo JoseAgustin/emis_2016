@@ -54,11 +54,11 @@ a subdirectory `time` with temporal distribution files.
 
 [G.](#fijas) **Directorio 07\_puntual**
 
-[H.](#especies)**Directorio 08\_spec**
+[H.](#especies) **Directorio 08\_spec**
 
-[I.](#pm25)**Directorio 09\_pm25spec**
+[I.](#pm25) **Directorio 09\_pm25spec**
 
-[J.](#guarda)**Directorio 10\_storage**
+[J.](#guarda) **Directorio 10\_storage**
 
 [2.](#script) **Proceso de ejecución**
 

@@ -18,7 +18,14 @@
 !   30/07/2019  para 2016 con anio bisiesto
 !   06/04/2020  Incluye Horario de verano
 !
-module variables
+!> @brief For movil_temp.f90 program. Mobile emissions temporal distribution
+!>
+!> Currently uses EPA temporal profiles
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+module var_mobile_temp
 integer :: month
 integer :: daytype ! tipo de dia 1 lun a 7 dom
 integer :: perfil  ! perfil temporal horario
@@ -67,23 +74,27 @@ character(len=14),dimension(nf) ::efile,casn
 common /vars/ fweek,nscc,nm,daytype,perfil,mes,dia,hora,current_date
 common /nlm_vars/lsummer,month,idia,anio,periodo,inicia,termina
 
-end module
+end module var_mobile_temp
 !
 !  Progran  movil_temp.f90
 !
-!  Make the temporal distribution of movile emissions
+!  Make the temporal distribution of mobile emissions
 !
-
-program atemporal
-   use variables
+!>  @brief Make temporal distribution of mobile emissions using profiles based on SCC.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+program mtemporal
+   use var_mobile_temp
 
    call lee_namelist
 
-   call lee
+   call lee_mobile
 
-   call compute
+   call compute_mobile
 
-   call storage
+   call storage_mobile
 
 contains
 !  _
@@ -92,7 +103,12 @@ contains
 ! | |  __/  __/
 ! |_|\___|\___|
 !
-subroutine lee
+!>  @brief Reads emissions and temporal profiles based on SCC.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+subroutine lee_mobile
 	implicit none
 	integer i,j,k,l,m,iprof
 	integer idum,imon,iwk,ipdy
@@ -370,14 +386,19 @@ subroutine lee
 	close(17)
 	close(18)
     close(19)
-end subroutine lee
+end subroutine lee_mobile
 !                                  _
 !   ___ ___  _ __ ___  _ __  _   _| |_ ___
 !  / __/ _ \| '_ ` _ \| '_ \| | | | __/ _ \
 ! | (_| (_) | | | | | | |_) | |_| | ||  __/
 !  \___\___/|_| |_| |_| .__/ \__,_|\__\___|
 !                     |_|
-subroutine compute
+!>  @brief Computes the hourly emissions based on SCC temporal profiles from annual to hourly.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+subroutine compute_mobile
 	implicit none
 	integer i,j,k,l,ival,ii
 !
@@ -425,14 +446,19 @@ subroutine compute
 		    end do
 		  end do
 	  end do
-	end subroutine compute
+	end subroutine compute_mobile
 !      _
 !  ___| |_ ___  _ __ __ _  __ _  ___
 ! / __| __/ _ \| '__/ _` |/ _` |/ _ \
 ! \__ \ || (_) | | | (_| | (_| |  __/
 ! |___/\__\___/|_|  \__,_|\__, |\___|
 !                         |___/
-subroutine storage
+!>  @brief Saves mobile emission with the temporal profile in hourly basis.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+subroutine storage_mobile
   implicit none
   integer i,j,k,l,iun
   real suma
@@ -497,13 +523,18 @@ subroutine storage
     deallocate(epm2)
     print*,"*****  DONE MOBILE TEMPORAL *****"
 110 format(I7,",",A10,",",23(ES12.4,","),ES12.4)
-end subroutine storage
+end subroutine storage_mobile
 !                        _
 !   ___ ___  _   _ _ __ | |_
 !  / __/ _ \| | | | '_ \| __|
 ! | (_| (_) | |_| | | | | |_
 !  \___\___/ \__,_|_| |_|\__|
 !
+!>  @brief Counts the number of different cells in file and stores in index.csv file.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 202
 subroutine count
   integer i,j
   idcel2(1)=idcel(1)
@@ -536,7 +567,11 @@ end subroutine adecua
 ! | |/ /\ \ / / __| _ \  /_\ | \| |/ _ \
 ! | ' <  \ V /| _||   / / _ \| .` | (_) |
 ! |_|\_\  \_/ |___|_|_\/_/ \_\_|\_|\___/
-!
+!>  @brief Identifies if it is summert time period and if it is considered or not
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 integer function kverano(ida,mes)
     implicit none
     integer, intent(in):: ida,mes
@@ -570,6 +605,11 @@ end function
 ! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_
 ! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|
 !            |_____|
+!>  @brief Reads global namelis input file for setting up the temporal settings.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine lee_namelist
     implicit none
     NAMELIST /fecha_nml/ idia,month,anio,periodo
@@ -608,4 +648,4 @@ subroutine lee_namelist
     close(10)
 
 end subroutine lee_namelist
-end program atemporal
+end program mtemporal

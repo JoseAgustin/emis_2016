@@ -1,7 +1,4 @@
-!> @brief Combines street and Higway fractional areas in one.
-!>  salida.csv contains  Higway fractional areas
-!>  salida2.csv contains  Street fractional areas
-!> gri_movil.csv  combined Highway and street fractional areas
+!> @brief for agrega.f90 progam in mobile spatial allocation.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  2020/06/20
 !>   @version  2.1
@@ -12,7 +9,7 @@
 !
 !  ifort -O2 -axAVX agrega.f90 -o agrega.exe
 ! Proposito:
-!  Lee las fracciones de vialidad y carretera (salida.csv)y genera un archivo
+!  Lee las fracciones de vialidad y carretera (salida.csv) y genera un archivo
 !  combinado de ambas
 !
 !  Modificaciones
@@ -20,21 +17,21 @@
 !   9/Sep/2014  se actualiza salida para varios municipios
 !   2/Ago/2012  se incluye en la salida la clave del municipio
 !
-!> @param nm    GRIDCODE number in Highway file
-!> @param nm2   GRIDCODE number in Streets file
-!> @param nm3   GRIDCODE number in combined Highway and street file
+!> @param fc3 Fractional surface Highway area in combined Highway and street array
+!> @param fcc Array of fractional surface Highway area in Highway file
+!> @param fcv Array of fractional surface Street area in Street file
+!> @param fv3 Fractional surface Street area in combined Highway and street array
 !> @param grid  Array of GRIDCODEs  in Highway file
 !> @param grid2 Array of GRIDCODEs  in Street file
 !> @param grid3 Array of GRIDCODEs  in combined Highway and street file
 !> @param icve  Array of Municipality ID in Highway file
 !> @param icve2 Array of Municipality ID in Street file
 !> @param icve3 Array of Municipality ID in Highway and street file
-!> @param fcc  Array of fractional surface Highway area in Highway file
-!> @param fcv Array of fractional surface Street area in Street file
-!> @param fc3 Fractional surface Highway area in combined Highway and street array
-!> @param fv3 Fractional surface Street area in combined Highway and street array
-!> @param smc Total Highway surface area in Highway file
-!> @param smv Total Street surface area in Street file
+!> @param nm    GRIDCODE number in Highway file
+!> @param nm2   GRIDCODE number in Streets file
+!> @param nm3   GRIDCODE number in combined Highway and street file
+!> @param smc   Total Highway surface area in Highway file
+!> @param smv   Total Street surface area in Street file
 module vars2
 integer nm,nm2,nm3
 integer,allocatable :: grid(:),icve(:)
@@ -47,7 +44,17 @@ real,allocatable ::fc3(:),fv3(:)
 common /dims/ nm,nm2,nm3
 
 end module vars2
-
+!>  @brief Combines Street and Higway fractional areas in one file.
+!>
+!>  salida.csv contains  Higway fractional areas
+!>
+!>  salida2.csv contains  Street fractional areas
+!>
+!>   gri_movil.csv  combined Highway and street fractional areas
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program agrega
 use vars2
     call lee
@@ -133,46 +140,46 @@ contains
     grid3(i)=grid(i)
     fc3(i)=fcc(i )
     fv3(i)=0
-        do j =1,nm2
-         if(grid(i).eq.grid2(j)) then
-            do k=j,nm2
-           if(grid(i).eq.grid2(k).and.icve(i).eq.icve2(k).and.not(xl(k))) then
-             fv3(i)=fcv(k)
-             xl(k)=.true.
-            !print *,grid3(i),icve3(i),fc3(i),fv3(i),i
-            end if
-           end do! k
-end if
-end do ! j
-end do !i
-!
-     do i  =1,nm
-       do j =1,nm2
-        if(grid(i).eq.grid2(j)) then
-         do k=j,nm2
-          if(grid(i).eq.grid2(k).and.icve(i).ne.icve2(k).and.not(xl(k))) then
-              icve3(m )=icve2(k)
-              grid3(m)=grid2(k)
-              fc3(m)= 0
-              fv3(m )=fcv(k)
-              xl(k)=.true.
-             ! print *,grid3(m),icve3(m),fc3(m),fv3(m),m
-               m=m+1
-             end if
-             end do! k
-          end if
-        end do !j
-     end do !i
-     do i=1,nm2
+    do j =1,nm2
+     if(grid(i).eq.grid2(j)) then
+        do k=j,nm2
+         if(grid(i).eq.grid2(k).and.icve(i).eq.icve2(k).and.not(xl(k))) then
+          fv3(i)=fcv(k)
+          xl(k)=.true.
+         !print *,grid3(i),icve3(i),fc3(i),fv3(i),i
+         end if
+        end do! k
+       end if
+      end do ! j
+    end do !i
+    !
+    do i  =1,nm
+    do j =1,nm2
+    if(grid(i).eq.grid2(j)) then
+     do k=j,nm2
+      if(grid(i).eq.grid2(k).and.icve(i).ne.icve2(k).and.not(xl(k))) then
+          icve3(m )=icve2(k)
+          grid3(m)=grid2(k)
+          fc3(m)= 0
+          fv3(m )=fcv(k)
+          xl(k)=.true.
+         ! print *,grid3(m),icve3(m),fc3(m),fv3(m),m
+           m=m+1
+         end if
+         end do! k
+      end if
+    end do !j
+    end do !i
+    do i=1,nm2
       if(not(xl(i))) then
         icve3(m)=icve2(i)
         grid3(m)=grid2(i)
         fc3(m)=0
         fv3(m)=fcv(i)
         m=m+1
-       end if
-     end do
-       nm3=m-1
+      end if
+    end do
+    nm3=m-1
 	end subroutine calcula
 !
 !> @brief Stores GRIDCODE fractional areas in gri_movil.csv.
@@ -188,7 +195,7 @@ end do !i
     write(10,*)'GRID, CVE_ENT_MUN, Fv, Fc'
     write(10,*)nm3
     do i=1,nm3
-    write(10,*)grid3(i),",",icve3(i),",",fv3(i),",",fc3(i)
+      write(10,*)grid3(i),",",icve3(i),",",fv3(i),",",fc3(i)
     end do
     end subroutine guarda
     end program agrega

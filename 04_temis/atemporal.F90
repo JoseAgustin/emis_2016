@@ -22,38 +22,64 @@
 !   30/07/2019  Para 2016, bisiesto febrero 29 dias
 !   16/12/2019  Actualizacion en indices
 !   06/04/2020  Incluye Horario de verano
-!
+!> @brief For atemporal.F90 program. Area emissions temporal distribution
+!>
+!> Currently uses EPA temporal profiles
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 module variables
 integer :: month,daytype
 integer,parameter :: nf=10 !number of emission files
-integer,parameter :: nnscc=58 !max number of scc descriptors in input files
+integer,parameter :: nnscc=59 !max number of scc descriptors in input files
 integer,parameter ::juliano=366
 integer,parameter :: nh=24 ! number of hour per day
-integer :: nmax !number of max lines in emiA
-integer :: nm ! line number in emissions file
-integer :: lh ! line number in uso horario
+integer :: nmax !> number of max lines in emiA
+!> Number of lines in emissions file
+integer :: nm !> line number in emissions file
+!> Number of lines in Time zone file
+integer :: lh !> line number in uso horario
 integer :: iverano  ! si es en periodo de verano
+!> Day for temporal emissions computations
 integer :: idia     ! dia para el calculo de emisiones
+!> Year for temporal emissions computations
 integer :: anio     ! anio de las emisiones 2016
 integer ::periodo! =1 uno 24 hr, =2 dos de 12hrs c/u
-integer,dimension(nf) :: nscc ! number of scc codes per file
+!> number of scc codes per file
+integer,dimension(nf) :: nscc
 integer, allocatable :: idcel(:),idcel2(:),idcel3(:)
-integer, allocatable :: idsm(:,:) ! state municipality IDs emiss and usoH
+!> state municipality IDs emiss and time zone
+integer, allocatable :: idsm(:,:)
+!> Days per month
 integer,dimension(12) :: daym ! days in a month
-integer,dimension(2014:2020) :: inicia   ! dia inicio horario verano
+!> start day for summer time period for years 2014 to 2020
+integer,dimension(2014:2020) :: inicia ! dia inicial del horario de verano
+!> end day for summer time period for years 2014 to 2020
 integer,dimension(2014:2020) :: termina  ! dia fin del horario de verano
+!> Fraction of weeks per month
 real ::fweek
-real,allocatable ::emiA(:,:,:) !Area emisions from files cel,ssc,file
-real,allocatable :: emis(:,:,:) ! Emission by cel,file and hour (inorganic)
-real,allocatable :: epm2(:,:,:) ! PM25 emissions cel,scc and hour
-real,allocatable :: evoc(:,:,:) ! VOC emissions cel,scc and hour
+!>Area emisions from files cel,ssc,file
+real,allocatable ::emiA(:,:,:)
+!> Emission by cel,file and hour (inorganic)
+real,allocatable :: emis(:,:,:)
+!> PM25 emissions cel,scc and hour
+real,allocatable :: epm2(:,:,:)
+!> VOC emissions cel,scc and hour
+real,allocatable :: evoc(:,:,:)
 real,dimension(nnscc,nf) :: mes,dia,diap ! dia currentday, diap previous day
 real,dimension(nnscc,nf,nh):: hCST,hMST,hPST,hEST
-integer,dimension(3,nnscc,nf):: profile  ! 1=mon 2=weekday 3=hourly
-integer,allocatable :: id5(:,:) ! index per file
+!> profile ID 1=mon 2=weekday 3=hourly per SCC and pollutant.
+integer,dimension(3,nnscc,nf):: profile
+!> index per file
+integer,allocatable :: id5(:,:)
+! SCC codes per file
 character(len=10),dimension(nnscc) ::iscc
+! Number of days in year
 character(len=3),dimension(juliano):: cdia
+! Initial date of the emissions period
 character (len=19) :: current_date
+! during summer period  consider timasvaing .true. or not .false.
 logical :: lsummer
 character(len=14),dimension(nf) ::efile,casn
 
@@ -67,18 +93,21 @@ character(len=14),dimension(nf) ::efile,casn
 &           'TAVOC_2016.csv'/
 ! number of day in a month
 !          jan feb mar apr may jun jul aug sep oct nov dec
- data daym /31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
-!              2014 2015 2016 2017 2018 2019 2020
-     data inicia  /6,  5,  3,   2,   1,   7,   5/
-     data termina /26,25, 30,  29,  28,  27,  25/
+   data daym /31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
+  !              2014 2015 2016 2017 2018 2019 2020
+   data inicia  /6,  5,  3,   2,   1,   7,   5/
+   data termina /26,25, 30,  29,  28,  27,  25/
 common /vars/ fweek,nscc,nm,lh,daytype,mes,dia,current_date
 common /nlm_vars/lsummer,month,idia,anio,periodo,inicia,termina
 end module
 !
 !  Progran  atemporal.F90
 !
-!  Make the temporal distribution of emissions
-!
+!>  @brief Make the area emissions temporal distribution using profiles based on SCC.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program atemporal
    use variables
 
@@ -96,7 +125,11 @@ contains
 ! | |/ _ \/ _ \
 ! | |  __/  __/
 ! |_|\___|\___|
-!
+!>  @brief Reads emissions and temporal profiles based on SCC.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine lee
 	implicit none
 	integer i,j,k,l,m
@@ -174,7 +207,7 @@ subroutine lee
     idcel3=idcel
 	close(iun)
   print *,"Done reading: ",efile(k),size(idcel3)
-!  REading and findig monthly, week and houry code profiles
+!  Reading and findig monthly, week and houry code profiles
     inquire(15,opened=fil1)
     if(.not.fil1) then
       canio="../01_datos/time/"//"temporal_01.txt"
@@ -400,6 +433,11 @@ end subroutine lee
 !| (_| (_) | | | | | | |_) | |_| | ||  __/
 ! \___\___/|_| |_| |_| .__/ \__,_|\__\___|
 !                    |_|
+!>  @brief Computes the hourly emissions based on SCC temporal profiles from annual to hourly.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine compute
 	implicit none
 	integer i,j,k,l,ival,ii
@@ -483,6 +521,11 @@ print *,"   Compute  VOCs",size(idcel2)
 !\__ \ || (_) | | | (_| | (_| |  __/
 !|___/\__\___/|_|  \__,_|\__, |\___|
 !                         |___/
+!>  @brief Saves area emission with the temporal profile in hourly basis.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine storage
   implicit none
   integer i,j,k,l,iun
@@ -551,6 +594,11 @@ end subroutine storage
 !| (_| (_) | |_| | | | | |_
 ! \___\___/ \__,_|_| |_|\__|
 !
+!>  @brief Counts the number of different cells in file and stores in index.csv file.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine count
   integer i,j
   integer idum
@@ -591,6 +639,11 @@ end subroutine count
 ! | | | | |_| \__ \ (_) |  | | | | (_) | | | (_| | |  | | (_) |
 ! |_| |_|\__,_|___/\___/___|_| |_|\___/|_|  \__,_|_|  |_|\___/
 !                     |_____|
+!>  @brief Identifies the time zone by state ID.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine huso_horario
     integer ::i,k,iedo
     print *,'Start uso horario'
@@ -619,6 +672,7 @@ end subroutine huso_horario
 ! | | | | |_) \__ \ (_) | |  | |_
 ! |_| |_| .__/|___/\___/|_|   \__|
 !       |_|
+!>  @brief Sorts an array from minumun to max value.
 subroutine hpsort(n)
     implicit none
     integer n
@@ -664,6 +718,11 @@ end subroutine hpsort
 ! | | | | | | (_| |>  <| | | | | |  __/
 ! |_| |_| |_|\__,_/_/\_\_|_|_| |_|\___|
 !
+!>  @brief Obtains the number of lines in *efile* file.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine maxline(entero)
     implicit none
     integer,intent(out):: entero
@@ -683,26 +742,16 @@ subroutine maxline(entero)
       !print '(I6)',entero
     end do
 end subroutine maxline
-subroutine piksrt(n)
-INTEGER n
-integer i,j
-real a
-  do j=2,N
-  a=idcel3(j)
-    do i=j-1,1,-1
-      if(idcel3(i).le.a) goto 10
-      idcel3(i+1)=idcel3(i)
-    end do
-  i=0
-  10 idcel3(i+1)=a
-  end do
-return
-end subroutine piksrt
 !  _  ____   _____ ___    _   _  _  ___
 ! | |/ /\ \ / / __| _ \  /_\ | \| |/ _ \
 ! | ' <  \ V /| _||   / / _ \| .` | (_) |
 ! |_|\_\  \_/ |___|_|_\/_/ \_\_|\_|\___/
 !
+!>  @brief Identifies if it is summert time period and if it is considered or not
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 integer function kverano(ida,mes)
     implicit none
     integer, intent(in):: ida,mes
@@ -730,6 +779,11 @@ integer function kverano(ida,mes)
     end if
 233 format("******  HORARIO de VERANO *******",/,3x,"Abril ",I2,x,"a Octubre ",I2)
 end function
+!>  @brief Reads global namelis input file for setting up the temporal settings.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine lee_namelist
     NAMELIST /fecha_nml/ idia,month,anio,periodo
     NAMELIST /verano_nml/ lsummer

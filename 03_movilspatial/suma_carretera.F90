@@ -13,22 +13,40 @@
 !
 !   2/Ago/2012  se considera la vialidad en todo el municipio rlm
 !   9/Abr/2020  usa namelist global
-!> @brief This program identifies the different Highway in the cell and adds them together.
-!> Obtains the road area fraction in the cell with respect to the municipality Highway area
+!> @brief for suma_carretera.F90 program. For aggregatin higway fractions in cells.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  2020/06/20
 !>   @version  2.1
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
+!> @param grid  GRIDCODEs  in higway input file (VIALIDADES.csv)
+!> @param grid2  GRIDCODEs  in higway output file (salida2.csv)
+!> @param icve  Municipality ID in higway input file
+!> @param icve2  Array with unique Municipality ID
+!> @param icve3  Municipality ID in higway output file
+!> @param rc     Fractional higway area for each GIRDCODE and municipality
+!> @param rlc    Higway area for each GIRDCODE
+!> @param rlm    Municipality total higway area from inputfile
+!> @param sum    Municipality total higway area array in output file
 module vars
 integer ::nm
 integer,allocatable :: grid(:),icve(:),grid2(:),icve2(:),icve3(:)
 real,allocatable ::rc(:),rlm(:),rlc(:)
 real,allocatable :: sm(:),sc(:),sum(:)
+!> Geographical area selected in namelist_emis.csv
 character(len=12):: zona
 
 common /vars1/ nm,zona
 
 end module vars
+!> @brief This program identifies the different Highway in the cell and adds them together.
+!>
+!> Obtains the Highway area fraction in the cell with respect to the total municipality Highway area
+!> Highways can cover many cels, thus cels can be repeated by different higways this code reduce
+!> the number of repeated cels by addig the fraction of each highway that includes each cel.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program suma
 use vars
 
@@ -171,8 +189,8 @@ subroutine count
     print *,'Number of different grids',j
     deallocate(xl)
 end subroutine count
-!> @brief Reads global namelist_emis for area identification in order to obtain
-!> the CARRETERAS.csv file.
+!> @brief Reads global namelist_emis for area identification in order to obtain specific
+!> grid values from CARRETERAS.csv file.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  2020/06/20
 !>   @version  2.1

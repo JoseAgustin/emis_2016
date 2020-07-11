@@ -1,4 +1,4 @@
-!  movil_spatial.f90
+!  movil_spatial.F90
 !
 !  ifort -O3 -axAVX -o MSpatial.exe movil_spatial.F90
 !
@@ -14,8 +14,12 @@
 !  Cambios
 !       Se incluye Carbono Negro
 !       18/11/2017  Se incluyen GSO4, OTHER, POA
-!
-module vars
+!> @brief For movil_spatial.F90 program. Mobile emissions spatial distribution
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+module mobile_vars
 integer nl   !  Number of lines in salida.csv
 integer nl2  !  Number of lines in gri_movil.csv
 integer,parameter :: npol=11 !  Number of pollutants
@@ -37,9 +41,16 @@ character (len= 5),dimension(fracp) :: polf ! pollutant name fraction file
 ! pemi emission in grid cell,pollutan,scc category
 real,allocatable:: ei(:,:),uf(:),rf(:),pemi(:,:,:),frac(:,:)
 common /vari/ nl,nl2,pol
-end module vars
+end module mobile_vars
+!> @brief Spatial distribution of emissions from mobile sources
+!>
+!> Allocates emission by monicipality to a emission by grid
+!> the grid is obtained from specific geographical area seting by zona variable
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
 program movil_spatial
-use vars
+use mobile_vars
 
     call lee
 
@@ -48,6 +59,10 @@ use vars
     call imprime
 	
 contains
+!> @brief Stores mobile sources emissions in a grid per pollutant file
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
 subroutine imprime
     integer i,j,k,iun
 	character(len=15) ::name
@@ -70,7 +85,10 @@ subroutine imprime
 220 format(i8,",",30(ES12.4,","),I2)
 #endif
 end subroutine imprime
-!
+!> @brief Allocates municipality sources emissions in a grid
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
 subroutine computations
 implicit none
   integer i,j,ii,l,k
@@ -101,6 +119,10 @@ end do! k
 !$omp end parallel do
 end subroutine computations
 !
+!> @brief Reads mobile emission file from MOVES emiss_2016.csv
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
 subroutine lee
 	implicit none
 	integer:: i,j,iedo
@@ -165,8 +187,10 @@ subroutine lee
 160 print *,"Error in reading file gri_movil.csv",i
 end subroutine lee
 !
-!  COUNTING grids, scc
-!
+!> @brief Counting the number of different GRDICODE cells
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1!
 subroutine count
   integer i,j
   logical,allocatable::xl(:)
@@ -230,6 +254,10 @@ subroutine count
 !  print *,(jscc(i),i=1,ii)
   deallocate(xl)
 end subroutine count
+!> @brief Reads mobile emissions 2015 state distributed and municipality fraction fracc_2008.csv
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
 subroutine lee_e
 integer i,j,k
 character (len=10) cdum
@@ -272,7 +300,10 @@ character (len=10) cdum
   print *,'End reading file fracc_2008.csv '
   close(10)
 end subroutine lee_e
-
+!> @brief Stores the pollutants in a intermediate file emissions in a grid
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
 subroutine guarda
 integer i,j,k,l
 real,dimension(npol):: mm

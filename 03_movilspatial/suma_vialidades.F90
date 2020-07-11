@@ -13,16 +13,14 @@
 !
 !   2/Ago/2012  se considera la vialidad en todo el municipio rlm
 !   9/Abr/2020  usa namelist global
-!
-!> @brief This program identifies the different streets in the cell and adds them together.
-!> Obtains the street area fraction in the cell with respect to the municipality street area
+!> @brief for suma_vialidades.F90 program. For aggregatin street fractions in cells.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  2020/06/20
 !>   @version  2.1
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !> @param grid  GRIDCODEs  in Street input file (VIALIDADES.csv)
-!> @param icve  Municipality ID in Street input file
 !> @param grid2  GRIDCODEs  in Street output file (salida2.csv)
+!> @param icve  Municipality ID in Street input file
 !> @param icve2  Array with unique Municipality ID
 !> @param icve3  Municipality ID in Street output file
 !> @param rc     Fractional street area for each GIRDCODE and municipality
@@ -30,15 +28,23 @@
 !> @param rlm    Municipality total Street area from inputfile 
 !> @param sum    Municipality total street area array in output file
 module varsv
+!> Number of lines in file
 integer ::nm
 integer,allocatable :: grid(:),icve(:),grid2(:),icve2(:),icve3(:)
 real,allocatable ::rc(:),rlm(:),rlc(:)
 real,allocatable :: sm(:),sc(:),sum(:)
+!> Geographical area selected in namelist_emis.csv
 character(len=12):: zona
 
 common /vars1/ nm,zona
 
 end module varsv
+!> @brief This program identifies the different streets in the cell and adds them together.
+!> Obtains the street area fraction in the cell with respect to the municipality street area
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program suma
 use varsv
 
@@ -189,8 +195,8 @@ subroutine count
     print *,'Number of different grids',j
     deallocate(xl)
 end subroutine count
-!> @brief Reads global namelist_emis for area identification in order to obtain
-!> the VIALIDADES.csv file.
+!> @brief Reads global namelist_emis for area identification in order to obtain specific
+!> grid values from VIALIDADES.csv file.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  2020/06/20
 !>   @version  2.1
