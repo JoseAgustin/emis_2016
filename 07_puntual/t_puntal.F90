@@ -15,9 +15,14 @@
 !   18/07/2017  Incluye CO2, CN y CH4, dos alturas.
 !   06/04/2020  Incluye Horario de verano
 !   29/04/2020  Para openmp
-!
-module vars
-integer, parameter::nsp=10 !number of compounds
+!>  @brief for t_puntal.F90 program. Emissions allocation in grid and hourly.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+module vars_point
+!> number of pollutants
+integer, parameter::nsp=10 !number of pollutants
 integer, parameter:: nh=24 !number of hours
 integer,parameter:: ipm=2  ! PM2.5
 integer,parameter:: ivoc=6  ! VOC position in puntual.csv
@@ -53,10 +58,16 @@ character (len=19) :: current_date
 common /dat/ nl,nx,ny,daytype,fweek,cvar,current_date
 common /nlm_vars/lsummer,zona,month,idia,anio,periodo,inicia,termina
 
-end module vars
-!
+end module vars_point
+!>  @brief Temporal distribution of point sources emissions.
+!>
+!>  using EPA temporal profiles based on SCC
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program t_puntual
-use vars
+use vars_point
 
     call lee_namelist
 
@@ -73,6 +84,11 @@ contains
 ! | |  __/  __/
 ! |_|\___|\___|
 !
+!>  @brief Reads emissions file and temporal profiles
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine lee
 implicit none
 	integer :: i,j,k,l,m,iun
@@ -91,7 +107,6 @@ implicit none
     iverano=0
     if(lsummer) iverano=kverano(idia,month)
     print *,'Current Date: ',current_date,month,idia,fweek
-
 !
 !   Days in year
 !
@@ -377,12 +392,16 @@ end subroutine lee
 !  / __/ _` | |/ __| | | | |/ _ \/ __|
 ! | (_| (_| | | (__| |_| | | (_) \__ \
 !  \___\__,_|_|\___|\__,_|_|\___/|___/
-!
+!>  @brief Distributes emissions from anual to hourly fluxes
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine calculos
 	implicit none
 	integer i,j,kk,l,ival,ii
 !
-	print *,'Calculos'
+	print *,'Computations'
     mes=mes*fweek
 !$omp parallel do
   do i=1,nl
@@ -405,6 +424,11 @@ end subroutine calculos
 ! | (_| | |_| | (_| | | | (_| | (_| |
 !  \__, |\__,_|\__,_|_|  \__,_|\__,_|
 !  |___/
+!>  @brief Stores houry emission by pollutant
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine guarda
 	implicit none
 	integer:: i,k,l,iun
@@ -464,6 +488,20 @@ end subroutine guarda
 ! | | (_) | (_| (_| | | |/ / (_| |
 ! |_|\___/ \___\__,_|_|_/___\__,_|
 !
+!>  @brief Identifies the grid code for the spatial
+!>   allocation of point source emissions
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+!>  @param xlat two dimensional array with latitudes
+!>  @param xlon two dimensional array with longitudes
+!>  @param mi x dimension in arrays xlat and xlon
+!>  @param mj y dimension in arrays xlat and xlon
+!>  @param clat array of nst-inst+1 elemets of latitudes
+!>  @param clon array of nst-inst+1 elemets of longitudes
+!>  @param inst start value of clat and clon arrays
+!>  @param nst end  value of clat and clon arrays
   Subroutine localiza(xlat,xlon,mi,mj,clat,clon,ist,jst,inst,nst)
   implicit none
   integer,intent(IN) :: mi,mj,nst,inst
@@ -495,6 +533,15 @@ end subroutine guarda
 ! |   <  \ V /  __/ | | (_| | | | | (_) |
 ! |_|\_\  \_/ \___|_|  \__,_|_| |_|\___/
 !
+!>  @brief Identifies if it is summert time period and if it is considered or not
+!>
+!> based on the day and month of the selected period
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+!>   @param ida day of the month
+!>   @param mes month
 integer function kverano(ida,mes)
     implicit none
     integer, intent(in):: ida,mes
@@ -527,6 +574,11 @@ end function
 ! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_
 ! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|
 !            |_____|
+!>  @brief Reads global namelis input file for setting up the temporal settings.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine lee_namelist
     implicit none
     NAMELIST /region_nml/ zona
@@ -565,7 +617,5 @@ subroutine lee_namelist
     stop
     end if
     close(10)
-
     end subroutine lee_namelist
-
 end program t_puntual

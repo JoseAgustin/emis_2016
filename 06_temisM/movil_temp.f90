@@ -28,10 +28,12 @@
 module var_mobile_temp
 integer :: month
 integer :: daytype ! tipo de dia 1 lun a 7 dom
+!> Hourly temporal profile
 integer :: perfil  ! perfil temporal horario
 integer,parameter :: nf=11 !number of emission files
 integer,parameter :: nh=24 ! number of hour per day
 integer,parameter :: nnscc=36 !max number of scc descriptors in input files
+!> number of emissions file
 integer :: nm ! line number in emissions file
 integer :: iverano  ! si es en periodo de verano
 integer :: idia     ! dia para el calculo de emisiones
@@ -554,6 +556,16 @@ subroutine count
    evoc=0
    emp2=0
 end subroutine count
+!> @brief Update temporal profile per day
+!>
+!> Currently uses EPA temporal profiles
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  2020/06/20
+!>   @version  2.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+!> @param perfili mobile temporal profile to be update
+!> @param idia day of the week 1 to 7 to be used to update the profile
+!> @param perfilo update mobile temporal profile
 subroutine adecua(perfili,idia,perfilo)
 implicit none
 integer, INTENT(IN)  :: perfili,idia

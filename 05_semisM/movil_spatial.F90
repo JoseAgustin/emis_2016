@@ -3,7 +3,7 @@
 !  ifort -O3 -axAVX -o MSpatial.exe movil_spatial.F90
 !
 !  Creado por Jose Agustin Garcia Reynoso el 1/11/2017
-! 
+!
 !
 ! Proposito
 !          Distribución espacial de las emisiones de fuentes moviles
@@ -57,7 +57,7 @@ use mobile_vars
     call computations
 
     call imprime
-	
+
 contains
 !> @brief Stores mobile sources emissions in a grid per pollutant file
 !>   @author  Jose Agustin Garcia Reynoso
@@ -133,7 +133,7 @@ subroutine lee
 	open(10,file='emiss_2016.csv',status='old',action='read')
 	read(10,*) cdum,cdum,(pol(i),i=1,npol) !read header
 	i=0
-	do 
+	do
 	 read(10,*,END=100)cdum
 	 i=1+i
 	end do
@@ -147,14 +147,14 @@ subroutine lee
       read(10,*,ERR=140)emid(i),iscc(i),(ei(i,j),j=1,npol)
 !    print *,emid(i),iscc(i),ei(i,7)
 	end do
-	print *,'End reading file salida.csv '
+	print *,'End reading file emiss_2016.csv '
 	close(10)
 !
 	open(10,file='../03_movilspatial/gri_movil.csv',status='old',action='read')
 	read(10,'(A)') cdum !read header line 1
 	read(10,'(A)') cdum !read header line 2
 	i=0
-	do 
+	do
 	 read(10,*,END=110)cdum
 	 i=1+i
 	end do
@@ -176,13 +176,13 @@ subroutine lee
 	print *,'End reading file gri_movil.csv',nl2
 	close(10)
 !
-!	Se considera que el 10 % va en carretera 
+!	Se considera que el 10 % va en carretera
 !   y el 90% en ciudad
 !
 	uf=uf*0.90
 	rf=rf*0.10
 	return
-140 print *,"Error in reading file salida.csv",i
+140 print *,"Error in reading file emiss_2016.csv",i
     stop
 160 print *,"Error in reading file gri_movil.csv",i
 end subroutine lee
@@ -254,83 +254,5 @@ subroutine count
 !  print *,(jscc(i),i=1,ii)
   deallocate(xl)
 end subroutine count
-!> @brief Reads mobile emissions 2015 state distributed and municipality fraction fracc_2008.csv
-!>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
-subroutine lee_e
-integer i,j,k
-character (len=10) cdum
 
-  print *,'Start reading files'
-
-  open (unit=10,file="emiss_2015.csv",status='OLD',ACTION='read')
-  read (10,*) cdum,cdum,(pol(i),i=1,npol)
-  i=0
-  do
-    read(10,*,END=100)cdum
-    i=1+i
-  end do
-  100 continue
-  print *,'number of lines',i
-  rewind(10)
-  read(10,*) cdum ! read header
-  allocate(iest(i),iscc(i),ei(i,npol))
-  do j=1,i
-    read(10,*)iest(j),iscc(j),(ei(j,k),k=1,npol)
-    end do
-  print *,'End reading file emiss_2015.csv '
-  close(10)
-
-  open (unit=10,file="fracc_2008.csv",status='OLD',ACTION='read')
-  read (10,*) cdum,(polf(i),i=1,fracp)
-  i=0
-  do
-    read(10,*,END=200)cdum
-    i=1+i
-  end do
-  200 continue
-  print *,'number of lines',i
-  rewind(10)
-  read(10,*) cdum ! read header
-  allocate(cventmun(i),frac(i,npol))
-  do j=1,i
-    read(10,*)cventmun(j),(frac(j,k),k=1,fracp)
-  end do
-  print *,'End reading file fracc_2008.csv '
-  close(10)
-end subroutine lee_e
-!> @brief Stores the pollutants in a intermediate file emissions in a grid
-!>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
-subroutine guarda
-integer i,j,k,l
-real,dimension(npol):: mm
-  open (unit=11,file='salida.csv')
-  write(11,110) "CVENTMUN","SCC",(pol(i),i=1,npol)
-  do i=1,nstates
-    do j= 1,size(iest)
-      do k=i,size(cventmun)
-        if(iest(j).eq.i .and. cventmun(k)/1000.eq.i) then
-          do l=1,npol
-            do m=1,fracp
-              if(trim(pol(l)).eq.trim(polf(m))) mm(l)=ei(j,l)*frac(k,m)
-              if(trim(pol(l)).eq."NO" .and.trim(polf(m)).eq."NOx") mm(l)=ei(j,l)*frac(k,m)
-              if(trim(pol(l)).eq."NO2".and.trim(polf(m)).eq."NOx") mm(l)=ei(j,l)*frac(k,m)
-              if(trim(pol(l)).eq."GSO4".and.trim(polf(m)).eq."PM25") mm(l)=ei(j,l)*frac(k,m)
-              if(trim(pol(l)).eq."OTHER".and.trim(polf(m)).eq."PM25") mm(l)=ei(j,l)*frac(k,m)
-              if(trim(pol(l)).eq."POA".and.trim(polf(m)).eq."PM25") mm(l)=ei(j,l)*frac(k,m)
-            end do
-          end do
-          write(11,120)cventmun(k),iscc(j),(mm(l),l=1,npol)
-        end if
-      end do
-    end do
-  end do
-  deallocate(iest,iscc,ei,cventmun,frac)
-  close(11)
-  110 format(A,14(",",A),",",A)
-  120 format(I6,",",A10,",",<npol-1>(F12.1,","),F12.1)
-end subroutine guarda
 end program
