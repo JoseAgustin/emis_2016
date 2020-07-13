@@ -79,14 +79,17 @@ implicit none
   integer i,j,k,iun
   real suma
   character(len=20)::fname
-  character(len=6 )::cfuente
+  character(len=6 )::cfuente,csource
   SELECT CASE (isource)
     CASE(1)
     cfuente='_A.txt'
+    csource=" AREA "
     CASE(2)
     cfuente='_M.txt'
+    csource="MOBILE"
     CASE(3)
     cfuente='_P.txt'
+    csource="POINT"
     CASE DEFAULT
           STOP "Error not identifcable type source "
     END SELECT
@@ -119,7 +122,7 @@ implicit none
     write(6,*)cname(j),",",suma
   end do
 !$omp end parallel do
-  print *,"***** DONE PM2.5 AREA SPECIATION *****"
+  print *,"***** DONE PM2.5",csource," SPECIATION *****"
 200 format(I7,x,I3,x,24(ES11.4,x),I3)
 701 format(I7,",",24(ES11.4,","))
 end subroutine guarda
@@ -143,9 +146,9 @@ subroutine count
   do i=1,nn-1
     do j=i+1,nn
       if(profile(j).eq.profile(i).and.xl(j))then
-                xl(j)=.false.
-                exit
-            end if
+        xl(j)=.false.
+        exit
+      end if
     end do
   end do
 !$omp end parallel do
@@ -186,11 +189,10 @@ subroutine count
   j=0
   do i=1,lfa
     if(xl(i)) then
-  j=j+1
-  grid2(j)=grid(i)
-  end if
+      j=j+1
+      grid2(j)=grid(i)
+    end if
   end do
-
   print *,'Number of different cells',j
   deallocate(xl)
 end subroutine count
@@ -222,7 +224,7 @@ subroutine lee(isource)
   CASE(3)
   fname='../07_puntual/T_ANNPM25.csv'
   CASE DEFAULT
-        STOP "Error not identifcable type source "
+        STOP "Error not identificable type source "
   END SELECT
   print *, 'Reading : ',trim(fname)
   open (unit=10,file=fname,status='old',action='read')
