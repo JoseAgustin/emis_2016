@@ -12,7 +12,7 @@ endif
 # Additional files to be cleaned with 'make clean'
 CLEANFILES = *.o *.mod *~
 
-spa_exe_SOURCES = agg_a.F90
-spm_exe_SOURCES = agg_m.F90
-spp_exe_SOURCES = agg_p.F90
+spa_exe_SOURCES = agg_mod.F90 agg_a.F90
+spm_exe_SOURCES = agg_mod.F90 agg_m.F90
+spp_exe_SOURCES = agg_mod.F90 agg_p.F90
 

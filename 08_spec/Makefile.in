@@ -98,13 +98,13 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_spa_exe_OBJECTS = agg_a.$(OBJEXT)
+am_spa_exe_OBJECTS = agg_mod.$(OBJEXT) agg_a.$(OBJEXT)
 spa_exe_OBJECTS = $(am_spa_exe_OBJECTS)
 spa_exe_LDADD = $(LDADD)
-am_spm_exe_OBJECTS = agg_m.$(OBJEXT)
+am_spm_exe_OBJECTS = agg_mod.$(OBJEXT) agg_m.$(OBJEXT)
 spm_exe_OBJECTS = $(am_spm_exe_OBJECTS)
 spm_exe_LDADD = $(LDADD)
-am_spp_exe_OBJECTS = agg_p.$(OBJEXT)
+am_spp_exe_OBJECTS = agg_mod.$(OBJEXT) agg_p.$(OBJEXT)
 spp_exe_OBJECTS = $(am_spp_exe_OBJECTS)
 spp_exe_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -265,9 +265,9 @@ top_srcdir = @top_srcdir@
 
 # Additional files to be cleaned with 'make clean'
 CLEANFILES = *.o *.mod *~
-spa_exe_SOURCES = agg_a.F90
-spm_exe_SOURCES = agg_m.F90
-spp_exe_SOURCES = agg_p.F90
+spa_exe_SOURCES = agg_mod.F90 agg_a.F90
+spm_exe_SOURCES = agg_mod.F90 agg_m.F90
+spp_exe_SOURCES = agg_mod.F90 agg_p.F90
 all: all-am
 
 .SUFFIXES:
