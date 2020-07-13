@@ -1,27 +1,19 @@
-!
-!	t_puntal.F90
-!
-!
 !  Creado por Jose Agustin Garcia Reynoso el 06/06/12.
 ! Proposito
 !          Distribución temporal de las emisiones de fuentes puntuales
 !
 ! ifort -O2 -axAVX2 t_puntal.F90 -o Puntual.exe
 !
-!   modificado
-!   14/08/2012  nombre archivos de PM
-!   02/10/2012  Ajuste en horas dia previo subroutina lee
-!   12/07/2017  para 2014 y hEST
-!   18/07/2017  Incluye CO2, CN y CH4, dos alturas.
-!   06/04/2020  Incluye Horario de verano
-!   29/04/2020  Para openmp
 !>  @brief for t_puntal.F90 program. Emissions allocation in grid and hourly.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  2020/06/20
-!>   @version  2.1
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-module vars_point
-!> number of pollutants
+!> @param nsp number of pollutants
+!> @param nh hours per day
+!> @param ipm  column for PM2.5 in emissions input file puntual.csv
+!> @param ivoc column for VOC in emissions input file puntual.csv
+module point_vars_mod
 integer, parameter::nsp=10 !number of pollutants
 integer, parameter:: nh=24 !number of hours
 integer,parameter:: ipm=2  ! PM2.5
@@ -57,39 +49,47 @@ character (len=19) :: current_date
     data termina /26,25, 30,  29,  28,  27,  25/
 common /dat/ nl,nx,ny,daytype,fweek,cvar,current_date
 common /nlm_vars/lsummer,zona,month,idia,anio,periodo,inicia,termina
-
-end module vars_point
+end module point_vars_mod
+!              _       _      _                                       _
+!  _ __   ___ (_)_ __ | |_   | |_ ___ _ __ ___  _ __   ___  _ __ __ _| |
+! | '_ \ / _ \| | '_ \| __|  | __/ _ \ '_ ` _ \| '_ \ / _ \| '__/ _` | |
+! | |_) | (_) | | | | | |_   | ||  __/ | | | | | |_) | (_) | | | (_| | |
+! | .__/ \___/|_|_| |_|\__|___\__\___|_| |_| |_| .__/ \___/|_|  \__,_|_|
+! |_|                    |_____|               |_|
+!
 !>  @brief Temporal distribution of point sources emissions.
 !>
 !>  using EPA temporal profiles based on SCC
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  2020/06/20
-!>   @version  2.1
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-program t_puntual
-use vars_point
+program point_temporal
+use point_vars_mod
 
-    call lee_namelist
+    call lee_namelist_zona_time
 
-    call lee
+    call point_emis_reading
 
-    call calculos
+    call point_temp_distribution
 
-    call guarda
+    call point_emissions_storage
 
 contains
-!  _
-! | | ___  ___
-! | |/ _ \/ _ \
-! | |  __/  __/
-! |_|\___|\___|
-!
+!  ___  ___ ___ _  _ _____
+! | _ \/ _ \_ _| \| |_   _|
+! |  _/ (_) | || .` | | |
+! |_|  \___/___|_|\_| |_|              _ _
+!  ___ _ __ (_)______  _ _ ___ __ _ __| (_)_ _  __ _
+! / -_) '  \| (_-<_-< | '_/ -_) _` / _` | | ' \/ _` |
+! \___|_|_|_|_/__/__/_|_| \___\__,_\__,_|_|_||_\__, |
+!                  |___|                       |___/
 !>  @brief Reads emissions file and temporal profiles
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  2020/06/20
-!>   @version  2.1
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine lee
+subroutine point_emis_reading
 implicit none
 	integer :: i,j,k,l,m,iun
 	integer :: idum, imon,iwk,ipdy
@@ -386,22 +386,22 @@ implicit none
 	return
 110	print *,'Error en ',i
     STOP
-end subroutine lee
-!            _            _
-!   ___ __ _| | ___ _   _| | ___  ___
-!  / __/ _` | |/ __| | | | |/ _ \/ __|
-! | (_| (_| | | (__| |_| | | (_) \__ \
-!  \___\__,_|_|\___|\__,_|_|\___/|___/
-!>  @brief Distributes emissions from anual to hourly fluxes
+end subroutine point_emis_reading
+!  _                                _      _ _    _       _ _         _   _
+! | |_ ___ _ __  _ __  ___ _ _ __ _| |  __| (_)__| |_ _ _(_) |__ _  _| |_(_)___ _ _
+! |  _/ -_) '  \| '_ \/ _ \ '_/ _` | | / _` | (_-<  _| '_| | '_ \ || |  _| / _ \ ' \
+!  \__\___|_|_|_| .__/\___/_| \__,_|_|_\__,_|_/__/\__|_| |_|_.__/\_,_|\__|_\___/_||_|
+!               |_|                 |___|
+!>  @brief Distributes point emissions from anual to hourly fluxes
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  2020/06/20
-!>   @version  2.1
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine calculos
+subroutine point_temp_distribution
 	implicit none
 	integer i,j,kk,l,ival,ii
 !
-	print *,'Computations'
+	print *,'Temporal distribution'
     mes=mes*fweek
 !$omp parallel do
   do i=1,nl
@@ -417,19 +417,18 @@ subroutine calculos
     end if
   end do
 !$omp end parallel do
-end subroutine calculos
-!                            _
-!   __ _ _   _  __ _ _ __ __| | __ _
-!  / _` | | | |/ _` | '__/ _` |/ _` |
-! | (_| | |_| | (_| | | | (_| | (_| |
-!  \__, |\__,_|\__,_|_|  \__,_|\__,_|
-!  |___/
+end subroutine point_temp_distribution
+!            _       _                  _
+!  ___ _ __ (_)_____(_)___ _ _  ___  __| |_ ___ _ _ __ _ __ _ ___
+! / -_) '  \| (_-<_-< / _ \ ' \(_-< (_-<  _/ _ \ '_/ _` / _` / -_)
+! \___|_|_|_|_/__/__/_\___/_||_/__/_/__/\__\___/_| \__,_\__, \___|
+!                                |___|                  |___/
 !>  @brief Stores houry emission by pollutant
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  2020/06/20
-!>   @version  2.1
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine guarda
+subroutine point_emissions_storage
 	implicit none
 	integer:: i,k,l,iun
 	character(len=14) ::fname
@@ -480,19 +479,18 @@ subroutine guarda
 300 format(A10,',',f10.6,',',f10.4,',',I3,',',23(E12.4,","),E12.4)
 310 format(A10,',',I8,',',I3,',',23(E12.4,","),E12.4,",",I3)
 #endif
-end subroutine guarda
-!
+end subroutine point_emissions_storage
 !  _                 _ _
 ! | | ___   ___ __ _| (_)______ _
 ! | |/ _ \ / __/ _` | | |_  / _` |
 ! | | (_) | (_| (_| | | |/ / (_| |
 ! |_|\___/ \___\__,_|_|_/___\__,_|
 !
-!>  @brief Identifies the grid code for the spatial
+!>  @brief Identifies the i,j index in the grid for the spatial
 !>   allocation of point source emissions
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  2020/06/20
-!>   @version  2.1
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>  @param xlat two dimensional array with latitudes
 !>  @param xlon two dimensional array with longitudes
@@ -533,12 +531,12 @@ end subroutine guarda
 ! |   <  \ V /  __/ | | (_| | | | | (_) |
 ! |_|\_\  \_/ \___|_|  \__,_|_| |_|\___/
 !
-!>  @brief Identifies if it is summert time period and if it is considered or not
+!>  @brief Identifies if it is summer time period and if it will be considered or not
 !>
 !> based on the day and month of the selected period
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  2020/06/20
-!>   @version  2.1
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param ida day of the month
 !>   @param mes month
@@ -568,18 +566,17 @@ integer function kverano(ida,mes)
     end if
 233 format("******  HORARIO de VERANO *******",/,3x,"Abril ",I2,x,"a Octubre ",I2)
 end function
-!  _                                          _ _     _
-! | | ___  ___     _ __   __ _ _ __ ___   ___| (_)___| |_
-! | |/ _ \/ _ \   | '_ \ / _` | '_ ` _ \ / _ \ | / __| __|
-! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_
-! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|
-!            |_____|
+!  _                               _ _    _                       _   _
+! | |___ ___   _ _  __ _ _ __  ___| (_)__| |_   ______ _ _  __ _ | |_(_)_ __  ___
+! | / -_) -_) | ' \/ _` | '  \/ -_) | (_-<  _| |_ / _ \ ' \/ _` ||  _| | '  \/ -_)
+! |_\___\___|_|_||_\__,_|_|_|_\___|_|_/__/\__|_/__\___/_||_\__,_|_\__|_|_|_|_\___|
+!          |___|                            |___|              |___|
 !>  @brief Reads global namelist input file for the temporal settings.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  2020/06/20
-!>   @version  2.1
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine lee_namelist
+subroutine lee_namelist_zona_time
     implicit none
     NAMELIST /region_nml/ zona
     NAMELIST /fecha_nml/ idia,month,anio,periodo
@@ -617,5 +614,5 @@ subroutine lee_namelist
     stop
     end if
     close(10)
-    end subroutine lee_namelist
-end program t_puntual
+    end subroutine lee_namelist_zona_time
+end program point_temporal

@@ -15,8 +15,8 @@
 !   9/Abr/2020  usa namelist global
 !> @brief for suma_carretera.F90 program. For aggregation Highway fractions in cells.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !> @param grid  GRIDCODEs  in higway input file (VIALIDADES.csv)
 !> @param grid2  GRIDCODEs  in higway output file (salida2.csv)
@@ -27,7 +27,7 @@
 !> @param rlc    Higway area for each GIRDCODE
 !> @param rlm    Municipality total higway area from inputfile
 !> @param sum    Municipality total higway area array in output file
-module vars
+module highway_vars_mod
 integer ::nm
 integer,allocatable :: grid(:),icve(:),grid2(:),icve2(:),icve3(:)
 real,allocatable ::rc(:),rlm(:),rlc(:)
@@ -37,34 +37,34 @@ character(len=12):: zona
 
 common /vars1/ nm,zona
 
-end module vars
+end module highway_vars_mod
 !> @brief This program identifies the different Highway in the cell and adds them together.
 !>
 !> Obtains the Highway area fraction in the cell with respect to the total municipality Highway area
 !> Highways can cover many cels, thus cels can be repeated by different higways this code reduce
 !> the number of repeated cels by addig the fraction of each highway that includes each cel.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-program suma
-use vars
+program suma_carreteras
+use highway_vars_mod
 
-    call lee_namelist
+    call lee_namelist_zona
 
-    call lee
+    call highway_area_read
 
-    call calculos
+    call highway_fraction_calculation
 
-    call guarda
+    call highway_fraction_saving
 
 contains
-!> @brief Reads higway area file (CARRETERAS.csv)
+!> @brief Reads higway surface area file (CARRETERAS.csv)
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine lee
+subroutine highway_area_read
 implicit none
     integer i
     character(len=50) ::fname
@@ -89,14 +89,14 @@ implicit none
     end do
     print *,'Done reading file ',fname
     close(10)
-end subroutine
+end subroutine highway_area_read
 !> @brief Identifyes the duplicate GRIDCODES, add higway areas and obtains
 !> the fractional area from the total area in the municipality.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine calculos
+subroutine highway_fraction_calculation
 implicit none
     integer i,j,l
     call count
@@ -113,14 +113,14 @@ implicit none
         end if
         end do
     end do
-end subroutine calculos
+end subroutine highway_fraction_calculation
 !> @brief Stores the Highway fractional area and total area for each grid code
 !>  and municipality.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine guarda
+subroutine highway_fraction_saving
 implicit none
 integer i,j
 open(unit=11,file='salida.csv',action='write')
@@ -133,11 +133,11 @@ open(unit=11,file='salida.csv',action='write')
 #endif
     end do
 close (11)
-end subroutine guarda
+end subroutine highway_fraction_saving
 !> @brief Identifies the different municipalities in the CARRETERAS.csv file.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine count
     use vars
@@ -189,13 +189,15 @@ subroutine count
     print *,'Number of different grids',j
     deallocate(xl)
 end subroutine count
-!> @brief Reads global namelist_emis for area identification in order to obtain specific
-!> grid values from CARRETERAS.csv file.
+!> @brief Reads zona variable from global namelist input file.
+!>
+!> for selecting the dommain used in the spatial allocation
+!> and for gathering grid values from CARRETERAS.csv file.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine lee_namelist
+subroutine lee_namelist_zona
     NAMELIST /region_nml/ zona
     integer unit_nml
     logical existe
@@ -219,5 +221,5 @@ subroutine lee_namelist
     else
         stop '***** No namelist_emis.nml in .. directory'
     end if
-end subroutine lee_namelist
-end program suma
+end subroutine lee_namelist_zona
+end program suma_carreteras

@@ -7,8 +7,8 @@
 !>
 !> GRIDCODE is based on a grid covering the hole country in 1x1 km or 3x3 km or 9x9 km grid cels
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !	Created by Agustin on 14/08/12.
 !	Copyright 2012 CCA-UNAM. All rights reserved.
@@ -60,7 +60,7 @@
 !> @param nm  Number of municipalities
 !> @param nnscc Number of emissions categories for SCC
 !> @param ofile Output emission file name
-module land
+module area_spatial_mod
 !> Number of lines in surrogate file
     integer nl
 !> State ID
@@ -107,7 +107,8 @@ module land
 &           'AVOC_2016.csv','ACO__2016.csv','APM10_2016.csv',&
 &          'APM25_2016.csv','ACO2_2016.csv','ACN__2016.csv', &
 &          'ACH4_2016.csv'/
-end module land
+end module area_spatial_mod
+
 !>	@brief Allocates municipality area emissions in an emissions grid
 !> by using gridded distributed population information,
 !> land cover, roads, trains, airports, seaports and
@@ -115,35 +116,38 @@ end module land
 !>
 !> the grid depends on the selected zona in namelist_emis.nml
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program area_espacial
-       use land
+    use area_spatial_mod
 
-       call lee_namelist
+       call lee_namelist_zona
 
-       call lee
+       call area_emiss_reading
 
-       call calculos
+       call area_spatial_locating
 
-       call guarda
+       call area_spatial_storing
 
 contains
 !>	@brief Reads distributed population information,
 !> land cover, roads, trains, airports, seaports and
 !> buses terminals to spatially allocate area emissions.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-!  _     _____ _____
-! | |   | ____| ____|
-! | |   |  _| |  _|
-! | |___| |___| |___
-! |_____|_____|_____|
-!
-subroutine lee
+!   __ _ _ __ ___  __ _
+!  / _` | '__/ _ \/ _` |
+! | (_| | | |  __/ (_| |
+!  \__,_|_|  \___|\__,_|                           _ _
+!   ___ _ __ ___ (_)___ ___     _ __ ___  __ _  __| (_)_ __   __ _
+!  / _ \ '_ ` _ \| / __/ __|   | '__/ _ \/ _` |/ _` | | '_ \ / _` |
+! |  __/ | | | | | \__ \__ \   | | |  __/ (_| | (_| | | | | | (_| |
+!  \___|_| |_| |_|_|___/___/___|_|  \___|\__,_|\__,_|_|_| |_|\__, |
+!                         |_____|                            |___/
+subroutine area_emiss_reading
 implicit none
     integer i,j,k,iun
     character(len=38):: cdum,fname
@@ -203,20 +207,24 @@ implicit none
         end do ! i
         close(iun)
     end do! k
-end subroutine lee
+end subroutine area_emiss_reading
 !>	@brief Allocates emissions using distributed population information,
 !> land cover, roads, trains, airports, seaports and
 !> buses terminals to distribute area emissions.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-!  CCC  AA  L     CCC U   U L     OOO   SSS
-! C    A  A L    C    U   U L    O   O S
-! C    AAAA L    C    U   U L    O   O  SSS
-! C    A  A L    C    U   U L    O   O     S
-!  CCC A  A LLLL  CCC  UUU  LLLL  OOO  SSSS
-subroutine calculos
+!   __ _ _ __ ___  __ _
+!  / _` | '__/ _ \/ _` |
+! | (_| | | |  __/ (_| |
+!  \__,_|_|  \___|\__,_|       _     _                 _   _
+!  ___ _ __   __ _| |_(_) __ _| |   | | ___   ___ __ _| |_(_)_ __   __ _
+! / __| '_ \ / _` | __| |/ _` | |   | |/ _ \ / __/ _` | __| | '_ \ / _` |
+! \__ \ |_) | (_| | |_| | (_| | |   | | (_) | (_| (_| | |_| | | | | (_| |
+! |___/ .__/ \__,_|\__|_|\__,_|_|___|_|\___/ \___\__,_|\__|_|_| |_|\__, |
+!     |_|                      |_____|                             |___/
+subroutine area_spatial_locating
     implicit none
     integer i,j,k,l,m
 	allocate(eagr(size(gria),nf,nnscc))
@@ -406,22 +414,26 @@ subroutine calculos
     end do poblacion
 !$omp end parallel sections
     end do Clase
-end subroutine calculos
+end subroutine area_spatial_locating
 !>	@brief Stores pollutan emissions, columns contains SCC and rows GRIDID.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-!  GGG  U   U  AA  RRRR  DDD   AA
-! G     U   U A  A R   R D  D A  A
-! G  GG U   U AAAA RRRR  D  D AAAA
-! G   G U   U A  A R R   D  D A  A
-!  GGG   UUU  A  A R  RR DDD  A  A
-subroutine guarda
+!   __ _ _ __ ___  __ _
+!  / _` | '__/ _ \/ _` |
+! | (_| | | |  __/ (_| |
+!  \__,_|_|  \___|\__,_|       _         _             _
+!  ___ _ __   __ _| |_(_) __ _| |    ___| |_ ___  _ __(_)_ __   __ _
+! / __| '_ \ / _` | __| |/ _` | |   / __| __/ _ \| '__| | '_ \ / _` |
+! \__ \ |_) | (_| | |_| | (_| | |   \__ \ || (_) | |  | | | | | (_| |
+! |___/ .__/ \__,_|\__|_|\__,_|_|___|___/\__\___/|_|  |_|_| |_|\__, |
+!     |_|                      |_____|                         |___/
+subroutine area_spatial_storing
     implicit none
     integer i,k,l,iun
     real suma
-    Print *,"   ***   Guarda   ***"
+    Print *,"   ***   Guardando Emisiones de Area   ***"
 !$omp parallel do private(iun,i,l,suma)
     do k=1,nf
         open(newunit=iun,file=ofile(k),ACTION='write')
@@ -527,18 +539,19 @@ subroutine guarda
 300 format(I3,", g_per_year",60(",",A10))
 310 format(I9,",",I6,",",F7.4,",",F7.4,60(",",ES12.5))
 #endif
-end subroutine guarda
+end subroutine area_spatial_storing
 !>	@brief Counts the number of lines per surrogate file.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-!   CCC U   U EEEE N   N TTTTTT  AA      L    III N   N EEEE  AA
-!  C    U   U E    NN  N   TT   A  A     L     I  NN  N E    A  A
-!  C    U   U EEE  N N N   TT   AAAA     L     I  N N N EEE  AAAA
-!  C    U   U E    N  NN   TT   A  A     L     I  N  NN E    A  A
-!   CCC  UUU  EEEE N   N   TT   A  A ____LLLL III N   N EEEE A  A
-!                                    ____
+!> @param archivo input file for line counting
+!                        _            _ _
+!   ___ _   _  ___ _ __ | |_ __ _    | (_)_ __   ___  __ _
+!  / __| | | |/ _ \ '_ \| __/ _` |   | | | '_ \ / _ \/ _` |
+! | (__| |_| |  __/ | | | || (_| |   | | | | | |  __/ (_| |
+!  \___|\__,_|\___|_| |_|\__\__,_|___|_|_|_| |_|\___|\__,_|
+!                               |_____|
 integer function cuenta_linea(archivo)
   implicit none
   integer iun
@@ -557,19 +570,25 @@ integer function cuenta_linea(archivo)
 end function
 !>	@brief Reads area fraction data from the surrogate file.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-! L    EEEE EEEE     FFFF III L    EEEE
-! L    E    E        F     I  L    E
-! L    EEE  EEE      FFF   I  L    EEE
-! L    E    E        F     I  L    E
-! LLLL EEEE EEEE ____F    III LLLL EEEE
-!                ____
+!>   @param archivo file to be read
+!>   @param grid GRIDCODE ID for the surrogate fraction
+!>   @param id municpality ID
+!>   @param frac  surrogate fraction
+!>   @param frac2 surrogate fraction 2
+!>   @param frac3 surrogate fraction 3
+!  _                __ _ _
+! | | ___  ___     / _(_) | ___
+! | |/ _ \/ _ \   | |_| | |/ _ \
+! | |  __/  __/   |  _| | |  __/
+! |_|\___|\___|___|_| |_|_|\___|
+!            |_____|
 subroutine lee_file(archivo,grid,id,frac,frac2,frac3)
     implicit none
-    integer, dimension(:), intent(inout)::grid,id
     integer i,nl,iun
+    integer, dimension(:), intent(inout)::grid,id
     real,dimension(:), intent(inout)::frac
     real,dimension(:), optional,intent(inout)::frac2,frac3
     character (len=*), intent(in)::archivo
@@ -588,12 +607,20 @@ subroutine lee_file(archivo,grid,id,frac,frac2,frac3)
     end if
     close(iun)
 end subroutine
-!>	@brief Reads global namelist input file for setting up the spatial allocation.
+!>	@brief Reads zona variable from global namelist input file
+!>
+!> for selecting the dommain used in the spatial allocation.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine lee_namelist
+!  _                                          _ _     _
+! | | ___  ___     _ __   __ _ _ __ ___   ___| (_)___| |_     _______  _ __   __ _
+! | |/ _ \/ _ \   | '_ \ / _` | '_ ` _ \ / _ \ | / __| __|   |_  / _ \| '_ \ / _` |
+! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_     / / (_) | | | | (_| |
+! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|___/___\___/|_| |_|\__,_|
+!            |_____|                                    |_____|
+subroutine lee_namelist_zona
     NAMELIST /region_nml/ zona
     integer unit_nml
     logical existe
@@ -618,5 +645,5 @@ subroutine lee_namelist
     stop '***** No namelist_emis.nml in .. directory'
     end if
 
-end subroutine lee_namelist
+end subroutine lee_namelist_zona
 end program area_espacial

@@ -9,14 +9,10 @@
 ! Este programa identifica las diferentes vialidades en la celda y las suma.
 ! y obtiene la fraccion de vialidad en la celda con respecto al municipio
 !
-!  Modificaciones
-!
-!   2/Ago/2012  se considera la vialidad en todo el municipio rlm
-!   9/Abr/2020  usa namelist global
 !> @brief for suma_vialidades.F90 program. For aggregatin street fractions in cells.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !> @param grid  GRIDCODEs  in Street input file (VIALIDADES.csv)
 !> @param grid2  GRIDCODEs  in Street output file (salida2.csv)
@@ -27,7 +23,7 @@
 !> @param rlc    Street area for each GIRDCODE
 !> @param rlm    Municipality total Street area from inputfile 
 !> @param sum    Municipality total street area array in output file
-module varsv
+module street_vars
 !> Number of lines in file
 integer ::nm
 integer,allocatable :: grid(:),icve(:),grid2(:),icve2(:),icve3(:)
@@ -38,30 +34,30 @@ character(len=12):: zona
 
 common /vars1/ nm,zona
 
-end module varsv
+end module street_vars
 !> @brief This program identifies the different streets in the cell and adds them together.
 !> Obtains the street area fraction in the cell with respect to the municipality street area
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-program suma
-use varsv
+program suma_vialidades
+use street_vars
 
-    call lee_namelist
+    call lee_namelist_zona
 
-    call lee
+    call street_areas_read
 
-    call calculos
+    call street_fraction_calculation
 
-    call guarda
+    call street_fraction_saving
 contains
 !> @brief Reads street area file (VIALIDADES.csv)
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine lee
+subroutine street_areas_read
 implicit none
     integer i
     character(len=50) ::fname
@@ -86,15 +82,15 @@ implicit none
     end do
     print *,'Done reading file ',fname
     close(10)
-end subroutine
+end subroutine street_areas_read
 !> @brief Identifyes the duplicate GRIDCODES, add street areas and obtains
 !> the fractional area from the total area in the municipality.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine calculos
-use varsv
+subroutine street_fraction_calculation
+use street_vars
 implicit none
     integer i,j,l
     call count
@@ -118,15 +114,15 @@ implicit none
         end if
         end do
     end do
-end subroutine calculos
+end subroutine street_fraction_calculation
 !> @brief Stores the Street fractional area and total area for each grid code
 !>  and municipality.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine guarda
-use varsv
+subroutine street_fraction_saving
+use street_vars
 implicit none
 integer i,j
 open(unit=11,file='salida2.csv',action='write')
@@ -139,14 +135,14 @@ open(unit=11,file='salida2.csv',action='write')
 #endif
     end do
 close (11)
-end subroutine guarda
+end subroutine street_fraction_saving
 !> @brief Identifies the different municipalities in the VIALIDADES.csv file.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine count
-    use varsv
+    use street_vars
     logical,allocatable::xl(:)
     allocate(xl(size(icve)))
     xl=.true.
@@ -195,13 +191,15 @@ subroutine count
     print *,'Number of different grids',j
     deallocate(xl)
 end subroutine count
-!> @brief Reads global namelist_emis for area identification in order to obtain specific
-!> grid values from VIALIDADES.csv file.
+!> @brief Reads zona variable from global namelist input file.
+!>
+!> for selecting the dommain used in the spatial allocation
+!> and for gathering grid values from  VIALIDADES.csv file.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine lee_namelist
+subroutine lee_namelist_zona
     NAMELIST /region_nml/ zona
     integer unit_nml
     logical existe
@@ -225,5 +223,5 @@ subroutine lee_namelist
     else
         stop '***** No namelist_emis.nml in .. directory'
     end if
-end subroutine lee_namelist
-end program suma
+end subroutine lee_namelist_zona
+end program suma_vialidades

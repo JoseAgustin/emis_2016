@@ -4,7 +4,7 @@
 !>   @date  2020/06/20
 !>   @version  2.1
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-program area_speciation
+program mobile_speciation
    use voc_split
 
     call lee_namelist
@@ -15,5 +15,5 @@ program area_speciation
 
     call guarda_voc(2)
 
-end program area_speciation
+end program mobile_speciation
 

@@ -1,7 +1,3 @@
-!
-!	atemporal.F90
-!
-!
 !   Creado por Jose Agustin Garcia Reynoso 12/07/2017.
 !
 ! Proposito:
@@ -11,25 +7,14 @@
 !  -parallel -Dtest_gap -opt-report=1 -opt-report-phase=par -opt-report-file=stdout atemporal.F90
 ! gfortran -DPGI  -fopenmp -O2 atemporal.F90 -o Atemporal.exe
 !
-!   modificado
-!   14/08/2012  Nombre archivos de PM
-!   02/10/2012  Ajuste en horas dia previo subroutina lee
-!   10/07/2017  Para 2014 nnscc 52, inclusion del 37123 y BC, CO2 y METH
-!   12/07/2017  Revision linea 158 se incluye else deallocate. Falta revisar 155 DONE
-!    2/11/2017  Huso horario se calcula con el estado
-!    5/11/2017  Actualizacion en numero de lineas totales en emiA
-!   15/11/2017  Seleccion de numero de linea mayor de los datos de entrada emiA
-!   30/07/2019  Para 2016, bisiesto febrero 29 dias
-!   16/12/2019  Actualizacion en indices
-!   06/04/2020  Incluye Horario de verano
 !> @brief For atemporal.F90 program. Area emissions temporal distribution
 !>
 !> Currently uses EPA temporal profiles
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date 07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-module variables
+module area_temporal_mod
 integer :: month,daytype
 integer,parameter :: nf=10 !number of emission files
 integer,parameter :: nnscc=59 !max number of scc descriptors in input files
@@ -99,38 +84,43 @@ character(len=14),dimension(nf) ::efile,casn
    data termina /26,25, 30,  29,  28,  27,  25/
 common /vars/ fweek,nscc,nm,lh,daytype,mes,dia,current_date
 common /nlm_vars/lsummer,month,idia,anio,periodo,inicia,termina
-end module
+end module area_temporal_mod
 !
 !  Progran  atemporal.F90
 !
 !>  @brief Make the area emissions temporal distribution using profiles based on SCC.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date 07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-program atemporal
-   use variables
+program area_temporal
+   use area_temporal_mod
 
-   call lee_namelist
+   call lee_namelist_time
 
-   call lee
+   call area_spatial_reading
 
-   call compute
+   call area_temp_distribution
 
-   call storage
+   call area_temporal_storing
 
 contains
-!  _
-! | | ___  ___
-! | |/ _ \/ _ \
-! | |  __/  __/
-! |_|\___|\___|
-!>  @brief Reads emissions and temporal profiles based on SCC.
+!
+!   __ _ _ __ ___  __ _
+!  / _` | '__/ _ \/ _` |
+! | (_| | | |  __/ (_| |
+!  \__,_|_|  \___|\__,_|       _                        _ _
+!  ___ _ __   __ _| |_(_) __ _| |    _ __ ___  __ _  __| (_)_ __   __ _
+! / __| '_ \ / _` | __| |/ _` | |   | '__/ _ \/ _` |/ _` | | '_ \ / _` |
+! \__ \ |_) | (_| | |_| | (_| | |   | | |  __/ (_| | (_| | | | | | (_| |
+! |___/ .__/ \__,_|\__|_|\__,_|_|___|_|  \___|\__,_|\__,_|_|_| |_|\__, |
+!     |_|                      |_____|                            |___/
+!>  @brief Reads spatial area emissions and temporal profiles based on SCC.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date 07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine lee
+subroutine area_spatial_reading
 	implicit none
 	integer i,j,k,l,m
 	integer idum,imon,iwk,ipdy,iun
@@ -426,30 +416,33 @@ print *,'   Done ',nfile,daytype,maxval(hCST)!,maxval(hPST),maxval(hMST)
     close(18)
     close(19)
 134 FORMAT(4x,A5,x,I6,x,A5,I6)
-end subroutine lee
-!                                 _
-!  ___ ___  _ __ ___  _ __  _   _| |_ ___
-! / __/ _ \| '_ ` _ \| '_ \| | | | __/ _ \
-!| (_| (_) | | | | | | |_) | |_| | ||  __/
-! \___\___/|_| |_| |_| .__/ \__,_|\__\___|
-!                    |_|
+end subroutine area_spatial_reading
+!   __ _ _ __ ___  __ _
+!  / _` | '__/ _ \/ _` |
+! | (_| | | |  __/ (_| |
+!  \__,_|_|  \___|\__,_|         _ _     _        _ _           _   _
+! | |_ ___ _ __ ___  _ __     __| (_)___| |_ _ __(_) |__  _   _| |_(_) ___  _ __
+! | __/ _ \ '_ ` _ \| '_ \   / _` | / __| __| '__| | '_ \| | | | __| |/ _ \| '_ \
+! | ||  __/ | | | | | |_) | | (_| | \__ \ |_| |  | | |_) | |_| | |_| | (_) | | | |
+!  \__\___|_| |_| |_| .__/___\__,_|_|___/\__|_|  |_|_.__/ \__,_|\__|_|\___/|_| |_|
+!                   |_| |_____|
 !>  @brief Computes the hourly emissions based on SCC temporal profiles from annual to hourly.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date 07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine compute
+subroutine area_temp_distribution
 	implicit none
 	integer i,j,k,l,ival,ii
 !
-    call count ! computes the number of different cells
+    call area_grids_count ! computes the number of different cells
     call huso_horario ! identifies the time lag in each cell
 !
 ! For inorganics
 !
 !$omp parallel sections num_threads (3) private(k,ii,i,l,j)
 !$omp section
-    print *,"   Compute Inorganics"
+    print *,"   Temporal distribution for Inorganics"
     emis=0
     mes=mes*fweek! weeks per month
     do k=1,nf-2
@@ -473,7 +466,7 @@ subroutine compute
 !  For PM2.5
 !
 !$omp section
-    print *,"   Compute PM2.5"
+    print *,"   Temporal distribution for PM2.5"
     epm2=0
 	k=nf-1
    do ii=1,size(idcel2)
@@ -497,7 +490,7 @@ subroutine compute
     evoc=0
 	k=nf
 
-print *,"   Compute  VOCs",size(idcel2)
+print *,"   Temporal distribution for VOCs"!,size(idcel2)
    do ii=1,size(idcel2)
     do i=1,size(id5,2)
      if(idcel2(ii).eq.id5(k,i))then
@@ -513,26 +506,29 @@ print *,"   Compute  VOCs",size(idcel2)
      end do
     end do
 !$omp end parallel sections
-	end subroutine compute
+	end subroutine point_temp_distribution
 !
-!     _
-! ___| |_ ___  _ __ __ _  __ _  ___
-!/ __| __/ _ \| '__/ _` |/ _` |/ _ \
-!\__ \ || (_) | | | (_| | (_| |  __/
-!|___/\__\___/|_|  \__,_|\__, |\___|
-!                         |___/
+!   __ _ _ __ ___  __ _
+!  / _` | '__/ _ \/ _` |
+! | (_| | | |  __/ (_| |
+!  \__,_|_|  \___|\__,_|                   _         _             _
+! | |_ ___ _ __ ___  _ __   ___  _ __ __ _| |    ___| |_ ___  _ __(_)_ __   __ _
+! | __/ _ \ '_ ` _ \| '_ \ / _ \| '__/ _` | |   / __| __/ _ \| '__| | '_ \ / _` |
+! | ||  __/ | | | | | |_) | (_) | | | (_| | |   \__ \ || (_) | |  | | | | | (_| |
+!  \__\___|_| |_| |_| .__/ \___/|_|  \__,_|_|___|___/\__\___/|_|  |_|_| |_|\__, |
+!                   |_|                    |_____|                         |___/
 !>  @brief Saves area emission with the temporal profile in hourly basis.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date 07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine storage
+subroutine area_temporal_storing
   implicit none
   integer i,j,k,l,iun
   real suma
   character(len=3):: cdia(7)
   data cdia/'MON','TUE','WND','THR','FRD','SAT','SUN'/
-  print *,"Storage"
+  print *,"Area Emissions Temporal distribution saving"
 !$omp parallel sections num_threads (3) private(k,i,l,j,iun)
 !$omp section
   do k=1,nf-2
@@ -587,19 +583,22 @@ subroutine storage
     print *,"*****  DONE Temporal Area *****"
 110 format(I7,",",A10,",",23(ES12.4,","),ES12.4)
     deallocate(idcel,id5,idcel2,idsm,emiA,emis,epm2,evoc)
-end subroutine storage
-!                       _
-!  ___ ___  _   _ _ __ | |_
-! / __/ _ \| | | | '_ \| __|
-!| (_| (_) | |_| | | | | |_
-! \___\___/ \__,_|_| |_|\__|
-!
+end subroutine area_temporal_storing
+!   __ _ _ __ ___  __ _
+!  / _` | '__/ _ \/ _` |
+! | (_| | | |  __/ (_| |
+!  \__,_|_|  \___|\__,_|                           _
+!   __ _ _ __(_) __| |___     ___ ___  _   _ _ __ | |_
+!  / _` | '__| |/ _` / __|   / __/ _ \| | | | '_ \| __|
+! | (_| | |  | | (_| \__ \  | (_| (_) | |_| | | | | |_
+!  \__, |_|  |_|\__,_|___/___\___\___/ \__,_|_| |_|\__|
+!  |___/                |_____|
 !>  @brief Counts the number of different cells in file and stores in index.csv file.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date 07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine count
+subroutine area_grids_count
   integer i,j
   integer idum
 !  Se ordenan los indices
@@ -632,7 +631,7 @@ subroutine count
    emis=0
    evoc=0
   deallocate(idcel3)
-end subroutine count
+end subroutine area_grids_count
 !  _                        _                          _
 ! | |__  _   _ ___  ___    | |__   ___  _ __ __ _ _ __(_) ___
 ! | '_ \| | | / __|/ _ \   | '_ \ / _ \| '__/ _` | '__| |/ _ \
@@ -641,8 +640,8 @@ end subroutine count
 !                     |_____|
 !>  @brief Identifies the time zone by state ID.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date 07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine huso_horario
     integer ::i,k,iedo
@@ -720,8 +719,8 @@ end subroutine hpsort
 !
 !>  @brief Obtains the number of lines in *efile* file.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date 07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine maxline(entero)
     implicit none
@@ -748,10 +747,13 @@ end subroutine maxline
 ! |_|\_\  \_/ |___|_|_\/_/ \_\_|\_|\___/
 !
 !>  @brief Identifies if it is summert time period and if it is considered or not
+!> return 1 if the date is within daysaving time.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date 07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
+!> @param ida day in the month
+!> @param mes month of the year
 integer function kverano(ida,mes)
     implicit none
     integer, intent(in):: ida,mes
@@ -779,12 +781,20 @@ integer function kverano(ida,mes)
     end if
 233 format("******  HORARIO de VERANO *******",/,3x,"Abril ",I2,x,"a Octubre ",I2)
 end function
+!  _                                          _ _     _      _   _
+! | | ___  ___     _ __   __ _ _ __ ___   ___| (_)___| |_   | |_(_)_ __ ___   ___
+! | |/ _ \/ _ \   | '_ \ / _` | '_ ` _ \ / _ \ | / __| __|  | __| | '_ ` _ \ / _ \
+! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_   | |_| | | | | | |  __/
+! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|___\__|_|_| |_| |_|\___|
+!            |_____|                                    |_____|
 !>  @brief Reads global namelist input file for setting up the temporal settings.
+!>
+!>  reads variables idia,month,anio and periodo used for time specification
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date 07/12/2020
+!>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine lee_namelist
+subroutine lee_namelist_time
     NAMELIST /fecha_nml/ idia,month,anio,periodo
     NAMELIST /verano_nml/ lsummer
     integer unit_nml
@@ -818,6 +828,5 @@ subroutine lee_namelist
         print '(A,I2,A,I2)','Error in day value: ',idia,' larger than days in month ',daym(month)
         Stop
     end if
-
-end subroutine lee_namelist
-end program atemporal
+end subroutine lee_namelist_time
+end program area_temporal

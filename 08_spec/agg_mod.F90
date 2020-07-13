@@ -313,6 +313,7 @@ end subroutine guarda_voc
 !>   @date  2020/06/20
 !>   @version  2.1
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
+!>   @param isource type of emissions source 1=area 2=mobile 3=point
 subroutine count(isource)
   implicit none
   integer, INTENT(IN)  ::isource
