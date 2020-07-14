@@ -3,21 +3,22 @@
 !>   @date  2020/06/20
 !>   @version  2.1
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-module var_spm25 ;!>number of hours in a day
+module PM25_speciation_mod ;!>number of hours in a day
 integer :: nh     ;!> number the clasess in profiles_spc.txt
 integer :: nclass ;!> line number in area file TPM252016.txt
 integer lfa  ;!>   grid id from emissions file
 integer,allocatable ::grid(:)   ;!> different grid id from emissions file
 integer,allocatable ::grid2(:)  ;!> number of chemical species in profile j
-integer,allocatable :: isp(:)   ;!> profile ID from file scc-profiles
-integer,allocatable ::profile(:),prof2(:);!> level of the emission
+integer,allocatable :: isp(:)   ;!> profile IDs from file scc-profiles
+integer,allocatable :: profile(:) ;!> profile IDs wtih no duplicates
+integer,allocatable :: prof2(:);!> level of the emission
 integer,allocatable :: capa(:,:) ;!> SCC from emissions file
 integer*8, allocatable:: iscc(:) ;!>emissions en TPM25 file grid , nh
 real,allocatable :: ea(:,:)      ;!> emissions id cel, category, hours
 real,allocatable :: emis(:,:,:)  ;!>aggregation factor by size(prof2), nclass
 real,allocatable :: fclass(:,:)  ;!> Category name used for file name
-character(len=4),allocatable::cname(:)
-character(len=3) ::cdia
+character(len=4),allocatable::cname(:) ;!> Character day type
+character(len=3) ::cdia ;!> Current date
 character (len=19) :: current_date
 
 parameter (nspecies=5,nh=24)
@@ -305,4 +306,4 @@ subroutine lee(isource)
   return
 323 format(2i10,60F10.4)
 end subroutine lee
-end module var_spm25
+end module PM25_speciation_mod

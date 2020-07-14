@@ -18,20 +18,29 @@
 !>   @date  07/12/2020
 !>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-!> @param grid  GRIDCODEs  in higway input file (VIALIDADES.csv)
+!> @param grid
 !> @param grid2  GRIDCODEs  in higway output file (salida2.csv)
 !> @param icve  Municipality ID in higway input file
-!> @param icve2  Array with unique Municipality ID
 !> @param icve3  Municipality ID in higway output file
-!> @param rc     Fractional higway area for each GIRDCODE and municipality
-!> @param rlc    Higway area for each GIRDCODE
-!> @param rlm    Municipality total higway area from inputfile
-!> @param sum    Municipality total higway area array in output file
 module highway_vars_mod
-integer ::nm
-integer,allocatable :: grid(:),icve(:),grid2(:),icve2(:),icve3(:)
-real,allocatable ::rc(:),rlm(:),rlc(:)
-real,allocatable :: sm(:),sc(:),sum(:)
+!> Number of lines in input file
+integer :: nm         ;!>  GRIDCODEs  in higway input file (VIALIDADES.csv)
+integer,allocatable :: grid(:) ; !> GRIDCODEs  in higway output file (salida2.csv)
+integer,allocatable :: grid2(:)
+!> Municipality ID in higway input file
+integer,allocatable :: icve(:)
+!>  Array with unique Municipality ID
+integer,allocatable :: icve2(:)
+!> Municipality ID in higway output file
+integer,allocatable :: icve3(:)
+!> Fraction higway area for each GIRDCODE and municipality
+real,allocatable :: rc(:)
+!> Municipality total higway area from inputfile
+real,allocatable :: rlm(:)
+!> Higway area for each GIRDCODE
+real,allocatable :: rlc(:)
+!> Municipality total higway area array in output file
+real,allocatable :: sum(:)
 !> Geographical area selected in namelist_emis.csv
 character(len=12):: zona
 
@@ -153,9 +162,7 @@ subroutine count
     do i=1,nm
     if (xl(i)) j=j+1
     end do
-    allocate(icve2(j),sm(j),sc(j))
-    sm=0
-    sc=0
+    allocate(icve2(j))
     j=0
     do i=1,nm
         if(xl(i)) then

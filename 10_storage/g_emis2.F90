@@ -11,7 +11,6 @@
 !
 ! ifort g_emis2.F90 -O2 -axAVX -lnetcdff -L$NETCDF/lib -I$NETCDF/include -qopenmp -o emis2.exe
 ! gfortran -L/usr/local/lib -I/usr/local/include -lnetcdff -fopenmp g_emis2.F90
-
 !>  @brief For program g_emis2.F90.
 !>
 !> Creates netcdf file by adding AREA, MOBILE and POINT emissions in a specific grid.
@@ -19,48 +18,76 @@
 !>   @date  07/13/20
 !>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-!>   @param nh number of hours per day
-!>   @param zlev number of layers in output file
 module emissions_save_vars_mod
-integer,parameter :: nh=24    !number hours day
-integer,parameter :: zlev=8  ! Layer of emission (1 to 8)
-integer :: nf    ! number of files antropogenic
-integer :: ns    ! number of compounds
-integer ::radm   ! =ns+5 number of Mechanism classes
-integer :: ipm   ! Posicion del archivo PM2.5
-integer :: icn   ! Posicion archivo CN del INEM
-integer :: jcn   ! Posicion archivo CN de especiacion
-integer :: imt   ! Posicion archivo CH4 del INEM
-integer :: jmt   ! Posicion archivo CH4 de especiacion
-integer :: idia  ! dia para el calculo de emisiones
-integer :: month ! mes de la modelacio
-integer :: anio  ! anio de las emisiones 2016
-integer ::periodo! =1 uno 24 hr, =2 dos de 12hrs c/u
-integer ::ncel   ! number of cell in the grid
-integer ::nl     ! number of lines in files
-integer :: nx,ny ! grid dimensions
-integer ::ncid,ncid2
-integer*8 :: idcf! ID cell in file
-integer,allocatable :: idcg(:) ! ID cell in grid
-integer,allocatable:: utmzd(:,:)  !utmz
-integer,allocatable :: isp(:) ! storage
-integer,allocatable:: id_var(:)  !netcdf
-integer :: id_varlong,id_varlat,id_varpop
-integer :: id_unlimit,id_utmx,id_utmy,id_utmz
+!> number hours day
+integer,parameter :: nh=24  ;!> Layer of emission (1 to 8)
+integer,parameter :: zlev=8 ;!> number of files antropogenic
+integer :: nf    ;!> number of compounds
+integer :: ns    ;!> =ns+5 number of Mechanism classes
+integer ::radm   ;!> Position of pm2.5 in the variables array
+integer :: ipm   ;!> Position of BC in variables array from INEM
+integer :: icn   ;!> Position of BC in variables array from Speciation file
+integer :: jcn   ;!> Position of CH4 in variables array from INEM
+integer :: imt   ;!> Position of CH4 in variables array from Speciation file
+integer :: jmt   ;!> day in emissions output file
+integer :: idia  ;!> month in emissions output file
+integer :: month ;!> year in emissions output file
+integer :: anio  ;!> =1 uno 24 hr, =2 dos de 12hrs c/u
+integer ::periodo;!> number of cell in the grid
+integer ::ncel   ;!>  number of lines in files
+integer ::nl     ;!> longitude values in grid
+integer :: nx    ;!> latitude values in grid
+integer ;; ny    ;!> netcdf unit ID for file1  in file (24 or 12 hrs)
+integer ::ncid   ;!> netcdf unit ID for file1  in file2 (12 hrs)
+integer :: ncid2 ;!> GRIDCODE in emission input files
+integer*8 :: idcf;!> GRIDCODE in output grid obtaines from localiza
+integer,allocatable :: idcg(:) ;!> UTM Z zone
+integer,allocatable:: utmzd(:,:); !> array with Species index
+integer,allocatable :: isp(:) ;!> array of variables ID
+integer,allocatable:: id_var(:)  ;!>netcdf longitude ID in netcdf file
+integer :: id_varlong  ;!>netcdf latitude ID in netcdf file
+integer :: id_varlat  ;!>netcdf population ID in netcdf file
+integer :: id_varpop  ;!>netcdf unlimited variable ID in netcdf file
+integer :: id_unlimit ;!>netcdf UTMx coordinate variable ID in netcdf file
+integer :: id_utmx ;!>netcdf UTMy coordinate variable ID in netcdf file
+integer :: id_utmy ;!>netcdf UTMz coordinate variable ID in netcdf file
+integer :: id_utmz
  !> molecular weight
 real,allocatable::wtm(:)
-real,allocatable:: eft(:,:,:,:)! emissions by nx,ny,level,nh
-real,allocatable:: efs(:,:,:,:)! emissions by nx,ny,level,nh/2
-real,allocatable ::xlon(:,:),xlat(:,:),pob(:,:)
-real,allocatable :: utmxd(:,:),utmyd(:,:)
-real,dimension(:), allocatable:: scala,scalm,scalp !Scaling factors
-real :: CDIM, SUPF1    ! cell dimension CDIM km  SUPF1 km^-2
+!>emissions by nx,ny,level,nh
+real,allocatable:: eft(:,:,:,:)
+!>emissions by nx,ny,level,nh/2
+real,allocatable:: efs(:,:,:,:) ;!> longitudes in output file from localiza
+real,allocatable :: xlon(:,:); !> latitudes in output file from localiza
+real,allocatable :: xlat(:,:); !> population in output file from localiza
+real,allocatable :: pob(:,:) ;!> UTMx coordinates in output file from localiza
+real,allocatable :: utmxd(:,:) ;!> UTMy coordinates in output file from localiza
+real,allocatable :: utmyd(:,:) ;!> Scaling emission factors for area sources
+real,dimension(:), allocatable:: scala ;!> Scaling emission factors for mobile sources
+real,dimension(:), allocatable:: scalm ;!> Scaling emission factors for point sources
+real,dimension(:), allocatable:: scalp !Scaling factors
+!> cell dimension CDIM km
+real :: CDIM ;!> grid 1/area  (km^-2)
+real :: SUPF1
+!> Type of day (lun, mar, mie, ..., dom)
 character(len=3) :: cday
+!> Emissions variable name
 character(len=11),dimension(:),allocatable:: ename
+!> Emissions long name
 character(len=16),dimension(:),allocatable:: cname
-character(len=18),dimension(:),allocatable:: fnameA,fnameM,fnameP
-character (len=19) :: current_date,mecha
+!> Area missions input file name
+character(len=18),dimension(:),allocatable:: fnameA
+!> Mobile missions input file name
+character(len=18),dimension(:),allocatable:: fnameM
+!> Point missions input file name
+character(len=18),dimension(:),allocatable:: fnameP
+!> current date in ourput file
+character (len=19) :: current_date
+!> Photochemical mechanism selected in namelist_emis.nml
+character (len=19) ::  mecha
+!> Title in netcdf file
 character (len=40) :: titulo
+!> geogrphical area selected in namelist_emis.nml
 character(len=12):: zona
 common /quimicos/ nf,ns,radm,ipm,icn,jcn,imt,jmt
 common /domain/ ncel,nl,nx,ny,CDIM,SUPF1,zona

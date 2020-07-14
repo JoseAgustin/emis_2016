@@ -28,9 +28,10 @@ integer,allocatable :: cventmun(:)
 !>State Mun code in emis and grid files
 integer,allocatable :: id(:) ;!>State Mun code in emis and grid files
 integer,allocatable :: id2(:) ;!>gridcode in gri_pob
-integer,allocatable ::grid(:)
+integer,allocatable ::grid(:) ;!>gridcode no duplicates
 integer,allocatable ::grid2(:) ;!>time lag emis and grid files
-integer,allocatable :: im(:),im2(:)
+integer,allocatable :: im(:)    ;!>time lag grid files
+integer,allocatable ::  im2(:)
 !>emid edo mun id
 integer*8,allocatable :: emid(:) ;!>SCC from emissions
 character (len=10),allocatable::iscc(:) ;!>scc code in emis and subset of different scc codes.
@@ -38,9 +39,11 @@ character (len=10),allocatable::jscc(:) ;!>pollutant name
 character (len= 5),dimension(npol) :: pol ; !>pollutant name fraction file
 character (len= 5),dimension(fracp) :: polf
 !>ei emission in emissfile (nl dimension)
-real,allocatable:: ei(:,:) ;!>uf, rf urban and rural population fraction
-real,allocatable:: uf(:),rf(:) ;!>pemi emission in grid cell,pollutan,scc category
-real,allocatable:: pemi(:,:,:),frac(:,:)
+real,allocatable:: ei(:,:) ;!>uf, rf urban population fraction
+real,allocatable:: uf(:)   ;!>rf rural population fraction
+real,allocatable:: rf(:)   ;!>pemi emission in grid cell,pollutan,scc category
+real,allocatable:: pemi(:,:,:) ;!>
+real,allocatable:: frac(:,:)
 common /vari/ nl,nl2,pol
 end module mobile_spatial_mod
 !> @brief Spatial distribution of emissions from mobile sources

@@ -12,37 +12,58 @@
 !>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 module movil_temporal_mod
-integer :: month
+!> month of emissions output
+integer :: month   ;!> type day (1=Mon, 2= Tue, ... 7=Sun)
 integer :: daytype ! tipo de dia 1 lun a 7 dom
 !> Hourly temporal profile
-integer :: perfil  ! perfil temporal horario
-integer,parameter :: nf=11 !number of emission files
-integer,parameter :: nh=24 ! number of hour per day
-integer,parameter :: nnscc=36 !max number of scc descriptors in input files
+integer :: perfil  ;!> number of emission files
+integer,parameter :: nf=11 ;!> number of max lines in emiA
+integer,parameter :: nh=24  ;!> max number of scc descriptors in input files
+integer,parameter :: nnscc=36
 !> number of emissions file
 integer :: nm ! line number in emissions file
+; !> if is dayligth time saving period
 integer :: iverano  ! si es en periodo de verano
+!> Day for temporal emissions computations
 integer :: idia     ! dia para el calculo de emisiones
+!> Year for temporal emissions computations
 integer :: anio     ! anio de las emisiones 2016
-integer ::periodo! =1 uno 24 hr, =2 dos de 12hrs c/u
-integer,dimension(2014:2020) :: inicia   ! dia inicio horario verano
+!> If =1  one file with 24 hr , =2  two files of 12hrs each one
+integer ::periodo
+!> start day for summer time period for years 2014 to 2020
+integer,dimension(2014:2020) :: inicia ! dia inicial del horario de verano
+!> end day for summer time period for years 2014 to 2020
 integer,dimension(2014:2020) :: termina  ! dia fin del horario de verano
-integer,dimension(nf) :: nscc ! number of scc codes per file
-integer, allocatable :: idcel(:),idcel2(:)
-integer, allocatable :: mst(:)  ! Difference in number of hours (CST, PST, MST)
-integer,dimension(12) :: daym ! days in a month
-real :: fweek                   ! weeks per month
-real,allocatable ::emiM(:,:,:) !Mobile emisions from files cel,ssc,file
-real,allocatable :: emis(:,:,:) ! Emission by cel,file and hour (inorganic)
-real,allocatable :: evoc(:,:,:) ! VOC emissions cel,scc and hour
-real,allocatable :: epm2(:,:,:) ! PM2.5 emissions cel,scc and hour
-real,dimension(nnscc,nf) :: mes,dia, diap
-real,dimension(nnscc,nf,nh):: hCST,hMST,hPST,hEST
+!> number of scc codes per file
+integer,dimension(nf) :: nscc    ;!> GRIDID in emissions
+integer, allocatable :: idcel(:) ;!> GRIDID not duplictes
+integer, allocatable :: idcel2(:);!> Difference in number of hours (CST, PST, MST)
+integer, allocatable :: mst(:)   ;!> days in a month
+integer,dimension(12) :: daym    ;!> fraction = weeks/month days
+real :: fweek                    ;!> Mobile emisions from files cel,ssc,file
+real,allocatable ::emiM(:,:,:)   ;!> Emission by cel,file and hour (inorganic)
+real,allocatable :: emis(:,:,:)  ;!> VOC emissions cel,scc and hour
+real,allocatable :: evoc(:,:,:)  ;!> PM2.5 emissions cel,scc and hour
+real,allocatable :: epm2(:,:,:)
+!> month interger
+real,dimension(nnscc,nf) :: mes ;!> current day
+real,dimension(nnscc,nf) :: dia ;!> previus day
+real,dimension(nnscc,nf) ::diap ! dia currentday, diap previous day
+!> Time zone  CST
+real,dimension(nnscc,nf,nh):: hCST ;!> Time zone MST
+real,dimension(nnscc,nf,nh):: hMST ;!> Time zone PST
+real,dimension(nnscc,nf,nh):: hPST ;!> Time zone EST
+real,dimension(nnscc,nf,nh):: hEST
+!> profile ID 1=mon 2=weekday 3=hourly per SCC and pollutant.
 integer,dimension(3,nnscc,nf):: profile  ! 1=mon 2=weekday 3=hourly
+!> SCC codes per file
 character (len=10),dimension(nnscc) ::iscc
+!> Initial date of the emissions period
 character (len=19) :: current_date
-logical :: lsummer
-character(len=14),dimension(nf) ::efile,casn
+!> during summer period  consider timasvaing .true. or not .false.
+logical :: lsummer ; !> Input file name
+character(len=14),dimension(nf) :: efile ; !> output file name
+character(len=14),dimension(nf) :: casn
 
  data efile / 'M_CO.csv' ,'M_NH3.csv','M_NO2.csv','M_NO.csv',&
               'M_SO2.csv','M_CN.csv' ,'M_CO2.csv','M_CH4.csv',&

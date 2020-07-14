@@ -28,7 +28,7 @@ program pm25_speciation
 #ifdef _OPENMP
     use omp_lib
 #endif
-use var_spm25
+use PM25_speciation_mod
 integer :: isource= 3 ! 1 area 2 mobile 3 point
 
 	call lee(isource)

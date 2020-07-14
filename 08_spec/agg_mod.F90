@@ -3,7 +3,8 @@
 !>   @date  07/12/2020
 !>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-module voc_split ;!>number of hours in a day
+module voc_split
+  !>number of hours in a day
   integer,parameter :: nh=24        ;!> max number species in profile 0 (292)
   integer,parameter :: nspecies=292 ;!> max number chemical species
   integer,parameter :: ncat=40      ;!>number the clasess in profiles_spc.txt
@@ -22,7 +23,7 @@ module voc_split ;!>number of hours in a day
   character (len=10), allocatable:: iscc(:) ;!> !> Mechanism class name used for a file name
   character(len=4),allocatable::cname(:) ;!> Type of day (lun, mar, mie, ..., dom)
   character(len=3) ::cdia        ;!> Selected photochemical mecanism
-  character(len=7) ::mecha
+  character(len=7) ::mecha        ;!> Current date
   character (len=19) :: current_date
   !> Photochemical mecanism in profile_MECHA.csv file
   character (len=19) ::cprof

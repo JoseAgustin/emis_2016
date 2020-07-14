@@ -7,22 +7,20 @@
 !  -parallel -Dtest_gap -opt-report=1 -opt-report-phase=par -opt-report-file=stdout atemporal.F90
 ! gfortran -DPGI  -fopenmp -O2 atemporal.F90 -o Atemporal.exe
 !
-!> @brief For atemporal.F90 program. Area emissions temporal distribution
+!> @brief For atemporal.F90 program. Area emissions temporal distribution variables
 !>
 !> Currently uses EPA temporal profiles
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date 07/12/2020
 !>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-!>   @param nf number of emission files
-!>   @param nnscc max number of scc descriptors in input files
-!>   @param juliano number of day in year
-!>   @param nh  number of hour per day
 module area_temporal_mod
-integer :: month,daytype
-integer,parameter :: nf=10
-integer,parameter :: nnscc=59
-integer,parameter ::juliano=366
+!> month of emissions output
+integer :: month   ;!> type day (1=Mon, 2= Tue, ... 7=Sun)
+integer :: daytype ;!> number of emission files
+integer,parameter :: nf=10    ;!> max number of scc descriptors in input files
+integer,parameter :: nnscc=59 ;!> number of day in year
+integer,parameter ::juliano=366 ;!> number of hour per day
 integer,parameter :: nh=24 ;!> number of max lines in emiA
 integer :: nmax
 !> Number of lines in emissions file
@@ -47,7 +45,7 @@ integer,dimension(12) :: daym ! days in a month
 integer,dimension(2014:2020) :: inicia ! dia inicial del horario de verano
 !> end day for summer time period for years 2014 to 2020
 integer,dimension(2014:2020) :: termina  ! dia fin del horario de verano
-!> Fraction of weeks per month
+!> Fraction of weeks per days in the month
 real ::fweek
 !>Area emisions from files cel,ssc,file
 real,allocatable ::emiA(:,:,:)
@@ -57,12 +55,15 @@ real,allocatable :: emis(:,:,:)
 real,allocatable :: epm2(:,:,:)
 !> VOC emissions cel,scc and hour
 real,allocatable :: evoc(:,:,:)
-!> month interger
+!> month integer
 real,dimension(nnscc,nf) :: mes ;!> current day
 real,dimension(nnscc,nf) :: dia ;!> previus day
 real,dimension(nnscc,nf) ::diap ! dia currentday, diap previous day
-!> Time zone  CST, MST, PST and EST
-real,dimension(nnscc,nf,nh):: hCST,hMST,hPST,hEST
+!> Time zone  CST
+real,dimension(nnscc,nf,nh):: hCST ;!> Time zone MST
+real,dimension(nnscc,nf,nh):: hMST ;!> Time zone PST
+real,dimension(nnscc,nf,nh):: hPST ;!> Time zone EST
+real,dimension(nnscc,nf,nh):: hEST
 !> profile ID 1=mon 2=weekday 3=hourly per SCC and pollutant.
 integer,dimension(3,nnscc,nf):: profile
 !> index per file
@@ -74,8 +75,7 @@ character(len=3),dimension(juliano):: cdia
 !> Initial date of the emissions period
 character (len=19) :: current_date
 !> during summer period  consider timasvaing .true. or not .false.
-logical :: lsummer
-!> Input file name
+logical :: lsummer          ; !> Input file name
 character(len=14),dimension(nf) ::efile ; !> output file name
 character(len=14),dimension(nf) :: casn
 

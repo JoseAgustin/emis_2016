@@ -17,29 +17,34 @@
 !   9/Sep/2014  se actualiza salida para varios municipios
 !   2/Ago/2012  se incluye en la salida la clave del municipio
 !
-!> @param fc3 Fractional surface Highway area in combined Highway and street array
-!> @param fcc Array of fractional surface Highway area in Highway file
-!> @param fcv Array of fractional surface Street area in Street file
-!> @param fv3 Fractional surface Street area in combined Highway and street array
-!> @param grid  Array of GRIDCODEs  in Highway file
-!> @param grid2 Array of GRIDCODEs  in Street file
-!> @param grid3 Array of GRIDCODEs  in combined Highway and street file
-!> @param icve  Array of Municipality ID in Highway file
-!> @param icve2 Array of Municipality ID in Street file
-!> @param icve3 Array of Municipality ID in Highway and street file
-!> @param nm    GRIDCODE number in Highway file
-!> @param nm2   GRIDCODE number in Streets file
-!> @param nm3   GRIDCODE number in combined Highway and street file
-!> @param smc   Total Highway surface area in Highway file
-!> @param smv   Total Street surface area in Street file
-module add_street_highway_mod
-integer nm,nm2,nm3
-integer,allocatable :: grid(:),icve(:)
-integer,allocatable :: grid2(:),icve2(:)
-integer,allocatable :: grid3(:),icve3(:)
-real,allocatable ::fcc(:),smc(:)
-real,allocatable ::fcv(:),smv(:)
-real,allocatable ::fc3(:),fv3(:)
+module add_street_highway_mod ; !> GRIDCODE number in Highway file
+integer :: nm      ; !> GRIDCODE number in Streets file
+integer :: nm2     ; !> GRIDCODE number in combined Highway and street file
+integer :: nm3
+!> Array of GRIDCODEs  in Highway file
+integer,allocatable :: grid(:)
+!> Array of Municipality ID in Highway file
+integer,allocatable ::icve(:)
+!>  Array of GRIDCODEs  in Street file
+integer,allocatable :: grid2(:)
+!>  Array of Municipality ID in Street file
+integer,allocatable :: icve2(:)
+!> Array of GRIDCODEs  in combined Highway and street file
+integer,allocatable :: grid3(:)
+!> Array of Municipality ID in Highway and street file
+integer,allocatable ::icve3(:)
+!> Array of fractional surface Highway area in Highway file
+real,allocatable :: fcc(:)
+!> Total Highway surface area in Highway file
+real,allocatable :: smc(:)
+!> Array of fractional surface Street area in Street file
+real,allocatable :: fcv(:)
+!> Total Street surface area in Street file
+real,allocatable :: smv(:)
+!> Fractional surface Highway area in combined Highway and street array
+real,allocatable :: fc3(:)
+!> Fractional surface Street area in combined Highway and street array
+real,allocatable :: fv3(:)
 
 common /dims/ nm,nm2,nm3
 

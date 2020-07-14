@@ -16,85 +16,64 @@
 !  Reads land use fraction per cell and land use tyepe and converts
 !  to a one line.
 !  ifort -o ASpatial.exe -O3 area_espacial.F90
-!> @param eaer Emissions from airports sources array
-!> @param eagr Emissions from agricultural sources array
-!> @param ebos Emissions from vegetation sources array
-!> @param ecen Emissions from bus terminals sources array
-!> @param efile National emission file name, array per pollutant
-!> @param epob Emissions related to population  array per GRIDCODE
-!> @param epue Emissions from seaports sources array
-!> @param eter Emissions from unpaved streets sources array
-!> @param etre Emissions from train stations sources array
-!> @param evia Emissions from streets sources array
-!> @param fa  Agriculture area fraction in grid
-!> @param fb   Vegetation area fraction in grid
-!> @param fe   Airport area fraction in grid
-!> @param fm   Seaports area fraction in grid
-!> @param fp1 Rural population number fraction in grid
-!> @param fp1 Total population number fraction in grid
-!> @param fp1 Urban population number fraction in grid
-!> @param fr   Unpaved streets area fraction in grid
-!> @param ft   Train stations area fraction in grid
-!> @param fu   Bus terminals fraction in grid
-!> @param fv   Streets area fraction in grid
-!> @param gria GRIDCODE ID for agriculture land use data
-!> @param grib GRIDCODE ID for vegetation land use data
-!> @param grie GRIDCODE ID for airport land use data
-!> @param grim GRIDCODE ID for seaports land use data
-!> @param grip GRIDCODE ID for population  data
-!> @param grir GRIDCODE ID for unpaved streets land use data
-!> @param grit GRIDCODE ID for train stations land use data
-!> @param griu GRIDCODE ID for bus terminals land use data
-!> @param griv GRIDCODE ID for streets land cover data
-!> @param ida  Agriculture municipality ID
-!> @param idb  Vegetation municipality ID
-!> @param ide  Airport municipality ID
-!> @param idm  Seaports municipality ID
-!> @param idp  Population municipality ID
-!> @param idr  Unpaved streets municipality ID
-!> @param idt  Train stations municipality ID
-!> @param idu  Bus terminals municipality ID
-!> @param idv  Streets municipality ID
-!> @param mun Municpaity ID in the state
-!> @param nf  Number of pollutant files
-!> @param nm  Number of municipalities
-!> @param nnscc Number of emissions categories for SCC
-!> @param ofile Output emission file name
 module area_spatial_mod
 !> Number of lines in surrogate file
-    integer nl
-!> State ID
-    integer edo
-!> municipality ID
-    integer mun
-    integer, parameter :: nm=2458,nf=10,nnscc=59
-    integer,allocatable :: gria(:),ida(:)  ! Agricola
-    integer,allocatable :: grib(:),idb(:)  ! Bosque
-    integer,allocatable :: grie(:),ide(:)  ! Aeropuertos
-    integer,allocatable :: grim(:),idm(:)  ! Puertos Maritimos
-    integer,allocatable :: grip(:),idp(:)  ! Poblacion
-    integer,allocatable :: grir(:),idr(:)  ! Terraceria
-    integer,allocatable :: grit(:),idt(:)  ! Ferrocarriles
-    integer,allocatable :: griu(:),idu(:)  ! Centrales Autobuses
-    integer,allocatable :: griv(:),idv(:)  ! Vialidades
-!> Number of emissions categories per pollutant file
-    integer,dimension(nf) :: nscc
-!> State ID + Municpaity ID
-    integer,dimension (nf,nm):: iem
-    real,allocatable ::fb(:),fa(:)! Fracciones Bosque Agricola
-    real,allocatable ::fe(:),fu(:),fm(:),ft(:)! Fracciones Aerop, C.A., P.M FFCC
-    real,allocatable ::fr(:),fv(:)    !  Fracciones de terraceria y vialidades
-    real,allocatable ::fp1(:),fp2(:),fp3(:)!Fracc Urbana1, Rural2 y total3
+    integer nl     ; !>  State ID
+    integer edo    ; !>  Municpaity ID in the state
+    integer mun;     !>  Number of municipalities
+    integer, parameter  :: nm=2458;   !> Number of pollutant files
+    integer, parameter  :: nf=10  ;   !> Number of emissions categories for SCC
+    integer, parameter  :: nnscc=59;  !> GRIDCODE ID for agriculture land use data
+    integer,allocatable :: gria(:) ;  !> Agriculture municipality ID
+    integer,allocatable :: ida(:)  ;  !> GRIDCODE ID for vegetation land use data
+    integer,allocatable :: grib(:) ;  !> Vegetation municipality ID
+    integer,allocatable :: idb(:)  ;  !> GRIDCODE ID for airport land use data
+    integer,allocatable :: grie(:) ;  !> Airport municipality ID
+    integer,allocatable :: ide(:)  ;  !> GRIDCODE ID for seaports land use data
+    integer,allocatable :: grim(:) ;  !> Seaports municipality ID
+    integer,allocatable :: idm(:)  ;  !> GRIDCODE ID for population  data
+    integer,allocatable :: grip(:) ;  !> Population municipality ID
+    integer,allocatable :: idp(:)  ;  !> GRIDCODE ID for unpaved streets land use data
+    integer,allocatable :: grir(:) ;  !> Unpaved streets municipality ID
+    integer,allocatable :: idr(:)  ;  !> GRIDCODE ID for train stations land use data
+    integer,allocatable :: grit(:) ;  !> Train stations municipality ID
+    integer,allocatable :: idt(:)  ;  !> GRIDCODE ID for bus terminals land use data
+    integer,allocatable :: griu(:) ;  !> Bus terminals municipality ID
+    integer,allocatable :: idu(:)  ;  !> GRIDCODE ID for streets land cover data
+    integer,allocatable :: griv(:) ;  !> Streets municipality ID
+    integer,allocatable :: idv(:)  ;  !> Number of emissions categories per pollutant file
+    integer,dimension(nf) :: nscc  ;  !> State ID + Municpaity ID
+    integer,dimension (nf,nm):: iem;  !> Agriculture area fraction in grid
+    real,allocatable :: fa(:) ;  !> Vegetation area fraction in grid
+    real,allocatable :: fb(:) ;  !> Airport area fraction in grid
+    real,allocatable :: fe(:) ;  !> Bus terminals fraction in grid
+    real,allocatable :: fu(:) ;  !> Seaports area fraction in grid
+    real,allocatable :: fm(:) ;  !> Train stations area fraction in grid
+    real,allocatable :: ft(:) ;  !> Unpaved streets area fraction in grid
+    real,allocatable :: fr(:) ;  !> Streets area fraction in grid
+    real,allocatable :: fv(:) ;  !> Urbana1 population number fraction in grid
+    real,allocatable :: fp1(:);  !> Rural2 population number fraction in grid
+    real,allocatable :: fp2(:);  !> Total population number fraction in grid
+    real,allocatable :: fp3(:)
 !   Emisiones fuentes agricolas, bosques y poblacion grid, n, nnscc
-    real,allocatable :: eagr(:,:,:), ebos(:,:,:), epob(:,:,:)
+!>  Emissions from agricultural sources array
+    real,allocatable :: eagr(:,:,:);    !> Emissions from vegetation sources array
+    real,allocatable :: ebos(:,:,:);    !> Emissions related to population  array per GRIDCODE
+    real,allocatable :: epob(:,:,:)
 !   Emisiones fuentes aeropuertos, central, puertos grid, n, nnscc
-    real,allocatable :: eaer(:,:,:),ecen(:,:,:), epue(:,:,:),etre(:,:,:)
-    real,allocatable :: eter(:,:,:),evia(:,:,:)
-!> Emissions array permunicipality, SCC and pollutant
+!>  Emissions from airports sources array
+    real,allocatable :: eaer(:,:,:);    !> Emissions from bus terminals sources array
+    real,allocatable :: ecen(:,:,:);    !> Emissions from seaports sources array
+    real,allocatable :: epue(:,:,:);    !> Emissions from train stations sources array
+    real,allocatable :: etre(:,:,:);    !> Emissions from unpaved streets sources array
+    real,allocatable :: eter(:,:,:);    !> Emissions from streets sources array
+    real,allocatable :: evia(:,:,:)
+!> Emissions array per municipality, SCC and pollutant
     real,dimension(nm,nnscc,nf):: emiss
 !> SCC codes array per polluntan and source
-    character(len=10),dimension(nf,nnscc) ::scc
-    character(len=14),dimension(nf) ::efile,ofile
+    character(len=10),dimension(nf,nnscc) ::scc; !>  National emission file name, array per pollutant
+    character(len=14),dimension(nf) :: efile;    !>   Output emission file name
+    character(len=14),dimension(nf) :: ofile
 !> Geographical area selected in namelist_emis.csv
     character(len=12):: zona
 !   Emissions Inventory files

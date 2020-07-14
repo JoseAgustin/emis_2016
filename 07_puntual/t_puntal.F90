@@ -9,37 +9,68 @@
 !>   @date  2020/06/20
 !>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-!> @param nsp number of pollutants
-!> @param nh hours per day
-!> @param ipm  column for PM2.5 in emissions input file puntual.csv
-!> @param ivoc column for VOC in emissions input file puntual.csv
 module point_vars_mod
+!>   number of pollutants
 integer, parameter::nsp=10 !number of pollutants
+!>   hours per day
 integer, parameter:: nh=24 !number of hours
+!>  column for PM2.5 in emissions input file puntual.csv
 integer,parameter:: ipm=2  ! PM2.5
+!>  column for VOC in emissions input file puntual.csv
 integer,parameter:: ivoc=6  ! VOC position in puntual.csv
-integer :: month
+!> month of emissions output
+integer :: month ;!> type day (1=Mon, 2= Tue, ... 7=Sun)
 integer :: daytype ! tipo de dia 1 lun a 7 dom
-integer,allocatable :: capa(:,:),ict(:),jct(:),idcg(:,:)
-integer,allocatable :: profile(:,:),mcst(:,:)
-integer :: iprof
-integer :: nl,nx,ny
-integer :: iverano  ! si es en periodo de verano
+!> layers where emissions are reach day and night
+integer,allocatable :: capa(:,:); !> **i** index in grid to allocate a point emission
+integer,allocatable :: ict(:) ; !> **j** index in grid to allocate a point emission
+integer,allocatable :: jct(:) ;!> _GRIDCODE_ in grid domain
+integer,allocatable :: idcg(:,:)
+!> profile ID 1=mon 2=weekday 3=hourly per SCC and pollutant.
+integer,allocatable :: profile(:,:);!> Time zone integer
+integer,allocatable :: mcst(:,:) ;!> Temporal profile (temp_var)
+integer :: iprof ;!> Number of lines in input file
+integer :: nl ;!> Number of longitudes (columns) in localiza file
+integer :: nx ;!> Number of latitudes (rows( in localiza file
+integer :: ny ;!> if is dayligth time saving period
+integer :: iverano
+!> Day for temporal emissions computations
 integer :: idia     ! dia para el calculo de emisiones
+!> Year for temporal emissions computations
 integer :: anio     ! anio de las emisiones 2016
+!> If =1  one file with 24 hr , =2  two files of 12hrs each one
 integer ::periodo! =1 uno 24 hr, =2 dos de 12hrs c/u
+!> start day for summer time period for years 2014 to 2020
 integer,dimension(2014:2020) :: inicia   ! dia inicio horario verano
-integer,dimension(2014:2020) :: termina  ! dia fin del horario de verano
+!> end day for summer time period for years 2014 to 2020
+integer,dimension(2014:2020) :: termina ;!> Days per month
 integer,dimension(12) :: daym ! days in a month
+!> Fraction of weeks per days in the month
 real :: fweek
-real,allocatable :: lat(:),lon(:),pf(:,:)
-real,allocatable :: e_mis(:,:),emis(:,:,:)! line compounds nsp
-real,allocatable :: mes(:),dia(:),diap(:)
-real,allocatable :: hEST(:,:),hCST(:,:),hMST(:,:),hPST(:,:)
+!> Latitude point source
+real,allocatable :: lat(:) ;!> Longitude point source
+real,allocatable :: lon(:)
+real,allocatable :: pf(:,:) ;!> point source emission input
+real,allocatable :: e_mis(:,:) ;!> point source emission w/temporal profile
+real,allocatable :: emis(:,:,:)
+!> month integer
+real,allocatable :: mes(:) ;!> current day
+real,allocatable :: dia(:) ;!> previus day
+real,allocatable :: diap(:)
+!> Time zone  CST
+real,dimension(nnscc,nf,nh):: hCST ;!> Time zone MST
+real,dimension(nnscc,nf,nh):: hMST ;!> Time zone PST
+real,dimension(nnscc,nf,nh):: hPST ;!> Time zone EST
+real,dimension(nnscc,nf,nh):: hEST
+!> during summer period  consider timasvaing .true. or not .false.
 logical :: lsummer
+!> Source clasification code array
 character(len=10),allocatable::iscc(:)
+!> geographical area selected
 character(len=12):: zona
+!> Pollutant name
 character (len=7) :: cvar(nsp)
+!> Initial date of the emissions period
 character (len=19) :: current_date
     ! number of day in a month
     !          jan feb mar apr may jun jul aug sep oct nov dec

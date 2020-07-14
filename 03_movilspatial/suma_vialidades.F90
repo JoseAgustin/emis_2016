@@ -14,21 +14,27 @@
 !>   @date  07/12/2020
 !>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-!> @param grid  GRIDCODEs  in Street input file (VIALIDADES.csv)
-!> @param grid2  GRIDCODEs  in Street output file (salida2.csv)
-!> @param icve  Municipality ID in Street input file
-!> @param icve2  Array with unique Municipality ID
-!> @param icve3  Municipality ID in Street output file
-!> @param rc     Fractional street area for each GIRDCODE and municipality
-!> @param rlc    Street area for each GIRDCODE
-!> @param rlm    Municipality total Street area from inputfile 
-!> @param sum    Municipality total street area array in output file
 module street_vars
 !> Number of lines in file
 integer ::nm
-integer,allocatable :: grid(:),icve(:),grid2(:),icve2(:),icve3(:)
-real,allocatable ::rc(:),rlm(:),rlc(:)
-real,allocatable :: sm(:),sc(:),sum(:)
+!>  GRIDCODEs  in Street input file (VIALIDADES.csv)
+integer,allocatable :: grid(:)
+!>  GRIDCODEs  in Street output file (salida2.csv)
+integer,allocatable :: grid2(:)
+!>  Municipality ID in Street input file
+integer,allocatable :: icve(:)
+!>  Array with unique Municipality ID
+integer,allocatable :: icve2(:)
+!>  Municipality ID in Street output file
+integer,allocatable :: icve3(:)
+!>  Fractional street area for each GIRDCODE and municipality
+real,allocatable :: rc(:)
+!>   Street area for each GIRDCODE
+real,allocatable ::rlc(:)
+!>   Municipality total Street area from inputfile
+real,allocatable :: rlm(:)
+!>  Municipality total street area array in output file
+real,allocatable ::sum(:)
 !> Geographical area selected in namelist_emis.csv
 character(len=12):: zona
 
@@ -155,9 +161,7 @@ subroutine count
     do i=1,nm
     if (xl(i)) j=j+1
     end do
-    allocate(icve2(j),sm(j),sc(j))
-    sm=0
-    sc=0
+    allocate(icve2(j))
     j=0
     do i=1,nm
         if(xl(i)) then

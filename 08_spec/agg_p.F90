@@ -1,5 +1,7 @@
-!>  @brief does AREA emissions VOC speciation and aggregation to the different
-!>   split in chemical species and agregates into classes for an specific mechanism
+!>  @brief does AREA emissions VOC speciation and aggregation
+!>
+!>  splits VOC in chemical species and agregates those chemical species  into classes
+!>  for a specific mechanism selected in namelist_emis.nml
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  2020/06/20
 !>   @version  2.1
