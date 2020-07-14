@@ -1,31 +1,17 @@
-!
-!	movil_temp.f90
-!
-!
 !  Creado por Jose Agustin Garcia Reynoso el 25/05/12.
 !
 ! Proposito
 !          Distribución temporal de las emisiones de fuentes moviles
 !   ifort -O3 movil_temp.f90 -o Mtemporal.exe
 !
-!   modificado
-!   02/10/2012  Ajuste en horas dia previo subroutina lee
-!   10/02/2015  Se indica que esta en g/h las emisiones.
-!   10/07/2017  Para 2014 nnscc 57 a 58, inclusion del 76946 y BC, CO2 y hEST
-!   21/07/2017  Incluye CO2 y CH4
-!   01/11/2017  Incluye NO y NO2
-!   18/11/2017  Incluye GSO4, POA and OTHE
-!   30/07/2019  para 2016 con anio bisiesto
-!   06/04/2020  Incluye Horario de verano
-!
 !> @brief For movil_temp.f90 program. Mobile emissions temporal distribution
 !>
 !> Currently uses EPA temporal profiles
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-module var_mobile_temp
+module movil_temporal_mod
 integer :: month
 integer :: daytype ! tipo de dia 1 lun a 7 dom
 !> Hourly temporal profile
@@ -76,7 +62,12 @@ character(len=14),dimension(nf) ::efile,casn
 common /vars/ fweek,nscc,nm,daytype,perfil,mes,dia,hora,current_date
 common /nlm_vars/lsummer,month,idia,anio,periodo,inicia,termina
 
-end module var_mobile_temp
+end module movil_temporal_mod
+!                _ _  _                                _
+!  _ __  _____ _(_) || |_ ___ _ __  _ __  ___ _ _ __ _| |
+! | '  \/ _ \ V / | ||  _/ -_) '  \| '_ \/ _ \ '_/ _` | |
+! |_|_|_\___/\_/|_|_|_\__\___|_|_|_| .__/\___/_| \__,_|_|
+!                  |___|           |_|
 !
 !  Progran  movil_temp.f90
 !
@@ -84,33 +75,35 @@ end module var_mobile_temp
 !
 !>  @brief Make temporal distribution of mobile emissions using profiles based on SCC.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-program mtemporal
-   use var_mobile_temp
+program movil_temporal
+   use movil_temporal_mod
 
-   call lee_namelist
+   call lee_namelist_time
 
-   call lee_mobile
+   call mobile_spatial_reading
 
-   call compute_mobile
+   call mobile_temporal_distribution
 
-   call storage_mobile
+   call mobile_temporal_storing
 
 contains
-!  _
-! | | ___  ___
-! | |/ _ \/ _ \
-! | |  __/  __/
-! |_|\___|\___|
-!
+!            _    _ _
+!  _ __  ___| |__(_) |___
+! | '  \/ _ \ '_ \ | / -_)
+! |_|_|_\___/_.__/_|_\___|  _                   _ _
+!  ____ __  __ _| |_(_)__ _| |  _ _ ___ __ _ __| (_)_ _  __ _
+! (_-< '_ \/ _` |  _| / _` | | | '_/ -_) _` / _` | | ' \/ _` |
+! /__/ .__/\__,_|\__|_\__,_|_|_|_| \___\__,_\__,_|_|_||_\__, |
+!    |_|                    |___|                       |___/
 !>  @brief Reads emissions and temporal profiles based on SCC.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine lee_mobile
+subroutine mobile_spatial_reading
 	implicit none
 	integer i,j,k,l,m,iprof
 	integer idum,imon,iwk,ipdy
@@ -383,24 +376,26 @@ subroutine lee_mobile
     end if
 	 print *,'   Done ',nfile,daytype
 	end do ! K
-	close(15)
-	close(16)
-	close(17)
-	close(18)
-    close(19)
-end subroutine lee_mobile
-!                                  _
-!   ___ ___  _ __ ___  _ __  _   _| |_ ___
-!  / __/ _ \| '_ ` _ \| '_ \| | | | __/ _ \
-! | (_| (_) | | | | | | |_) | |_| | ||  __/
-!  \___\___/|_| |_| |_| .__/ \__,_|\__\___|
-!                     |_|
+  close(15)
+  close(16)
+  close(17)
+  close(18)
+  close(19)
+end subroutine mobile_spatial_reading
+!            _    _ _
+!  _ __  ___| |__(_) |___
+! | '  \/ _ \ '_ \ | / -_)
+! |_|_|_\___/_.__/_|_\___|          _      _ _    _       _ _         _   _
+! | |_ ___ _ __  _ __  ___ _ _ __ _| |  __| (_)__| |_ _ _(_) |__ _  _| |_(_)___ _ _
+! |  _/ -_) '  \| '_ \/ _ \ '_/ _` | | / _` | (_-<  _| '_| | '_ \ || |  _| / _ \ ' \
+!  \__\___|_|_|_| .__/\___/_| \__,_|_|_\__,_|_/__/\__|_| |_|_.__/\_,_|\__|_\___/_||_|
+!              |_|                 |___|
 !>  @brief Computes the hourly emissions based on SCC temporal profiles from annual to hourly.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine compute_mobile
+subroutine mobile_temporal_distribution
 	implicit none
 	integer i,j,k,l,ival,ii
 !
@@ -448,19 +443,21 @@ subroutine compute_mobile
 		    end do
 		  end do
 	  end do
-	end subroutine compute_mobile
-!      _
-!  ___| |_ ___  _ __ __ _  __ _  ___
-! / __| __/ _ \| '__/ _` |/ _` |/ _ \
-! \__ \ || (_) | | | (_| | (_| |  __/
-! |___/\__\___/|_|  \__,_|\__, |\___|
-!                         |___/
+	end subroutine mobile_temporal_distribution
+!            _    _ _
+!  _ __  ___| |__(_) |___
+! | '  \/ _ \ '_ \ | / -_)
+! |_|_|_\___/_.__/_|_\___|          _      _           _
+! | |_ ___ _ __  _ __  ___ _ _ __ _| |  __| |_ ___ _ _(_)_ _  __ _
+! |  _/ -_) '  \| '_ \/ _ \ '_/ _` | | (_-<  _/ _ \ '_| | ' \/ _` |
+!  \__\___|_|_|_| .__/\___/_| \__,_|_|_/__/\__\___/_| |_|_||_\__, |
+!               |_|                 |___|                    |___/
 !>  @brief Saves mobile emission with the temporal profile in hourly basis.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine storage_mobile
+subroutine mobile_temporal_storing
   implicit none
   integer i,j,k,l,iun
   real suma
@@ -469,54 +466,54 @@ subroutine storage_mobile
 !$omp parallel sections num_threads (3) private(iun,i,l)
 !$omp section
   do k=1,nf-2
-   print *,'Storing: ',casn(k),' ',efile(k)
-   open(newunit=iun,file=casn(k),action='write')
-   write(iun,*)casn(k),',ID, Hr to Hr24,g/h'
-   write(iun,'(I8,4A)')size(emis,dim=1),",",current_date,', ',cdia(daytype)
-   do i=1,size(emis,dim=1)
-     suma=0
-     do l=1,nh
-     suma=suma+emis(i,k,l)
-     end do
-     if(suma.gt.0) write(iun,100)idcel2(i),(emis(i,k,l),l=1,nh)
-   end do
-   close(unit=iun)
+    print *,'Storing: ',casn(k),' ',efile(k)
+    open(newunit=iun,file=casn(k),action='write')
+    write(iun,*)casn(k),',ID, Hr to Hr24,g/h'
+    write(iun,'(I8,4A)')size(emis,dim=1),",",current_date,', ',cdia(daytype)
+    do i=1,size(emis,dim=1)
+      suma=0
+      do l=1,nh
+        suma=suma+emis(i,k,l)
+      end do
+      if(suma.gt.0) write(iun,100)idcel2(i),(emis(i,k,l),l=1,nh)
+    end do
+    close(unit=iun)
   end do
 100 format(I7,",",23(ES12.4,","),ES12.4)
 !$omp section
    k=nf-1
 ! WARNING iscc voc must be the last one to be read.
-    print *,casn(k),efile(k)
-   open(newunit=iun,file=casn(k),action='write')
-   write(iun,*)casn(k),'ID, SCC,  Hr to Hr24'
-   write(iun,'(I8,4A)')size(epm2,dim=1)*nscc(k),', ',current_date,', ',cdia(daytype)
-   do i=1,size(epm2,dim=1)
-     do j=1,nscc(k)
-        suma=0
-        do l=1,nh
-          suma=suma+epm2(i,j,l)
-        end do
-        if(suma.gt.0) write(iun,110)idcel2(i),iscc(j),(epm2(i,j,l),l=1,nh)
-     end do
-   end do
-	close(iun)
+  print *,casn(k),efile(k)
+  open(newunit=iun,file=casn(k),action='write')
+  write(iun,*)casn(k),'ID, SCC,  Hr to Hr24'
+  write(iun,'(I8,4A)')size(epm2,dim=1)*nscc(k),', ',current_date,', ',cdia(daytype)
+  do i=1,size(epm2,dim=1)
+    do j=1,nscc(k)
+      suma=0
+      do l=1,nh
+        suma=suma+epm2(i,j,l)
+      end do
+      if(suma.gt.0) write(iun,110)idcel2(i),iscc(j),(epm2(i,j,l),l=1,nh)
+    end do
+  end do
+  close(iun)
 !$omp section
 ! WARNING iscc voc must be the last one to be read.
-   k=nf
-    print *,casn(k),efile(k)
-   open(newunit=iun,file=casn(k),action='write')
-   write(iun,*)casn(k),'ID, SCC,  Hr to Hr24'
-   write(iun,'(I8,4A)')size(evoc,dim=1)*nscc(k),', ',current_date,', ',cdia(daytype)
-   do i=1,size(evoc,dim=1)
-     do j=1,nscc(k)
-        suma=0
-        do l=1,nh
+  k=nf
+  print *,casn(k),efile(k)
+  open(newunit=iun,file=casn(k),action='write')
+  write(iun,*)casn(k),'ID, SCC,  Hr to Hr24'
+  write(iun,'(I8,4A)')size(evoc,dim=1)*nscc(k),', ',current_date,', ',cdia(daytype)
+  do i=1,size(evoc,dim=1)
+    do j=1,nscc(k)
+      suma=0
+      do l=1,nh
         suma=suma+evoc(i,j,l)
-        end do
-        if(suma.gt.0)write(iun,110)idcel2(i),iscc(j),(evoc(i,j,l),l=1,nh)
-     end do
-   end do
-	close(iun)
+      end do
+      if(suma.gt.0)write(iun,110)idcel2(i),iscc(j),(evoc(i,j,l),l=1,nh)
+    end do
+  end do
+  close(iun)
 !$omp end parallel sections
     deallocate(idcel,idcel2,mst)
     deallocate(emiM)
@@ -525,43 +522,42 @@ subroutine storage_mobile
     deallocate(epm2)
     print*,"*****  DONE MOBILE TEMPORAL *****"
 110 format(I7,",",A10,",",23(ES12.4,","),ES12.4)
-end subroutine storage_mobile
+end subroutine mobile_temporal_storing
 !                        _
 !   ___ ___  _   _ _ __ | |_
 !  / __/ _ \| | | | '_ \| __|
 ! | (_| (_) | |_| | | | | |_
 !  \___\___/ \__,_|_| |_|\__|
 !
-!>  @brief Counts the number of different cells in file and stores in index.csv file.
+!>  @brief Counts the number of different cells in emissions file.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 202
 subroutine count
   integer i,j
   idcel2(1)=idcel(1)
   j=1
   do i=2,nm
-   if(idcel2(j).ne.idcel(i)) then
-    j=j+1
-	idcel2(j)=idcel(i)
-	end if
-
+    if(idcel2(j).ne.idcel(i)) then
+      j=j+1
+      idcel2(j)=idcel(i)
+    end if
   end do
   print *,'Number of different cells',j
   allocate(emis(j,nf-2,nh))
-  allocate(evoc(j,nscc(nf),nh))
   allocate(epm2(j,nscc(nf-1),nh))
-   emis=0
-   evoc=0
-   emp2=0
+  allocate(evoc(j,nscc(nf),nh))
+  emis=0
+  evoc=0
+  emp2=0
 end subroutine count
 !> @brief Update temporal profile per day
 !>
 !> Currently uses EPA temporal profiles
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !> @param perfili mobile temporal profile to be update
 !> @param idia day of the week 1 to 7 to be used to update the profile
@@ -579,11 +575,14 @@ end subroutine adecua
 ! | |/ /\ \ / / __| _ \  /_\ | \| |/ _ \
 ! | ' <  \ V /| _||   / / _ \| .` | (_) |
 ! |_|\_\  \_/ |___|_|_\/_/ \_\_|\_|\___/
-!>  @brief Identifies if it is summert time period and if it is considered or not
+!>  @brief Identifies if it is summert time period and if it is considered  or not.
+!>   Returns 1 if the date is within daysaving time period
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
+!>   @param ida  day in the month
+!>   @param mes  month of the year
 integer function kverano(ida,mes)
     implicit none
     integer, intent(in):: ida,mes
@@ -611,18 +610,19 @@ integer function kverano(ida,mes)
     end if
 233 format("******  HORARIO de VERANO *******",/,3x,"Abril ",I2,x,"a Octubre ",I2)
 end function
-!  _                                          _ _     _
-! | | ___  ___     _ __   __ _ _ __ ___   ___| (_)___| |_
-! | |/ _ \/ _ \   | '_ \ / _` | '_ ` _ \ / _ \ | / __| __|
-! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_
-! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|
-!            |_____|
+!  _                               _ _    _    _   _
+! | |___ ___   _ _  __ _ _ __  ___| (_)__| |_ | |_(_)_ __  ___
+! | / -_) -_) | ' \/ _` | '  \/ -_) | (_-<  _||  _| | '  \/ -_)
+! |_\___\___|_|_||_\__,_|_|_|_\___|_|_/__/\__|_\__|_|_|_|_\___|
+!          |___|                            |___|
 !>  @brief Reads global namelist input file for setting up the temporal settings.
+!>
+!> reads variables idia, month, anio and periodo used for time specification
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine lee_namelist
+subroutine lee_namelist_time
     implicit none
     NAMELIST /fecha_nml/ idia,month,anio,periodo
     NAMELIST /verano_nml/ lsummer
@@ -659,5 +659,5 @@ subroutine lee_namelist
     end if
     close(10)
 
-end subroutine lee_namelist
-end program mtemporal
+end subroutine lee_namelist_time
+end program movil_temporal

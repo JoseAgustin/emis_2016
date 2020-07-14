@@ -14,29 +14,34 @@
 !>   @date 07/12/2020
 !>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
+!>   @param nf number of emission files
+!>   @param nnscc max number of scc descriptors in input files
+!>   @param juliano number of day in year
+!>   @param nh  number of hour per day
 module area_temporal_mod
 integer :: month,daytype
-integer,parameter :: nf=10 !number of emission files
-integer,parameter :: nnscc=59 !max number of scc descriptors in input files
+integer,parameter :: nf=10
+integer,parameter :: nnscc=59
 integer,parameter ::juliano=366
-integer,parameter :: nh=24 ! number of hour per day
-integer :: nmax !> number of max lines in emiA
+integer,parameter :: nh=24 ;!> number of max lines in emiA
+integer :: nmax
 !> Number of lines in emissions file
-integer :: nm !> line number in emissions file
+integer :: nm
 !> Number of lines in Time zone file
-integer :: lh !> line number in uso horario
+integer :: lh ; !> if is dayligth time saving period
 integer :: iverano  ! si es en periodo de verano
 !> Day for temporal emissions computations
 integer :: idia     ! dia para el calculo de emisiones
 !> Year for temporal emissions computations
 integer :: anio     ! anio de las emisiones 2016
-integer ::periodo! =1 uno 24 hr, =2 dos de 12hrs c/u
+!> If =1  one file with 24 hr , =2  two files of 12hrs each one
+integer ::periodo
 !> number of scc codes per file
-integer,dimension(nf) :: nscc
-integer, allocatable :: idcel(:),idcel2(:),idcel3(:)
-!> state municipality IDs emiss and time zone
-integer, allocatable :: idsm(:,:)
-!> Days per month
+integer,dimension(nf) :: nscc ; !> GRIDID in emissions
+integer, allocatable :: idcel(:) ;!> GRIDID not duplictes
+integer, allocatable ::idcel2(:) ;!> GRIDID fir identification of not duplicate
+integer, allocatable ::idcel3(:) ;!> state municipality IDs emiss and time zone
+integer, allocatable :: idsm(:,:); !> Days per month
 integer,dimension(12) :: daym ! days in a month
 !> start day for summer time period for years 2014 to 2020
 integer,dimension(2014:2020) :: inicia ! dia inicial del horario de verano
@@ -52,21 +57,27 @@ real,allocatable :: emis(:,:,:)
 real,allocatable :: epm2(:,:,:)
 !> VOC emissions cel,scc and hour
 real,allocatable :: evoc(:,:,:)
-real,dimension(nnscc,nf) :: mes,dia,diap ! dia currentday, diap previous day
+!> month interger
+real,dimension(nnscc,nf) :: mes ;!> current day
+real,dimension(nnscc,nf) :: dia ;!> previus day
+real,dimension(nnscc,nf) ::diap ! dia currentday, diap previous day
+!> Time zone  CST, MST, PST and EST
 real,dimension(nnscc,nf,nh):: hCST,hMST,hPST,hEST
 !> profile ID 1=mon 2=weekday 3=hourly per SCC and pollutant.
 integer,dimension(3,nnscc,nf):: profile
 !> index per file
 integer,allocatable :: id5(:,:)
-! SCC codes per file
+!> SCC codes per file
 character(len=10),dimension(nnscc) ::iscc
-! Number of days in year
+!> Number of days in year
 character(len=3),dimension(juliano):: cdia
-! Initial date of the emissions period
+!> Initial date of the emissions period
 character (len=19) :: current_date
-! during summer period  consider timasvaing .true. or not .false.
+!> during summer period  consider timasvaing .true. or not .false.
 logical :: lsummer
-character(len=14),dimension(nf) ::efile,casn
+!> Input file name
+character(len=14),dimension(nf) ::efile ; !> output file name
+character(len=14),dimension(nf) :: casn
 
  data efile/'ASO2_2016.csv','ANOx_2016.csv','ANH3_2016.csv',&
 &           'ACO__2016.csv','APM10_2016.csv','ACO2_2016.csv',&

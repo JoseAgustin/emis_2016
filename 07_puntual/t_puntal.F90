@@ -500,6 +500,8 @@ end subroutine point_emissions_storage
 !>  @param clon array of nst-inst+1 elemets of longitudes
 !>  @param inst start value of clat and clon arrays
 !>  @param nst end  value of clat and clon arrays
+!>  @param ist column index value
+!>  @param jst row index value 
   Subroutine localiza(xlat,xlon,mi,mj,clat,clon,ist,jst,inst,nst)
   implicit none
   integer,intent(IN) :: mi,mj,nst,inst

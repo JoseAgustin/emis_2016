@@ -11,17 +11,17 @@
 !
 ! ifort g_emis2.F90 -O2 -axAVX -lnetcdff -L$NETCDF/lib -I$NETCDF/include -qopenmp -o emis2.exe
 ! gfortran -L/usr/local/lib -I/usr/local/include -lnetcdff -fopenmp g_emis2.F90
-!
-!   09/04/2020   Version 1.1
-!   12/04/2020   Version 2.0
+
 !>  @brief For program g_emis2.F90.
 !>
 !> Creates netcdf file by adding AREA, MOBILE and POINT emissions in a specific grid.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/20
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-module vars_emis
+!>   @param nh number of hours per day
+!>   @param zlev number of layers in output file
+module emissions_save_vars_mod
 integer,parameter :: nh=24    !number hours day
 integer,parameter :: zlev=8  ! Layer of emission (1 to 8)
 integer :: nf    ! number of files antropogenic
@@ -47,8 +47,8 @@ integer,allocatable :: isp(:) ! storage
 integer,allocatable:: id_var(:)  !netcdf
 integer :: id_varlong,id_varlat,id_varpop
 integer :: id_unlimit,id_utmx,id_utmy,id_utmz
-
-real,allocatable::wtm(:)  !storage
+ !> molecular weight
+real,allocatable::wtm(:)
 real,allocatable:: eft(:,:,:,:)! emissions by nx,ny,level,nh
 real,allocatable:: efs(:,:,:,:)! emissions by nx,ny,level,nh/2
 real,allocatable ::xlon(:,:),xlat(:,:),pob(:,:)
@@ -68,23 +68,23 @@ common /fileout/id_varlong,id_varlat,id_varpop,&
 id_unlimit,id_utmx,id_utmy,id_utmz,ncid,ncid2
 common /date/ current_date,cday,mecha,titulo
 common /nlm_vars/month,idia,anio,periodo
-end module vars_emis
-!                            _
-!   __ _ _   _  __ _ _ __ __| | __ _     _ __   ___
-!  / _` | | | |/ _` | '__/ _` |/ _` |   | '_ \ / __|
-! | (_| | |_| | (_| | | | (_| | (_| |   | | | | (__
-!  \__, |\__,_|\__,_|_|  \__,_|\__,_|___|_| |_|\___|
-!  |___/                           |_____|
+end module emissions_save_vars_mod
+!                 _         _
+!   ___ _ __ ___ (_)___ ___(_) ___  _ __  ___     ___  __ ___   _____     _ __   ___
+!  / _ \ '_ ` _ \| / __/ __| |/ _ \| '_ \/ __|   / __|/ _` \ \ / / _ \   | '_ \ / __|
+! |  __/ | | | | | \__ \__ \ | (_) | | | \__ \   \__ \ (_| |\ V /  __/   | | | | (__
+!  \___|_| |_| |_|_|___/___/_|\___/|_| |_|___/___|___/\__,_| \_/ \___|___|_| |_|\___|
+!                                           |_____|                 |_____|
 !>  @brief Stores emissions from Area, mobile and point emissions
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-program guarda_nc
+program emissions_save_nc
 #ifdef _OPENMP
     use omp_lib
 #endif
-    use vars_emis
+    use emissions_save_vars_mod
     use netcdf
 
     call lee_namelist
@@ -93,7 +93,7 @@ program guarda_nc
 
     call guarda_variables
 
-    call termina
+    call free_memory
 
 contains
 !  _                                          _ _     _
@@ -106,49 +106,49 @@ contains
 !>
 !>   for setting up geographical, temporal and chemical mechamism settings
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine lee_namelist
 implicit none
-    NAMELIST /region_nml/ zona
-    NAMELIST /fecha_nml/ idia,month,anio,periodo
-    NAMELIST /chem_nml/ mecha
-    integer:: unit_nml=9
-    logical existe
-    existe = .FALSE.
-    write(6,*)' >>>> Reading file - ../namelist_emis.nml'
-    inquire ( FILE = '../namelist_emis.nml' , EXIST = existe )
-
-    if ( existe ) then
-    !  Opening the file.
-        open ( FILE   = '../namelist_emis.nml' ,      &
-        UNIT   =  unit_nml        ,      &
-        STATUS = 'OLD'            ,      &
-        FORM   = 'FORMATTED'      ,      &
-        ACTION = 'READ'           ,      &
-        ACCESS = 'SEQUENTIAL'     )
-        !  Reading the file
-        READ (unit_nml , NML = region_nml )
-        READ (unit_nml , NML = fecha_nml)
-        READ (unit_nml , NML = chem_nml )
-        !WRITE (6    , NML = chem_nml )
-        close(unit_nml)
-    else
-        stop '***** No namelist_emis.nml in .. directory'
-    end if
+  NAMELIST /region_nml/ zona
+  NAMELIST /fecha_nml/ idia,month,anio,periodo
+  NAMELIST /chem_nml/ mecha
+  integer:: unit_nml=9
+  logical existe
+  existe = .FALSE.
+  write(6,*)' >>>> Reading file - ../namelist_emis.nml'
+  inquire ( FILE = '../namelist_emis.nml' , EXIST = existe )
+  if ( existe ) then
+  !  Opening the file.
+    open ( FILE   = '../namelist_emis.nml' ,      &
+    UNIT   =  unit_nml        ,      &
+    STATUS = 'OLD'            ,      &
+    FORM   = 'FORMATTED'      ,      &
+    ACTION = 'READ'           ,      &
+    ACCESS = 'SEQUENTIAL'     )
+    !  Reading the file
+    READ (unit_nml , NML = region_nml )
+    READ (unit_nml , NML = fecha_nml)
+    READ (unit_nml , NML = chem_nml )
+    !WRITE (6    , NML = chem_nml )
+    close(unit_nml)
+  else
+    stop '***** No namelist_emis.nml in .. directory'
+  end if
 end subroutine lee_namelist
-!   _                               _ _    _                  _
-! | |___ ___   _ _  __ _ _ __  ___| (_)__| |_   _ __  ___ __| |_  __ _
-! | / -_) -_) | ' \/ _` | '  \/ -_) | (_-<  _| | '  \/ -_) _| ' \/ _` |
-! |_\___\___|_|_||_\__,_|_|_|_\___|_|_/__/\__|_|_|_|_\___\__|_||_\__,_|
-!          |___|                            |___|
+!  _                                          _ _     _                           _
+! | | ___  ___     _ __   __ _ _ __ ___   ___| (_)___| |_     _ __ ___   ___  ___| |__   __ _
+! | |/ _ \/ _ \   | '_ \ / _` | '_ ` _ \ / _ \ | / __| __|   | '_ ` _ \ / _ \/ __| '_ \ / _` |
+! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_    | | | | | |  __/ (__| | | | (_| |
+! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|___|_| |_| |_|\___|\___|_| |_|\__,_|
+!           |_____|                                    |_____|
 !>  @brief Reads mechamism namelist input file
 !>
 !>   for setting up the scaling factor for each category in the chemical mechamism
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>  @param mecanismo name of the photochemical mechanism to be use
 subroutine lee_namelist_mecha(mecanismo)
@@ -191,8 +191,8 @@ end subroutine lee_namelist_mecha
 !>   for setting up molecular weigths, categories names, descriptions and
 !>   files to read depending of the mechamism
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine setup_mecha
     IMPLICIT NONE
@@ -619,11 +619,11 @@ end subroutine setup_mecha
 ! \__ \  __/ |_| |_| | |_) |  |  _| | |  __/
 ! |___/\___|\__|\__,_| .__/___|_| |_|_|\___|
 !                    |_| |_____|
-!>  @brief sets netcdf output file
+!>  @brief sets attributes and dimensions for netcdf output file
 !>
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param FILE_NAME emissions file name
 !>   @param istart For name file specification 00 or 12
@@ -776,8 +776,8 @@ end subroutine setup_file
 !  |___/                           |_____|
 !>  @brief Stores emissions categories in netcdf file
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine guarda_variables
     IMPLICIT NONE
@@ -807,10 +807,10 @@ end subroutine guarda_variables
 !   | | |_| | | | (_| | | | | (_) |
 !  _/ |\__,_|_|_|\__,_|_| |_|\___/
 ! |__/
-!>   @brief Otains Julian day from year, month and day input
+!>   @brief Obtains Julian day from year, month and day input
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param  iyear year number for identify leap year
 !>   @param  imes month number for identify number of days
@@ -840,8 +840,8 @@ end function
 !
 !>  @brief Returns the month in characters from month number
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param  num number of the month
 character(len=3)function mes(num)
@@ -882,10 +882,10 @@ end subroutine check
 ! | (__| | |  __/ (_| |  | (_| | |_| |_| |
 !  \___|_|  \___|\__,_|___\__,_|\__|\__|_|
 !                    |_____|
-!>  @brief Creates attributes for the netcdf file
+!>  @brief Creates attributes for each variable in the netcdf file
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param ncid netcdf file ID
 !>   @param idm number of items in dimids array
@@ -921,10 +921,10 @@ end subroutine crea_attr
 ! | |  __/  __/   | | (_) | (_| (_| | | |/ / (_| |
 ! |_|\___|\___|___|_|\___/ \___\__,_|_|_/___\__,_|
 !            |_____|
-!>  @brief Obtains the lon,lat and utm coordinates for the output grid
+!>  @brief Reada the lon,lat and utm coordinates for the output grid
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine lee_localiza
     implicit NONE
@@ -947,7 +947,7 @@ subroutine lee_localiza
     end do
     CDIM=(utmxd(2,1)-utmxd(1,1))/1000.  ! from meters to km
     write(6,'(F8.2,A30)') CDIM,trim(titulo)
-    SUPF1=1./(CDIM*CDIM)
+    SUPF1=1./(CDIM*CDIM)  !computes  grid area in km^-1
     close(10)
 end subroutine lee_localiza
 !  _                             _
@@ -958,8 +958,8 @@ end subroutine lee_localiza
 !            |_____|
 !>   @brief Reads emissions categories
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !> @param ii pm2.5 index
 !> @param borra boolean variable to keep or not the previous values
@@ -1117,8 +1117,8 @@ end subroutine lee_emis
 !                                 |_____|
 !>  @brief Stores variables categories in netcdf file
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !> @param ikk emissions array index
 subroutine escribe_var(ikk)
@@ -1208,18 +1208,18 @@ if(ikk.eq.ns) call check( nf90_close(ncid) )
 if(ikk.eq.ns.and. periodo.eq.2) call check( nf90_close(ncid2) )
 
 end subroutine escribe_var
-!  _____                   _
-! |_   _|__ _ __ _ __ ___ (_)_ __   __ _
-!   | |/ _ \ '__| '_ ` _ \| | '_ \ / _` |
-!   | |  __/ |  | | | | | | | | | | (_| |
-!   |_|\___|_|  |_| |_| |_|_|_| |_|\__,_|
-!
+!   __
+!  / _|_ __ ___  ___     _ __ ___   ___ _ __ ___   ___  _ __ _   _
+! | |_| '__/ _ \/ _ \   | '_ ` _ \ / _ \ '_ ` _ \ / _ \| '__| | | |
+! |  _| | |  __/  __/   | | | | | |  __/ | | | | | (_) | |  | |_| |
+! |_| |_|  \___|\___|___|_| |_| |_|\___|_| |_| |_|\___/|_|   \__, |
+!                 |_____|                                   |___/
 !>   @brief Release memory from allocated variables
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine termina
+subroutine free_memory
     print *,"Libera Memoria"
     deallocate(ename,cname)
     deallocate(isp,wtm)
@@ -1234,17 +1234,17 @@ subroutine termina
 
 122 format("*******************",/,"***   Termina   ***",/,&
           &"*******************")
-end subroutine termina
-!                                     _
-!   ___ ___  _ __  _   _  __   ____ _| |
-!  / __/ _ \| '_ \| | | | \ \ / / _` | |
-! | (_| (_) | |_) | |_| |  \ V / (_| | |
-!  \___\___/| .__/ \__, |___\_/ \__,_|_|
-!           |_|    |___/_____|
+end subroutine free_memory
+!                                    _     _ ____  _       ____  _____
+!  ___ ___  _ __  _   _  __   ____ _| |   / |___ \| |_ ___|___ \|___ /
+! / __/ _ \| '_ \| | | | \ \ / / _` | |   | | __) | __/ _ \ __) | |_ \
+!| (_| (_) | |_) | |_| |  \ V / (_| | |   | |/ __/| || (_) / __/ ___) |
+! \___\___/| .__/ \__, |___\_/ \__,_|_|___|_|_____|\__\___/_____|____/
+!          |_|    |___/_____|        |_____|
 !>  @brief Copy in a new array emissions values from hour 12 to 23 for parallel storage
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/20
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine copy_val_12to23
 IMPLICIT NONE
@@ -1262,4 +1262,4 @@ do i=1,nx
 end do
 !$omp end parallel do
 end subroutine
-end program guarda_nc
+end program emissions_save_nc

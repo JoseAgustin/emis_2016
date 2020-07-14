@@ -1,5 +1,3 @@
-!  movil_spatial.F90
-!
 !  ifort -O3 -axAVX -o MSpatial.exe movil_spatial.F90
 !
 !  Creado por Jose Agustin Garcia Reynoso el 1/11/2017
@@ -16,54 +14,57 @@
 !       18/11/2017  Se incluyen GSO4, OTHER, POA
 !> @brief For movil_spatial.F90 program. Mobile emissions spatial distribution
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-module mobile_vars
-integer nl   !  Number of lines in salida.csv
-integer nl2  !  Number of lines in gri_movil.csv
-integer,parameter :: npol=11 !  Number of pollutants
-integer,parameter :: nstates=32
-integer,parameter :: fracp=10 ! Number of
-integer,allocatable :: iest(:)  ! estados
-integer,allocatable :: cventmun(:) !estado_municipio
-
-integer,allocatable :: id(:),id2(:) !State Mun code in emis and grid files
-integer,allocatable ::grid(:),grid2(:) ! gridcode in gri_pob
-integer,allocatable :: im(:),im2(:)  ! time lag emis and grid files
-! scc code in emis and subset of different scc codes.
-integer*8,allocatable :: emid(:) ! emid edo mun id
-character (len=10),allocatable::iscc(:),jscc(:) ! SCC from emissions
-character (len= 5),dimension(npol) :: pol ! pollutant name
-character (len= 5),dimension(fracp) :: polf ! pollutant name fraction file
-! ei emission in emissfile (nl dimension)
-! uf, rf urban and rural population fraction
-! pemi emission in grid cell,pollutan,scc category
-real,allocatable:: ei(:,:),uf(:),rf(:),pemi(:,:,:),frac(:,:)
+module mobile_spatial_mod ;!> Number of lines in salida.csv
+integer nl   ;!> Number of lines in gri_movil.csv
+integer nl2  ;!> Number of pollutants
+integer,parameter :: npol=11 ;!> Number of States
+integer,parameter :: nstates=32 ;!>Number of pollutant name fraction
+integer,parameter :: fracp=10 ;!>State ID
+integer,allocatable :: iest(:)  ;!>ID State_municipality
+integer,allocatable :: cventmun(:)
+!>State Mun code in emis and grid files
+integer,allocatable :: id(:) ;!>State Mun code in emis and grid files
+integer,allocatable :: id2(:) ;!>gridcode in gri_pob
+integer,allocatable ::grid(:)
+integer,allocatable ::grid2(:) ;!>time lag emis and grid files
+integer,allocatable :: im(:),im2(:)
+!>emid edo mun id
+integer*8,allocatable :: emid(:) ;!>SCC from emissions
+character (len=10),allocatable::iscc(:) ;!>scc code in emis and subset of different scc codes.
+character (len=10),allocatable::jscc(:) ;!>pollutant name
+character (len= 5),dimension(npol) :: pol ; !>pollutant name fraction file
+character (len= 5),dimension(fracp) :: polf
+!>ei emission in emissfile (nl dimension)
+real,allocatable:: ei(:,:) ;!>uf, rf urban and rural population fraction
+real,allocatable:: uf(:),rf(:) ;!>pemi emission in grid cell,pollutan,scc category
+real,allocatable:: pemi(:,:,:),frac(:,:)
 common /vari/ nl,nl2,pol
-end module mobile_vars
+end module mobile_spatial_mod
 !> @brief Spatial distribution of emissions from mobile sources
-!>
-!> Allocates emission by monicipality to a emission by grid
-!> the grid is obtained from specific geographical area seting by zona variable
+!> @par
+!> Allocates the municipatily emission in to a grid
+!> the grid is obtained from specific geographical area seting by zona variable in namelist_emis.nml
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  07/13/2020
+!>   @version  2.2
 program movil_spatial
-use mobile_vars
+use mobile_spatial_mod
 
-    call lee
+    call mobile_emiss_reading
 
-    call computations
+    call mobile_spatial_locating
 
-    call imprime
+    call mobile_spatial_storing
 
 contains
 !> @brief Stores mobile sources emissions in a grid per pollutant file
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
-subroutine imprime
+!>   @date  07/13/2020
+!>   @version  2.2
+subroutine mobile_spatial_storing
     integer i,j,k,iun
 	character(len=15) ::name
 	do i=1,npol
@@ -84,15 +85,15 @@ subroutine imprime
 210 format(i8,",",30(A11,","))
 220 format(i8,",",30(ES12.4,","),I2)
 #endif
-end subroutine imprime
+end subroutine mobile_spatial_storing
 !> @brief Allocates municipality sources emissions in a grid
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
-subroutine computations
+!>   @date  07/13/2020
+!>   @version  2.2
+subroutine mobile_spatial_locating
 implicit none
   integer i,j,ii,l,k
-	print *,' Start doing computations'
+	print *,' Start doing spatial allocation'
 	print *,(pol(i),i=1,npol)
 	call count  ! counts grids and scc different values
 	print *,'end count'
@@ -117,13 +118,13 @@ implicit none
 	end do !i
 end do! k
 !$omp end parallel do
-end subroutine computations
+end subroutine mobile_spatial_locating
 !
 !> @brief Reads mobile emission file from MOVES emiss_2016.csv
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
-subroutine lee
+!>   @date  07/13/2020
+!>   @version  2.2
+subroutine mobile_emiss_reading
 	implicit none
 	integer:: i,j,iedo
     integer:: anio,cint
@@ -185,12 +186,12 @@ subroutine lee
 140 print *,"Error in reading file emiss_2016.csv",i
     stop
 160 print *,"Error in reading file gri_movil.csv",i
-end subroutine lee
+end subroutine mobile_emiss_reading
 !
 !> @brief Counting the number of different GRDICODE cells
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1!
+!>   @date  07/13/2020
+!>   @version  2.2
 subroutine count
   integer i,j
   logical,allocatable::xl(:)
