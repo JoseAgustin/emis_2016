@@ -149,7 +149,7 @@ end subroutine highway_fraction_saving
 !>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine count
-    use vars
+    use highway_vars_mod
     logical,allocatable::xl(:)
     allocate(xl(size(icve)))
     xl=.true.

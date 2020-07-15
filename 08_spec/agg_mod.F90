@@ -88,13 +88,13 @@ subroutine lee_voc(isource)
   print *,"Inicia lectura"
   SELECT CASE (isource)
   CASE(1)
-  fname='../04_temis/TAVOC_2016.csv'
+    fname='../04_temis/TAVOC_2016.csv'
   CASE(2)
-  fname='../06_temisM/TMCOV_2016.csv'
+    fname='../06_temisM/TMCOV_2016.csv'
   CASE(3)
-  fname='../07_puntual/T_ANNVOC.csv'
+    fname='../07_puntual/T_ANNVOC.csv'
   CASE DEFAULT
-        STOP "Error not identifcable type source "
+    STOP "Error not identifcable type source "
   END SELECT
     print *,fname
   open (unit=10,file=fname,status='old',action='read')
@@ -411,4 +411,3 @@ print *,'   Number of different cells',j,size(grid2)
 deallocate(xl)
 end subroutine count
 end module voc_split
-

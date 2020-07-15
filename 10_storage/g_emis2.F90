@@ -37,7 +37,7 @@ integer ::periodo;!> number of cell in the grid
 integer ::ncel   ;!>  number of lines in files
 integer ::nl     ;!> longitude values in grid
 integer :: nx    ;!> latitude values in grid
-integer ;; ny    ;!> netcdf unit ID for file1  in file (24 or 12 hrs)
+integer :: ny    ;!> netcdf unit ID for file1  in file (24 or 12 hrs)
 integer ::ncid   ;!> netcdf unit ID for file1  in file2 (12 hrs)
 integer :: ncid2 ;!> GRIDCODE in emission input files
 integer*8 :: idcf;!> GRIDCODE in output grid obtaines from localiza

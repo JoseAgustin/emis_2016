@@ -517,7 +517,7 @@ print *,"   Temporal distribution for VOCs"!,size(idcel2)
      end do
     end do
 !$omp end parallel sections
-	end subroutine point_temp_distribution
+	end subroutine area_temp_distribution
 !
 !   __ _ _ __ ___  __ _
 !  / _` | '__/ _ \/ _` |

@@ -13,13 +13,15 @@ integer,allocatable :: isp(:)   ;!> profile IDs from file scc-profiles
 integer,allocatable :: profile(:) ;!> profile IDs wtih no duplicates
 integer,allocatable :: prof2(:);!> level of the emission
 integer,allocatable :: capa(:,:) ;!> SCC from emissions file
-integer*8, allocatable:: iscc(:) ;!>emissions en TPM25 file grid , nh
+!integer*8, allocatable:: iscc(:) ;!> SCC from emissions file character
+character(len=10),allocatable:: iscc(:);!>emissions en TPM25 file grid , nh
 real,allocatable :: ea(:,:)      ;!> emissions id cel, category, hours
 real,allocatable :: emis(:,:,:)  ;!>aggregation factor by size(prof2), nclass
 real,allocatable :: fclass(:,:)  ;!> Category name used for file name
 character(len=4),allocatable::cname(:) ;!> Character day type
 character(len=3) ::cdia ;!> Current date
 character (len=19) :: current_date
+
 
 parameter (nspecies=5,nh=24)
 
@@ -212,10 +214,10 @@ subroutine lee(isource)
   implicit none
   integer, INTENT(IN)  ::isource
   integer :: i,j,id,idun,l
-  integer*8 :: isccf
-  real,dimension(5):: fagg ! aggregation factor for 5 pm2.5 species
-  character(len=10) ::cdum
-  character(len=27):: fname
+  real,dimension(5) :: fagg ! aggregation factor for 5 pm2.5 species
+  character(len=10) :: cdum
+  character(len=10) :: isccf
+  character(len=27) :: fname
   logical ::lfil
   SELECT CASE (isource)
   CASE(1)
@@ -245,9 +247,9 @@ subroutine lee(isource)
   read (10,*) cdum  ! header 1
   read (10,*) cdum  ! header 2
   if(isource.eq.3)then
-  do i=1,lfa
+    do i=1,lfa
        read (10,*)iscc(i),grid(i),capa(i,1),(ea(i,j),j=1,nh),capa(i,2)
-  end do
+    end do
   else
     do i=1,lfa
       read (10,*)grid(i),iscc(i),(ea(i,j),j=1,nh)

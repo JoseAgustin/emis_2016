@@ -58,10 +58,10 @@ real,allocatable :: mes(:) ;!> current day
 real,allocatable :: dia(:) ;!> previus day
 real,allocatable :: diap(:)
 !> Time zone  CST
-real,dimension(nnscc,nf,nh):: hCST ;!> Time zone MST
-real,dimension(nnscc,nf,nh):: hMST ;!> Time zone PST
-real,dimension(nnscc,nf,nh):: hPST ;!> Time zone EST
-real,dimension(nnscc,nf,nh):: hEST
+real,allocatable :: hCST(:,:) ;!> Time zone MST
+real,allocatable :: hMST(:,:) ;!> Time zone PST
+real,allocatable :: hPST(:,:) ;!> Time zone EST
+real,allocatable :: hEST(:,:)
 !> during summer period  consider timasvaing .true. or not .false.
 logical :: lsummer
 !> Source clasification code array
@@ -532,7 +532,7 @@ end subroutine point_emissions_storage
 !>  @param inst start value of clat and clon arrays
 !>  @param nst end  value of clat and clon arrays
 !>  @param ist column index value
-!>  @param jst row index value 
+!>  @param jst row index value
   Subroutine localiza(xlat,xlon,mi,mj,clat,clon,ist,jst,inst,nst)
   implicit none
   integer,intent(IN) :: mi,mj,nst,inst
