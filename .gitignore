@@ -9,7 +9,16 @@ salida*
 *.xlsx
 .tmpfile
 libnetcdf*
-02_Aemis2
+config.status
+02_aemis/Makefile
+03_movilspatial/Makefile
+04_temis/Makefile
+05_semisM/Makefile
+06_temisM/Makefile
+07_puntual/Makefile
+08_spec/Makefile
+09_pm25spec/Makefile
+10_storage/Makefile
 02_aemis/A*16.csv
 02_aemis/ANH3_2016.csv 
 index.csv

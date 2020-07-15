@@ -4167,6 +4167,7 @@ $as_echo "$ac_cv_prog_fc_openmp" >&6; }
 
 # Check for newunit option to open()
 AX_F08_NEWUNIT
+LDFLAGS=-lnetcdff
 if test -z "${NETCDF_ROOT}"; then
   # Extract the first word of "nf-config", so it can be a program name with args.
 set dummy nf-config; ac_word=$2
@@ -4245,9 +4246,9 @@ fi
 
 
 fi
-        LDFLAGS="`${NETCDF_CONFIG} --flibs` ${LDFLAGS}";
-        FCFLAGS="-I`${NETCDF_CONFIG} --fflags` ${FCFLAGS}";
-                                # Extract the first word of "ncdump", so it can be a program name with args.
+        NC_LIB="`${NETCDF_CONFIG} --flibs` ${LDFLAGS}";
+        NC_INC="-I`${NETCDF_CONFIG} --fflags`";
+        # Extract the first word of "ncdump", so it can be a program name with args.
 set dummy ncdump; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 $as_echo_n "checking for $ac_word... " >&6; }
@@ -4287,13 +4288,14 @@ $as_echo "no" >&6; }
 fi
 
 
-                NETCDF_ROOT=`dirname $NETCDF_ROOT`   # Strip /ncdump
-                NETCDF_ROOT=`dirname $NETCDF_ROOT`;  # Strip /bin
+        NETCDF_ROOT=`dirname $NETCDF_ROOT`   # Strip /ncdump
+        NETCDF_ROOT=`dirname $NETCDF_ROOT`;  # Strip /bin
     else
         NETCDF_CONFIG="${NETCDF_ROOT}/bin/nf-config"
-        LDFLAGS="`${NETCDF_CONFIG} --flibs` ${LDFLAGS}";
-        FCFLAGS="-I`${NETCDF_CONFIG} --fflags` ${FCFLAGS}";
+        NC_LIB="`${NETCDF_CONFIG} --flibs` ${LDFLAGS}";
+        NC_INC="-I`${NETCDF_CONFIG} --fflags` ";
     fi
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: setting netcdf root directory NETCDF_ROOT=$NETCDF_ROOT" >&5
 $as_echo "$as_me: setting netcdf root directory NETCDF_ROOT=$NETCDF_ROOT" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for the existence of the netcdf root directory" >&5
@@ -4347,7 +4349,7 @@ fi
 if test -z "$NC_LIB" ; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for -lnetcdff" >&5
 $as_echo_n "checking for -lnetcdff... " >&6; };
-   if test -f $NETCDF_LIB/libnetcdff.a; then :
+    if test -f $NETCDF_LIB/libnetcdff.a; then :
   NC_LIB="-L$NETCDF_LIB -lnetcdff -lnetcdf";{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
@@ -4360,6 +4362,8 @@ fi
 #
 # NC_INC and NC_LIB contain the flags for compilation and linking and are
 # exported to Makefiles
+
+
 
 
 #
@@ -4379,9 +4383,9 @@ else
 fi
 
    if test "${parallel}" = "true"; then
-    FCFLAGS="${FCFLAGS} ${NC_LIB}";
+    FCFLAGS="${FCFLAGS} ";
    else
-    FCFLAGS="${FCFLAGS} ${NC_LIB}";
+    FCFLAGS="${FCFLAGS} ";
     fi
  if test "x$parallel" = "xtrue"; then
   WITH_OMPI_TRUE=
@@ -4395,8 +4399,7 @@ fi
 # Checks for library functions.
 #
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: FCFLAGS = ${FCFLAGS}" >&5
-$as_echo "FCFLAGS = ${FCFLAGS}" >&6; }
+#AC_MSG_RESULT([FCFLAGS = ${FCFLAGS}])
 
 ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
@@ -5779,10 +5782,10 @@ $as_echo "$as_me: Fortran flags:              FCFLAGS=$FCFLAGS" >&6;}
 $as_echo "$as_me: Fortran OPENMPI:            OPENMP_FCFLAGS=$OPENMP_FCFLAGS" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}: Root directory of netcdf:   NETCDF=$NETCDF_ROOT" >&5
 $as_echo "$as_me: Root directory of netcdf:   NETCDF=$NETCDF_ROOT" >&6;}
-{ $as_echo "$as_me:${as_lineno-$LINENO}: Compiler flags for netcdf:  NC_INC=$NETCDF_INC" >&5
-$as_echo "$as_me: Compiler flags for netcdf:  NC_INC=$NETCDF_INC" >&6;}
-{ $as_echo "$as_me:${as_lineno-$LINENO}: Linker flags for netcdf:    NC_LIB=$NETCDF_LIB" >&5
-$as_echo "$as_me: Linker flags for netcdf:    NC_LIB=$NETCDF_LIB" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}: Compiler flags for netcdf:  NC_INC=$NC_INC" >&5
+$as_echo "$as_me: Compiler flags for netcdf:  NC_INC=$NC_INC" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}: Linker flags for netcdf:    NC_LIB=$NC_LIB" >&5
+$as_echo "$as_me: Linker flags for netcdf:    NC_LIB=$NC_LIB" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}: Install prefix:             --prefix=$prefix" >&5
 $as_echo "$as_me: Install prefix:             --prefix=$prefix" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}: Executables install prefix: --exec_prefix=$exec_prefix" >&5
