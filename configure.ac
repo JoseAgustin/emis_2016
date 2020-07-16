@@ -48,12 +48,14 @@ if test -z "${NETCDF_ROOT}"; then
      [AC_CHECK_PROG([NETCDF_CONFIG],[nc-config],[nc-config])])
         NC_LIB="`${NETCDF_CONFIG} --flibs` ";
         NC_INC="-I`${NETCDF_CONFIG} --fflags`";
+        NC_FC="`${NETCDF_CONFIG} --fc` "
         AC_PATH_PROG([NETCDF_ROOT], [ncdump])
         NETCDF_ROOT=`dirname $NETCDF_ROOT`   # Strip /ncdump
         NETCDF_ROOT=`dirname $NETCDF_ROOT`;  # Strip /bin
     else
         NETCDF_CONFIG="${NETCDF_ROOT}/bin/nf-config"
-        NC_LIB="`${NETCDF_CONFIG} --flibs` ";
+        NC_FC="`${NETCDF_CONFIG} --fc` "
+        NC_LIB="`${NETCDF_CONFIG} --flibs` "
         NC_INC="-I`${NETCDF_CONFIG} --fflags` ";
     fi
 
@@ -92,7 +94,7 @@ AS_IF([test -d $NETCDF_ROOT/lib ],[AC_MSG_CHECKING([for -lnetcdff]);
 
 AC_SUBST(NC_INC)
 AC_SUBST(NC_LIB)
-
+AC_SUBST(NC_FC)
 #
 ax_netcdf_ok=yes
 
@@ -155,6 +157,7 @@ AC_MSG_NOTICE([Fortran OPENMPI:            OPENMP_FCFLAGS=$OPENMP_FCFLAGS])
 AC_MSG_NOTICE([Root directory of netcdf:   NETCDF=$NETCDF_ROOT])
 AC_MSG_NOTICE([Compiler flags for netcdf:  NC_INC=$NC_INC])
 AC_MSG_NOTICE([Linker flags for netcdf:    NC_LIB=$NC_LIB])
+AC_MSG_NOTICE([Fortran compiler netcdf:    NC_FC=$NC_FC])
 AC_MSG_NOTICE([Install prefix:             --prefix=$prefix])
 AC_MSG_NOTICE([Executables install prefix: --exec_prefix=$exec_prefix])
 AC_MSG_NOTICE([Binary directory:           --bindir=$bindir])

@@ -6,6 +6,7 @@ bin_PROGRAMS = emiss.exe
 # Additional files to be cleaned with 'make clean'
 CLEANFILES = *.o *.mod *~
 # Compiler flags
+  FC =$(NC_FC)
   AM_FCFLAGS  = $(NC_INC)
   AM_FCFLAGS += $(NC_LIB)
 # Parallel version

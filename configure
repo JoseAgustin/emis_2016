@@ -593,6 +593,7 @@ WITH_R4_FALSE
 WITH_R4_TRUE
 WITH_OMPI_FALSE
 WITH_OMPI_TRUE
+NC_FC
 NC_INC
 NETCDF_CONFIG
 OPENMP_FCFLAGS
@@ -4246,6 +4247,7 @@ fi
 fi
         NC_LIB="`${NETCDF_CONFIG} --flibs` ";
         NC_INC="-I`${NETCDF_CONFIG} --fflags`";
+        NC_FC="`${NETCDF_CONFIG} --fc` "
         # Extract the first word of "ncdump", so it can be a program name with args.
 set dummy ncdump; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
@@ -4290,7 +4292,8 @@ fi
         NETCDF_ROOT=`dirname $NETCDF_ROOT`;  # Strip /bin
     else
         NETCDF_CONFIG="${NETCDF_ROOT}/bin/nf-config"
-        NC_LIB="`${NETCDF_CONFIG} --flibs` ";
+        NC_FC="`${NETCDF_CONFIG} --fc` "
+        NC_LIB="`${NETCDF_CONFIG} --flibs` "
         NC_INC="-I`${NETCDF_CONFIG} --fflags` ";
     fi
 
@@ -5784,6 +5787,8 @@ $as_echo "$as_me: Root directory of netcdf:   NETCDF=$NETCDF_ROOT" >&6;}
 $as_echo "$as_me: Compiler flags for netcdf:  NC_INC=$NC_INC" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}: Linker flags for netcdf:    NC_LIB=$NC_LIB" >&5
 $as_echo "$as_me: Linker flags for netcdf:    NC_LIB=$NC_LIB" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}: Fortran compiler netcdf:    NC_FC=$NC_FC" >&5
+$as_echo "$as_me: Fortran compiler netcdf:    NC_FC=$NC_FC" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}: Install prefix:             --prefix=$prefix" >&5
 $as_echo "$as_me: Install prefix:             --prefix=$prefix" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}: Executables install prefix: --exec_prefix=$exec_prefix" >&5

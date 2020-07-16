@@ -176,7 +176,8 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EXEEXT = @EXEEXT@
-FC = @FC@
+# Compiler flags
+FC = $(NC_FC)
 FCFLAGS = @FCFLAGS@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -190,6 +191,7 @@ LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
+NC_FC = @NC_FC@
 NC_INC = @NC_INC@
 NC_LIB = @NC_LIB@
 NETCDF_CONFIG = @NETCDF_CONFIG@
@@ -255,7 +257,6 @@ top_srcdir = @top_srcdir@
 
 # Additional files to be cleaned with 'make clean'
 CLEANFILES = *.o *.mod *~
-# Compiler flags
 AM_FCFLAGS = $(NC_INC) $(NC_LIB) $(am__append_1)
 emiss_exe_SOURCES = g_emis2.F90
 all: all-am
