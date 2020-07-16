@@ -10,6 +10,7 @@ salida*
 .tmpfile
 libnetcdf*
 config.status
+Makefile
 02_aemis/Makefile
 03_movilspatial/Makefile
 04_temis/Makefile

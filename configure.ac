@@ -7,7 +7,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([DIETE], [1.1], [agustin@atmosfera.unam.mx])
+AC_INIT([DIETE], [2.1], [agustin@atmosfera.unam.mx])
 # Define our M4 macro directory
 AC_CONFIG_AUX_DIR([autoconf])
 AM_INIT_AUTOMAKE([1.11 foreign])
@@ -29,7 +29,7 @@ AC_PROG_FC
 # Make precious variables for ./configure --help
 AC_ARG_VAR(NETCDF_ROOT,[Root of netCDF installation or] (compile-time))
 AC_ARG_VAR(NETCDF_INC,[  Location of netCDF headers] (compile-time))
-AC_ARG_VAR(NETCDF_LIB,[  Location of netCDF library] (compile-time))
+AC_ARG_VAR(NC_LIB,[  Location of netCDF library] (compile-time))
 
 # Checks for libraries.
 
@@ -41,20 +41,19 @@ AC_FC_FREEFORM
 AC_OPENMP
 # Check for newunit option to open()
 AX_F08_NEWUNIT
-LDFLAGS=-lnetcdff
 if test -z "${NETCDF_ROOT}"; then
   AC_CHECK_PROG([NETCDF_CONFIG],[nf-config],[nf-config])
         # If not found, check for nc-config
   AS_IF([test -z "${NETCDF_CONFIG}"],
      [AC_CHECK_PROG([NETCDF_CONFIG],[nc-config],[nc-config])])
-        NC_LIB="`${NETCDF_CONFIG} --flibs` ${LDFLAGS}";
+        NC_LIB="`${NETCDF_CONFIG} --flibs` ";
         NC_INC="-I`${NETCDF_CONFIG} --fflags`";
         AC_PATH_PROG([NETCDF_ROOT], [ncdump])
         NETCDF_ROOT=`dirname $NETCDF_ROOT`   # Strip /ncdump
         NETCDF_ROOT=`dirname $NETCDF_ROOT`;  # Strip /bin
     else
         NETCDF_CONFIG="${NETCDF_ROOT}/bin/nf-config"
-        NC_LIB="`${NETCDF_CONFIG} --flibs` ${LDFLAGS}";
+        NC_LIB="`${NETCDF_CONFIG} --flibs` ";
         NC_INC="-I`${NETCDF_CONFIG} --fflags` ";
     fi
 
@@ -78,13 +77,13 @@ AS_IF([test -f $NETCDF_INC/netcdf.mod],
 AS_IF([ test -z "{$NC_INC}"],[NC_INC=-I$NETCDF_INC])
 # Set the netcdf linker flags
 AC_MSG_CHECKING([for netCDF library directory])
-AS_IF([test "X$NETCDF_LIB" = "X"],[NETCDF_LIB=$NETCDF_ROOT/lib])
-AC_MSG_RESULT([$NETCDF_LIB])
-AS_IF([test ! -d $NETCDF_LIB],[AC_MSG_ERROR([No such directory: $NETCDF_LIB])])
-AS_IF([test -z "$NC_LIB" ],[AC_MSG_CHECKING([for -lnetcdff]);
-    AS_IF([test -f $NETCDF_LIB/libnetcdff.a],
-    [NC_LIB="-L$NETCDF_LIB -lnetcdff -lnetcdf";AC_MSG_RESULT([yes])],
-    [NC_LIB="-L$NETCDF_LIB -lnetcdf";AC_MSG_RESULT([no])
+AS_IF([test "X$NC_LIB" = "X"],[NC_LIB=$NETCDF_ROOT/lib])
+AC_MSG_RESULT([$NC_LIB])
+AS_IF([test ! -d $NETCDF_ROOT/lib ],[AC_MSG_ERROR([No such directory: $NC_LIB])])
+AS_IF([test -d $NETCDF_ROOT/lib ],[AC_MSG_CHECKING([for -lnetcdff]);
+    AS_IF([test -f $NETCDF_ROOT/lib/libnetcdff.a],
+      [NC_LIB="$NC_LIB -lnetcdff -lnetcdf";AC_MSG_RESULT([yes])],
+      [NC_LIB="$NC_LIB -lnetcdf";AC_MSG_RESULT([no])
    ])
 ])
 #
