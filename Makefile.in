@@ -87,7 +87,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/autoconf/ax_f08_newunit.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(top_srcdir)/configure \
@@ -301,7 +302,7 @@ SUBDIRS = 02_aemis 03_movilspatial 04_temis 05_semisM 06_temisM \
 	07_puntual 08_spec 09_pm25spec 10_storage
 
 # Additional files or directories to be distributed
-EXTRA_DIST = AUTHOR LICENSE emis_2016.sh util namelist_emis.nml
+EXTRA_DIST = LICENSE emis_2016.sh util namelist_emis.nml
 all: all-recursive
 
 .SUFFIXES:
@@ -765,6 +766,9 @@ uninstall-am:
 
 .PRECIOUS: Makefile
 
+
+.PHONY: $(EXTRA_DIST)
+$(EXTRA_DIST):
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
