@@ -3,7 +3,7 @@
 !          Especiacion de PM2.5 en diferentes categorias para
 !          emisiones provenientes de fuentes de industriales fijas
 !
-!  compile: ifort -O2 -axAVX e_pm25_mod.F90 test_p.F90 -o spm25p.exe
+!  compile: ifort -O2 -axAVX e_pm25_mod.F90 pm25_speci_p.F90 -o spm25p.exe
 !
 !>  @brief does POINT emissions PM2.5 speciation
 !>

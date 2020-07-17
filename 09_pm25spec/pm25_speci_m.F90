@@ -3,7 +3,7 @@
 !          Especiacion de PM2.5 en diferentes categorias para
 !          emisiones provenientes de fuentes de vehiculares moviles
 !
-!  compile: ifort -O2 -axAVX e_pm25_mod.F90 test_m.F90 -o spm25m.exe
+!  compile: ifort -O2 -axAVX e_pm25_mod.F90 pm25_speci_m.F90 -o spm25m.exe
 !
 !>  @brief does MOBILE emissions PM2.5 speciation
 !>

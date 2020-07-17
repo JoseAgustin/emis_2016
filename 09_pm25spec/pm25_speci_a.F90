@@ -3,7 +3,7 @@
 !          Especiacion de PM2.5 en diferentes categorias para
 !          emisiones provenientes de fuentes de area
 !
-!  compile: ifort -O2 -axAVX e_pm25_mod.F90 test_a.F90 -o spm25a.exe
+!  compile: ifort -O2 -axAVX e_pm25_mod.F90 pm25_speci_a.F90 -o spm25a.exe
 !
 !>  @brief does AREA emissions PM2.5 speciation
 !>
