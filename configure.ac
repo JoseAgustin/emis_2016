@@ -47,7 +47,7 @@ if test -z "${NETCDF_ROOT}"; then
   AS_IF([test -z "${NETCDF_CONFIG}"],
      [AC_CHECK_PROG([NETCDF_CONFIG],[nc-config],[nc-config])])
         NC_LIB="`${NETCDF_CONFIG} --flibs` ";
-        NC_INC="-I`${NETCDF_CONFIG} --fflags`";
+        NC_INC="-I`${NETCDF_CONFIG} --includedir`";
         NC_FC="`${NETCDF_CONFIG} --fc` "
         AC_PATH_PROG([NETCDF_ROOT], [ncdump])
         NETCDF_ROOT=`dirname $NETCDF_ROOT`   # Strip /ncdump
@@ -56,7 +56,7 @@ if test -z "${NETCDF_ROOT}"; then
         NETCDF_CONFIG="${NETCDF_ROOT}/bin/nf-config"
         NC_FC="`${NETCDF_CONFIG} --fc` "
         NC_LIB="`${NETCDF_CONFIG} --flibs` "
-        NC_INC="-I`${NETCDF_CONFIG} --fflags` ";
+        NC_INC="-I`${NETCDF_CONFIG} --includedir` ";
     fi
 
 AC_MSG_NOTICE([setting netcdf root directory NETCDF_ROOT=$NETCDF_ROOT])
