@@ -82,7 +82,7 @@ AC_MSG_CHECKING([for netCDF library directory])
 AS_IF([test "X$NC_LIB" = "X"],[NC_LIB=$NETCDF_ROOT/lib])
 AC_MSG_RESULT([$NC_LIB])
 AS_IF([test ! -d $NETCDF_ROOT/lib ],[AC_MSG_ERROR([No such directory: $NC_LIB])])
-AS_IF([test -d $NETCDF_ROOT/lib ],[AC_MSG_CHECKING([for -lnetcdff]);
+AS_IF([test -n $NC_LIB ],[AC_MSG_CHECKING([for -lnetcdff]);
     AS_IF([test -f $NETCDF_ROOT/lib/libnetcdff.a],
       [NC_LIB="$NC_LIB -lnetcdff -lnetcdf";AC_MSG_RESULT([yes])],
       [NC_LIB="$NC_LIB -lnetcdf";AC_MSG_RESULT([no])
