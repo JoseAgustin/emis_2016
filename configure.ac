@@ -38,7 +38,7 @@ AC_ARG_VAR(NC_LIB,[  Location of netCDF library] (compile-time))
 # Checks for typedefs, structures, and compiler characteristics.
 AC_LANG_PUSH(Fortran)
 AC_FC_FREEFORM
-AC_OPENMP
+#AC_OPENMP
 # Check for newunit option to open()
 AX_F08_NEWUNIT
 if test -z "${NETCDF_ROOT}"; then
@@ -106,9 +106,10 @@ AC_ARG_ENABLE([parallel],
     yes) parallel=true ;;
      no) parallel=false ;;
       *) AC_MSG_ERROR([bad value ${enableval} for --enable-parallel]) ;;
-   esac], [parallel=true])
+   esac], [parallel=false])
    if test "${parallel}" = "true"; then
     FCFLAGS="${FCFLAGS} ";
+    AC_OPENMP
    else
     FCFLAGS="${FCFLAGS} ";
     fi
