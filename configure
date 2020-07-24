@@ -4099,7 +4099,7 @@ ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
 ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
-#AC_OPENMP
+
 # Check for newunit option to open()
 
 
@@ -4270,7 +4270,7 @@ fi
     else
         NETCDF_CONFIG="${NETCDF_ROOT}/bin/nf-config"
         NC_FC="`${NETCDF_CONFIG} --fc` "
-        NC_LIB="`${NETCDF_CONFIG} --flibs` "
+        NC_LIB="`${NETCDF_CONFIG} --flibs` ";
         NC_INC="-I`${NETCDF_CONFIG} --includedir` ";
     fi
 
@@ -4313,6 +4313,7 @@ fi
 if  test -z "{$NC_INC}"; then :
   NC_INC=-I$NETCDF_INC
 fi
+
 # Set the netcdf linker flags
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for netCDF library directory" >&5
 $as_echo_n "checking for netCDF library directory... " >&6; }
@@ -4361,7 +4362,6 @@ else
 fi
 
    if test "${parallel}" = "true"; then
-    FCFLAGS="${FCFLAGS} ";
 
   OPENMP_FCFLAGS=
   # Check whether --enable-openmp was given.
@@ -4428,8 +4428,9 @@ $as_echo "$ac_cv_prog_fc_openmp" >&6; }
   fi
 
 
+    FCFLAGS="${FCFLAGS} -O2";
    else
-    FCFLAGS="${FCFLAGS} ";
+    FCFLAGS="${FCFLAGS} -O2";
     fi
  if test "x$parallel" = "xtrue"; then
   WITH_OMPI_TRUE=

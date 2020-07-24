@@ -21,8 +21,8 @@ integer,parameter :: nf=11 ;!> number of max lines in emiA
 integer,parameter :: nh=24  ;!> max number of scc descriptors in input files
 integer,parameter :: nnscc=36
 !> number of emissions file
-integer :: nm ! line number in emissions file
-; !> if is dayligth time saving period
+integer :: nm ! grid number in emissions file
+!> if is dayligth time saving period
 integer :: iverano  ! si es en periodo de verano
 !> Day for temporal emissions computations
 integer :: idia     ! dia para el calculo de emisiones
@@ -188,10 +188,10 @@ subroutine mobile_spatial_reading
 	end do
 	close(10)
 	print *,"Done reading: ",efile(k)
-!  REading and findig monthly, week and houry code profiles
+!  Reading and findig monthly, week and houry code profiles
     inquire(15,opened=fil1)
     if(.not.fil1) then
-      canio="../01_datos/time/"//"temporal_01.txt"
+      canio="../01_datos/time/temporal_01.txt"
 	  open(unit=15,file=canio,status='OLD',action='read')
 	else
 	  rewind(15)
@@ -208,11 +208,11 @@ subroutine mobile_spatial_reading
 		end do
 	  end do
  200 continue
-     !print '(A3,<nscc(k)>(I5))','mon',(profile(1,i,k),i=1,nscc(k))
-     !print '(A3,<nscc(k)>(I4,x))','day',(profile(2,i,k),i=1,nscc(k))
-	 !print '(A3,<nscc(k)>(I4,x))','hr ',(profile(3,i,k),i=1,nscc(k))
+    !print '(A3,<nscc(k)>(I5))','mon',(profile(1,i,k),i=1,nscc(k))
+    !print '(A3,<nscc(k)>(I4,x))','day',(profile(2,i,k),i=1,nscc(k))
+    !print '(A3,<nscc(k)>(I4,x))','hr ',(profile(3,i,k),i=1,nscc(k))
 	 print *,'   Done Temporal_01'
-!  REading and findig monthly  profile
+!  Reading and findig monthly  profile
     inquire(16,opened=fil1)
     if(.not.fil1) then
         canio="../01_datos/time/"//"temporal_mon.txt"
@@ -403,14 +403,18 @@ subroutine mobile_spatial_reading
   close(18)
   close(19)
 end subroutine mobile_spatial_reading
-!            _    _ _
-!  _ __  ___| |__(_) |___
-! | '  \/ _ \ '_ \ | / -_)
-! |_|_|_\___/_.__/_|_\___|          _      _ _    _       _ _         _   _
-! | |_ ___ _ __  _ __  ___ _ _ __ _| |  __| (_)__| |_ _ _(_) |__ _  _| |_(_)___ _ _
-! |  _/ -_) '  \| '_ \/ _ \ '_/ _` | | / _` | (_-<  _| '_| | '_ \ || |  _| / _ \ ' \
-!  \__\___|_|_|_| .__/\___/_| \__,_|_|_\__,_|_/__/\__|_| |_|_.__/\_,_|\__|_\___/_||_|
-!              |_|                 |___|
+!                  _     _ _         _                                       _
+!  _ __ ___   ___ | |__ (_) | ___   | |_ ___ _ __ ___  _ __   ___  _ __ __ _| |
+! | '_ ` _ \ / _ \| '_ \| | |/ _ \  | __/ _ \ '_ ` _ \| '_ \ / _ \| '__/ _` | |
+! | | | | | | (_) | |_) | | |  __/  | ||  __/ | | | | | |_) | (_) | | | (_| | |
+! |_| |_| |_|\___/|_.__/|_|_|\___|___\__\___|_| |_| |_| .__/ \___/|_|  \__,_|_|
+!                              |_____|               |_|
+!      _ _     _        _ _           _   _
+!   __| (_)___| |_ _ __(_) |__  _   _| |_(_) ___  _ __
+!  / _` | / __| __| '__| | '_ \| | | | __| |/ _ \| '_ \
+! | (_| | \__ \ |_| |  | | |_) | |_| | |_| | (_) | | | |
+!  \__,_|_|___/\__|_|  |_|_.__/ \__,_|\__|_|\___/|_| |_|
+!
 !>  @brief Computes the hourly emissions based on SCC temporal profiles from annual to hourly.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  07/13/2020
@@ -420,11 +424,17 @@ subroutine mobile_temporal_distribution
 	implicit none
 	integer i,j,k,l,ival,ii
 !
-    call count ! computes the number of different cells
-!
+!    call count ! computes the number of unique cells
+    allocate(emis(nm,nf-2,nh))
+    allocate(epm2(nm,nscc(nf-1),nh))
+    allocate(evoc(nm,nscc(nf),nh))
+    emis=0
+    epm2=0
+    evoc=0
+    write(6,180)
 ! For inorganics
 !
-     mes=mes*fweek! weeks per month
+     mes=mes*fweek! computes nuber of weeks per month
 
 	do k=1,nf-2
 	  do i=1,nm
@@ -464,6 +474,7 @@ subroutine mobile_temporal_distribution
 		    end do
 		  end do
 	  end do
+180 format(7x,"++++++    Starting Computations")
 	end subroutine mobile_temporal_distribution
 !            _    _ _
 !  _ __  ___| |__(_) |___
@@ -487,7 +498,7 @@ subroutine mobile_temporal_storing
 !$omp parallel sections num_threads (3) private(iun,i,l)
 !$omp section
   do k=1,nf-2
-    print *,'Storing: ',casn(k),' ',efile(k)
+    write(6,170) casn(k),efile(k)
     open(newunit=iun,file=casn(k),action='write')
     write(iun,*)casn(k),',ID, Hr to Hr24,g/h'
     write(iun,'(I8,4A)')size(emis,dim=1),",",current_date,', ',cdia(daytype)
@@ -504,7 +515,7 @@ subroutine mobile_temporal_storing
 !$omp section
    k=nf-1
 ! WARNING iscc voc must be the last one to be read.
-  print *,casn(k),efile(k)
+  write(6,170) casn(k),efile(k)
   open(newunit=iun,file=casn(k),action='write')
   write(iun,*)casn(k),'ID, SCC,  Hr to Hr24'
   write(iun,'(I8,4A)')size(epm2,dim=1)*nscc(k),', ',current_date,', ',cdia(daytype)
@@ -521,7 +532,7 @@ subroutine mobile_temporal_storing
 !$omp section
 ! WARNING iscc voc must be the last one to be read.
   k=nf
-  print *,casn(k),efile(k)
+  write(6,170) casn(k),efile(k)
   open(newunit=iun,file=casn(k),action='write')
   write(iun,*)casn(k),'ID, SCC,  Hr to Hr24'
   write(iun,'(I8,4A)')size(evoc,dim=1)*nscc(k),', ',current_date,', ',cdia(daytype)
@@ -541,8 +552,10 @@ subroutine mobile_temporal_storing
     deallocate(emis)
     deallocate(evoc)
     deallocate(epm2)
-    print*,"*****  DONE MOBILE TEMPORAL *****"
+    write(6,180)
 110 format(I7,",",A10,",",23(ES12.4,","),ES12.4)
+170 format(5x,"Storing: ",A15,1x,A15)
+180 format(7x,"*****  DONE MOBILE TEMPORAL *****")
 end subroutine mobile_temporal_storing
 !                        _
 !   ___ ___  _   _ _ __ | |_
@@ -565,10 +578,10 @@ subroutine count
       idcel2(j)=idcel(i)
     end if
   end do
-  print *,'Number of different cells',j
-  allocate(emis(j,nf-2,nh))
-  allocate(epm2(j,nscc(nf-1),nh))
-  allocate(evoc(j,nscc(nf),nh))
+  print *,'Number of unique grids',j,nm
+  allocate(emis(nm,nf-2,nh))
+  allocate(epm2(nm,nscc(nf-1),nh))
+  allocate(evoc(nm,nscc(nf),nh))
   emis=0
   evoc=0
   emp2=0
@@ -592,10 +605,12 @@ if (perfili.eq.2013) then; perfilo=perfili+(idia-1)*100
 else;perfilo=perfili;end if
 
 end subroutine adecua
-!  _  ____   _____ ___    _   _  _  ___
-! | |/ /\ \ / / __| _ \  /_\ | \| |/ _ \
-! | ' <  \ V /| _||   / / _ \| .` | (_) |
-! |_|\_\  \_/ |___|_|_\/_/ \_\_|\_|\___/
+!  _
+! | | ____   _____ _ __ __ _ _ __   ___
+! | |/ /\ \ / / _ \ '__/ _` | '_ \ / _ \
+! |   <  \ V /  __/ | | (_| | | | | (_) |
+! |_|\_\  \_/ \___|_|  \__,_|_| |_|\___/
+!
 !>  @brief Identifies if it is summert time period and if it is considered  or not.
 !>   Returns 1 if the date is within daysaving time period
 !>   @author  Jose Agustin Garcia Reynoso
@@ -631,11 +646,16 @@ integer function kverano(ida,mes)
     end if
 233 format("******  HORARIO de VERANO *******",/,3x,"Abril ",I2,x,"a Octubre ",I2)
 end function
-!  _                               _ _    _    _   _
-! | |___ ___   _ _  __ _ _ __  ___| (_)__| |_ | |_(_)_ __  ___
-! | / -_) -_) | ' \/ _` | '  \/ -_) | (_-<  _||  _| | '  \/ -_)
-! |_\___\___|_|_||_\__,_|_|_|_\___|_|_/__/\__|_\__|_|_|_|_\___|
-!          |___|                            |___|
+!  _                                          _ _     _
+! | | ___  ___     _ __   __ _ _ __ ___   ___| (_)___| |_
+! | |/ _ \/ _ \   | '_ \ / _` | '_ ` _ \ / _ \ | / __| __|
+! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_
+! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|
+!  _   _     |_____|
+! | |_(_)_ __ ___   ___
+! | __| | '_ ` _ \ / _ \
+! | |_| | | | | | |  __/
+!  \__|_|_| |_| |_|\___|
 !>  @brief Reads global namelist input file for setting up the temporal settings.
 !>
 !> reads variables idia, month, anio and periodo used for time specification

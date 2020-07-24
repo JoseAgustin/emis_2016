@@ -38,7 +38,7 @@ AC_ARG_VAR(NC_LIB,[  Location of netCDF library] (compile-time))
 # Checks for typedefs, structures, and compiler characteristics.
 AC_LANG_PUSH(Fortran)
 AC_FC_FREEFORM
-#AC_OPENMP
+
 # Check for newunit option to open()
 AX_F08_NEWUNIT
 if test -z "${NETCDF_ROOT}"; then
@@ -55,7 +55,7 @@ if test -z "${NETCDF_ROOT}"; then
     else
         NETCDF_CONFIG="${NETCDF_ROOT}/bin/nf-config"
         NC_FC="`${NETCDF_CONFIG} --fc` "
-        NC_LIB="`${NETCDF_CONFIG} --flibs` "
+        NC_LIB="`${NETCDF_CONFIG} --flibs` ";
         NC_INC="-I`${NETCDF_CONFIG} --includedir` ";
     fi
 
@@ -77,6 +77,7 @@ AS_IF([test -f $NETCDF_INC/netcdf.mod],
    [AC_MSG_ERROR([File: netcdf.mod was not found in $NETCDF_INC
    Probably the Fortran version of NetCDF is not correctly installed])])
 AS_IF([ test -z "{$NC_INC}"],[NC_INC=-I$NETCDF_INC])
+
 # Set the netcdf linker flags
 AC_MSG_CHECKING([for netCDF library directory])
 AS_IF([test "X$NC_LIB" = "X"],[NC_LIB=$NETCDF_ROOT/lib])
@@ -108,10 +109,10 @@ AC_ARG_ENABLE([parallel],
       *) AC_MSG_ERROR([bad value ${enableval} for --enable-parallel]) ;;
    esac], [parallel=false])
    if test "${parallel}" = "true"; then
-    FCFLAGS="${FCFLAGS} ";
     AC_OPENMP
+    FCFLAGS="${FCFLAGS} -O2";
    else
-    FCFLAGS="${FCFLAGS} ";
+    FCFLAGS="${FCFLAGS} -O2";
     fi
 AM_CONDITIONAL([WITH_OMPI], [test "x$parallel" = "xtrue"])
 
