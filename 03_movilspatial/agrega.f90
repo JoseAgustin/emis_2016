@@ -180,7 +180,7 @@ contains
     do j =1,nm2
      if(grid(i).eq.grid2(j)) then
         do k=j,nm2
-         if(grid(i).eq.grid2(k).and.icve(i).eq.icve2(k).and.not(xl(k))) then
+    if(grid(i).eq.grid2(k).and.icve(i).eq.icve2(k).and. .not.(xl(k))) then
           fv3(i)=fcv(k)
           xl(k)=.true.
          !print *,grid3(i),icve3(i),fc3(i),fv3(i),i
@@ -194,7 +194,7 @@ contains
     do j =1,nm2
     if(grid(i).eq.grid2(j)) then
      do k=j,nm2
-      if(grid(i).eq.grid2(k).and.icve(i).ne.icve2(k).and.not(xl(k))) then
+    if(grid(i).eq.grid2(k).and.icve(i).ne.icve2(k).and. .not.(xl(k))) then
           icve3(m )=icve2(k)
           grid3(m)=grid2(k)
           fc3(m)= 0
@@ -208,7 +208,7 @@ contains
     end do !j
     end do !i
     do i=1,nm2
-      if(not(xl(i))) then
+    if(.not.(xl(i))) then
         icve3(m)=icve2(i)
         grid3(m)=grid2(i)
         fc3(m)=0

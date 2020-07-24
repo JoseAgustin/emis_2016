@@ -89,7 +89,8 @@ POST_UNINSTALL = :
 bin_PROGRAMS = carr.exe$(EXEEXT) vial.exe$(EXEEXT) agrega.exe$(EXEEXT)
 subdir = 03_movilspatial
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/autoconf/ax_f08_newunit.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
@@ -213,6 +214,7 @@ LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
+NC_FC = @NC_FC@
 NC_INC = @NC_INC@
 NC_LIB = @NC_LIB@
 NETCDF_CONFIG = @NETCDF_CONFIG@

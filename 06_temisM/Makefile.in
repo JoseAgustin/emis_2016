@@ -87,9 +87,12 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 bin_PROGRAMS = Mtemporal.exe$(EXEEXT)
+# Parallel version
+@WITH_OMPI_TRUE@am__append_1 = $(OPENMP_FCFLAGS)
 subdir = 06_temisM
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/autoconf/ax_f08_newunit.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
@@ -114,11 +117,12 @@ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
 am__v_at_0 = @
 am__v_at_1 = 
 DEFAULT_INCLUDES = -I.@am__isrc@
-FCCOMPILE = $(FC) $(AM_FCFLAGS) $(FCFLAGS)
-AM_V_FC = $(am__v_FC_@AM_V@)
-am__v_FC_ = $(am__v_FC_@AM_DEFAULT_V@)
-am__v_FC_0 = @echo "  FC      " $@;
-am__v_FC_1 = 
+PPFCCOMPILE = $(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_FCFLAGS) $(FCFLAGS)
+AM_V_PPFC = $(am__v_PPFC_@AM_V@)
+am__v_PPFC_ = $(am__v_PPFC_@AM_DEFAULT_V@)
+am__v_PPFC_0 = @echo "  PPFC    " $@;
+am__v_PPFC_1 = 
 FCLD = $(FC)
 FCLINK = $(FCLD) $(AM_FCFLAGS) $(FCFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o \
 	$@
@@ -187,6 +191,7 @@ LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
+NC_FC = @NC_FC@
 NC_INC = @NC_INC@
 NC_LIB = @NC_LIB@
 NETCDF_CONFIG = @NETCDF_CONFIG@
@@ -252,16 +257,15 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 #
 # Compiler flags
-# Parallel version
-@WITH_OMPI_TRUE@AM_FCFLAGS = $(OPENMP_FCFLAGS)
+AM_FCFLAGS = $(NC_INC) $(am__append_1)
 
 # Additional files to be cleaned with 'make clean'
 CLEANFILES = *.o *.mod *~
-Mtemporal_exe_SOURCES = movil_temp.f90
+Mtemporal_exe_SOURCES = movil_temp.F90
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .f90 .o .obj
+.SUFFIXES: .F90 .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -344,11 +348,11 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-.f90.o:
-	$(AM_V_FC)$(FCCOMPILE) -c -o $@ $<
+.F90.o:
+	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $@ $<
 
-.f90.obj:
-	$(AM_V_FC)$(FCCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+.F90.obj:
+	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique

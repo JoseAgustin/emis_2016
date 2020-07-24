@@ -127,7 +127,7 @@ open(unit=11,file='salida.csv',action='write')
     write(11, *)"GRID, CVE_ENT_MUN, frac, suma"
     do i=1,size(grid2)
 #ifndef PGI
-     write(11, '(I8,",",I6,2(",",ES))') grid2(i),icve3(i),rc(i),sum(i)
+     write(11, '(I8,",",I6,2(",",ES14.7))') grid2(i),icve3(i),rc(i),sum(i)
 #else
      write(11, '(I8,",",I6,2(",",E))') grid2(i),icve3(i),rc(i),sum(i)
 #endif
@@ -140,7 +140,7 @@ end subroutine highway_fraction_saving
 !>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine count
-    use vars
+    use highway_vars_mod
     logical,allocatable::xl(:)
     allocate(xl(size(icve)))
     xl=.true.
