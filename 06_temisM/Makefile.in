@@ -102,7 +102,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_Mtemporal_exe_OBJECTS = movil_temp.$(OBJEXT)
+am_Mtemporal_exe_OBJECTS = check.$(OBJEXT) movil_temp.$(OBJEXT)
 Mtemporal_exe_OBJECTS = $(am_Mtemporal_exe_OBJECTS)
 Mtemporal_exe_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -261,7 +261,7 @@ AM_FCFLAGS = $(NC_INC) $(NC_LIB) $(am__append_1)
 
 # Additional files to be cleaned with 'make clean'
 CLEANFILES = *.o *.mod *~
-Mtemporal_exe_SOURCES = movil_temp.F90
+Mtemporal_exe_SOURCES = check.F90 movil_temp.F90
 all: all-am
 
 .SUFFIXES:

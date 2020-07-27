@@ -15,4 +15,4 @@ endif
 
 # Additional files to be cleaned with 'make clean'
 CLEANFILES = *.o *.mod *~
-Mtemporal_exe_SOURCES = movil_temp.F90
+Mtemporal_exe_SOURCES = check.F90 movil_temp.F90

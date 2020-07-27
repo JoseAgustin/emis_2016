@@ -16,10 +16,25 @@ module movil_temporal_mod
 integer :: month   ;!> type day (1=Mon, 2= Tue, ... 7=Sun)
 integer :: daytype ! tipo de dia 1 lun a 7 dom
 !> Hourly temporal profile
-integer :: perfil  ;!> number of emission files
-integer,parameter :: nf=11 ;!> number of max lines in emiA
-integer,parameter :: nh=24  ;!> max number of scc descriptors in input files
-integer,parameter :: nnscc=36
+integer :: perfil  ;!> number of pollutant emission files
+integer,parameter :: nf=11 ;!> hours per day
+integer,parameter :: hday=24 ;!> max number of scc descriptors in input files
+integer,parameter :: nnscc=36; !> x dim for grid temporal prifiles gridded
+integer,parameter :: nxt=28  ; !> y dim for grid temporal prifiles gridded
+integer,parameter :: nyt=34  ; !> Day type 1 weekday, 2 saturday, 3 sunday
+integer,parameter :: iday=3  ; !> Pollutant ID in temporl profile  CO,NO,VOC, VOC Diesel, SO2
+integer,parameter :: ispc=5  ; !> Type number of vehicle  1 all, 2 automobile gas
+integer,parameter :: v_type=9 ;!> stores gricode values for grids with temporal profiles
+integer,allocatable :: idcg(:) ;!> stores gricode value from localiza.csv
+integer,allocatable :: idcg2(:);!> i index in temporal domain for each gricode
+integer,allocatable :: idx(:) ;!> j index in temporal domain for each gricode
+integer,allocatable :: idy(:) ;!> array with map scc domain and TP domain SCC
+integer,allocatable :: mscc(:);!> longitudes in output file from localiza
+real,allocatable :: xlon(:)  ;!> latitudes in output file from localiza
+real,allocatable :: xlat(:)  ;!> longitud coordinate for temporal profile mesh
+real,dimension(nxt,nyt) :: tlon;!> latitude coordinate for temporal profile mesh
+real,dimension(nxt,nyt) :: tlat ;!>t_prof_m gridded temporal profiles
+real,dimension(nxt,nyt,iday,ispc,v_type,hday)::t_prof_m
 !> number of emissions file
 integer :: nm ! grid number in emissions file
 !> if is dayligth time saving period
@@ -36,34 +51,37 @@ integer,dimension(2014:2020) :: inicia ! dia inicial del horario de verano
 integer,dimension(2014:2020) :: termina  ! dia fin del horario de verano
 !> number of scc codes per file
 integer,dimension(nf) :: nscc    ;!> GRIDID in emissions
-integer, allocatable :: idcel(:) ;!> GRIDID not duplictes
-integer, allocatable :: idcel2(:);!> Difference in number of hours (CST, PST, MST)
+integer, allocatable :: idcel(:) ;!> Difference in number of hours (CST, PST, MST)
 integer, allocatable :: mst(:)   ;!> days in a month
 integer,dimension(12) :: daym    ;!> fraction = weeks/month days
 real :: fweek                    ;!> Mobile emisions from files cel,ssc,file
-real,allocatable ::emiM(:,:,:)   ;!> Emission by cel,file and hour (inorganic)
+real,allocatable :: emiM(:,:,:)   ;!> Emission by cel,file and hour (inorganic)
 real,allocatable :: emis(:,:,:)  ;!> VOC emissions cel,scc and hour
 real,allocatable :: evoc(:,:,:)  ;!> PM2.5 emissions cel,scc and hour
-real,allocatable :: epm2(:,:,:)
+real,allocatable :: epm2(:,:,:)  ;!> Time zone  CST for gridded temporal profiles
+real,allocatable :: tCST(:,:,:,:) ! idcel,pollutant,veh_type,hrs
 !> month interger
 real,dimension(nnscc,nf) :: mes ;!> current day
 real,dimension(nnscc,nf) :: dia ;!> previus day
 real,dimension(nnscc,nf) ::diap ! dia currentday, diap previous day
 !> Time zone  CST
-real,dimension(nnscc,nf,nh):: hCST ;!> Time zone MST
-real,dimension(nnscc,nf,nh):: hMST ;!> Time zone PST
-real,dimension(nnscc,nf,nh):: hPST ;!> Time zone EST
-real,dimension(nnscc,nf,nh):: hEST
+real,dimension(nnscc,nf,hday):: hCST ;!> Time zone MST
+real,dimension(nnscc,nf,hday):: hMST ;!> Time zone PST
+real,dimension(nnscc,nf,hday):: hPST ;!> Time zone EST
+real,dimension(nnscc,nf,hday):: hEST
 !> profile ID 1=mon 2=weekday 3=hourly per SCC and pollutant.
 integer,dimension(3,nnscc,nf):: profile  ! 1=mon 2=weekday 3=hourly
 !> SCC codes per file
 character (len=10),dimension(nnscc) ::iscc
+character(len=10),dimension(v_type,1)::cscc
 !> Initial date of the emissions period
 character (len=19) :: current_date
 !> during summer period  consider timasvaing .true. or not .false.
 logical :: lsummer ; !> Input file name
 character(len=14),dimension(nf) :: efile ; !> output file name
 character(len=14),dimension(nf) :: casn
+!> geogrphical area selected in namelist_emis.nml
+character(len=12):: zona
 
  data efile / 'M_CO.csv' ,'M_NH3.csv','M_NO2.csv','M_NO.csv',&
               'M_SO2.csv','M_CN.csv' ,'M_CO2.csv','M_CH4.csv',&
@@ -80,16 +98,19 @@ character(len=14),dimension(nf) :: casn
 !              2014 2015 2016 2017 2018 2019 2020
     data inicia  /6,  5,   3,   2,   1,  7,   5/
     data termina /26,25,  30,  29,  28, 27,  25/
-common /vars/ fweek,nscc,nm,daytype,perfil,mes,dia,hora,current_date
-common /nlm_vars/lsummer,month,idia,anio,periodo,inicia,termina
-
+common /vars/ fweek,nscc,nm,daytype,perfil,mes,hora,current_date
+common /nlm_vars/lsummer,month,idia,anio,periodo,inicia,termina,daym
+common /emi_vars/dia,diap,hCST,hMST,hPST,hEST,efile,casn,iscc
+common /domain/ iverano,zona
+common /leenetcdf/profile,tlon,tlat,t_prof_m,cscc
 end module movil_temporal_mod
-!                _ _  _                                _
-!  _ __  _____ _(_) || |_ ___ _ __  _ __  ___ _ _ __ _| |
-! | '  \/ _ \ V / | ||  _/ -_) '  \| '_ \/ _ \ '_/ _` | |
-! |_|_|_\___/\_/|_|_|_\__\___|_|_|_| .__/\___/_| \__,_|_|
-!                  |___|           |_|
-!
+
+!                       _ _    _                                       _
+!  _ __ ___   _____   _(_) |  | |_ ___ _ __ ___  _ __   ___  _ __ __ _| |
+! | '_ ` _ \ / _ \ \ / / | |  | __/ _ \ '_ ` _ \| '_ \ / _ \| '__/ _` | |
+! | | | | | | (_) \ V /| | |  | ||  __/ | | | | | |_) | (_) | | | (_| | |
+! |_| |_| |_|\___/ \_/ |_|_|___\__\___|_| |_| |_| .__/ \___/|_|  \__,_|_|
+!                        |_____|               |_|
 !  Progran  movil_temp.f90
 !
 !  Make the temporal distribution of mobile emissions
@@ -102,15 +123,46 @@ end module movil_temporal_mod
 program movil_temporal
    use movil_temporal_mod
 
-   call lee_namelist_time
+    call lee_namelist_zone_time
 
-   call mobile_spatial_reading
+    call mobile_spatial_reading
 
-   call mobile_temporal_distribution
+    call lee_movil_temp
 
-   call mobile_temporal_storing
+    call lee_localiza
+
+    call ubicar
+
+    if(size(idcg).gt.1) call crea_perfil
+
+    call mobile_temporal_distribution
+
+    call mobile_temporal_storing
+
+    call libera_memoria
 
 contains
+!>  @brief Deallocates allocated arrays.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  07/13/2020
+!>   @version  2.2
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+subroutine libera_memoria
+
+  if(allocated(idcel))  deallocate(idcel)
+  if(allocated(mst))    deallocate(mst)
+  if(allocated(emiM))   deallocate(emiM)
+  if(allocated(emis))   deallocate(emis)
+  if(allocated(evoc))   deallocate(evoc)
+  if(allocated(epm2))   deallocate(epm2)
+  if(allocated(idcg))   deallocate(idcg)
+  if(allocated(tCST))   deallocate(tCST)
+
+  write(6,170)
+  write(6,180)
+170 format(7x,"XXXXXX  Released memory    XXXXXX")
+180 format(7x,"*****  DONE MOBILE TEMPORAL *****")
+end subroutine libera_memoria
 !            _    _ _
 !  _ __  ___| |__(_) |___
 ! | '  \/ _ \ '_ \ | / -_)
@@ -125,15 +177,15 @@ contains
 !>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine mobile_spatial_reading
-	implicit none
-	integer i,j,k,l,m,iprof
-	integer idum,imon,iwk,ipdy
-	integer,dimension(25) :: itfrc  !montly,weekely and hourly values and total
-	real rdum
-	logical fil1,fil2
+  implicit none
+  integer i,j,k,l,m,iprof
+  integer idum,imon,iwk,ipdy
+  integer,dimension(25) :: itfrc  !montly,weekely and hourly values and total
+  real rdum
+  logical fil1,fil2
   character (len=10):: jscc ! scc code from temporal file
-	character(len=4):: cdum
-	character(len=18):: nfile,nfilep
+  character(len=4):: cdum
+  character(len=18):: nfile,nfilep
   character(len=35):: canio
 
     write(current_date,'(I4,"-",I2.2,"-",I2.2,A9)')anio,month,idia,'_00:00:00'
@@ -160,9 +212,9 @@ subroutine mobile_spatial_reading
         end do
 95  continue
     close(10)
-	if(daytype.eq.0) STOP 'Error in daytype=0'
+	if(daytype.eq.0) STOP 'Error in daytype = 0'
 !
-	do k=1,nf
+	do k=1,nf  ! per pollutant
 	open (unit=10,file="../05_semisM/"//efile(k),status='OLD',action='read')
 	read (10,'(A)') cdum
 	read (10,*) nscc(k),(iscc(i),i=1,nscc(k))
@@ -177,7 +229,7 @@ subroutine mobile_spatial_reading
      !print *,nm
 	 rewind(10)
 	 if(k.eq.1) then
-	allocate(idcel(nm),idcel2(nm),mst(nm))
+	allocate(idcel(nm),mst(nm))
 	allocate(emiM(nm,nnscc,nf))
 	end if
 	read (10,'(A)') cdum
@@ -275,33 +327,33 @@ subroutine mobile_spatial_reading
            call adecua(profile(3,i,k),daytype,perfil)
 	      if(iprof.eq.perfil) then
             m=4-iverano
-            do l=1,nh
-            if(m+l.gt.nh) then
-              hEST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+            do l=1,hday
+            if(m+l.gt.hday) then
+              hEST(i,k,m+l-hday)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
             else
               hEST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
             end if
             end do
 		    m=5-iverano
-		    do l=1,nh
-            if(m+l.gt.nh) then
-                hCST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+		    do l=1,hday
+            if(m+l.gt.hday) then
+                hCST(i,k,m+l-hday)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
             else
                 hCST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
             end if
 			end do
 		    m=6-iverano
-            do l=1,nh
-            if(m+l.gt.nh) then
-                hMST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+            do l=1,hday
+            if(m+l.gt.hday) then
+                hMST(i,k,m+l-hday)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
             else
                 hMST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
             end if
 			end do
 		    m=7-iverano
-            do l=1,nh
-            if(m+l.gt.nh) then
-                hPST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+            do l=1,hday
+            if(m+l.gt.hday) then
+                hPST(i,k,m+l-hday)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
             else
                 hPST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
             end if
@@ -310,7 +362,7 @@ subroutine mobile_spatial_reading
 		end do dias!i
 	 end do  !  Files 18
  230 continue
-!   do l=1,nh
+!   do l=1,hday
 !    print '(A3,x,I3,x,<nscc(k)>(f7.4))','hr',l,(hCST(i,k,l),i=1,nscc(k))
 !   end do
 
@@ -329,56 +381,56 @@ subroutine mobile_spatial_reading
             call adecua(profile(3,i,k),daytype,perfil)
             if(iprof.eq.perfil) then
             m=4-iverano
-            do l=1,nh
+            do l=1,hday
             if(daytype.eq.1 )then
-                if(m+l.gt.nh) then
-                 hEST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+                if(m+l.gt.hday) then
+                 hEST(i,k,m+l-hday)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
                 end if
             else
-                if(m+l.gt.nh) then
-                 hEST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+                if(m+l.gt.hday) then
+                 hEST(i,k,m+l-hday)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
                 else
                  hEST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
                 end if
             end if  ! daytype
             end do
             m=5-iverano
-            do l=1,nh
+            do l=1,hday
             if(daytype.eq.1) then
-                if(m+l.gt.nh) then
-                 hCST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+                if(m+l.gt.hday) then
+                 hCST(i,k,m+l-hday)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
                 end if
             else
-                if(m+l.gt.nh) then
-                 hCST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+                if(m+l.gt.hday) then
+                 hCST(i,k,m+l-hday)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
                 else
                  hCST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
                 end if
             end if !daytype
             end do
             m=6-iverano
-            do l=1,nh
+            do l=1,hday
             if(daytype.eq.1) then
-                if(m+l.gt.nh) then
-                 hMST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+                if(m+l.gt.hday) then
+                 hMST(i,k,m+l-hday)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
                 end if
             else
-                if(m+l.gt.nh) then
-                 hMST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+                if(m+l.gt.hday) then
+                 hMST(i,k,m+l-hday)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
                 else
                  hMST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
                 end if
             end if !daytype
             end do
             m=7-iverano
-            do l=1,nh
+            do l=1,hday
             if(daytype.eq.1 )then
-                if(m+l.gt.nh) then
-                 hPST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+                if(m+l.gt.hday) then
+                 hPST(i,k,m+l-hday)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
                 end if
             else
-                if(m+l.gt.nh) then
-                 hPST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+                if(m+l.gt.hday) then
+                 hPST(i,k,m+l-hday)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
                 else
                  hPST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
                 end if
@@ -390,7 +442,7 @@ subroutine mobile_spatial_reading
         end do ! File 19
     240 continue
 !
-!      do l=1,nh
+!      do l=1,hday
 !        print '("Hr",x,I3,x,<nscc(k)>(f7.4))', l,(hCST(i,k,l),i=1,nscc(k))
 !      end do
 !
@@ -424,10 +476,9 @@ subroutine mobile_temporal_distribution
 	implicit none
 	integer i,j,k,l,ival,ii
 !
-!    call count ! computes the number of unique cells
-    allocate(emis(nm,nf-2,nh))
-    allocate(epm2(nm,nscc(nf-1),nh))
-    allocate(evoc(nm,nscc(nf),nh))
+    allocate(emis(nm,nf-2,hday))
+    allocate(epm2(nm,nscc(nf-1),hday))
+    allocate(evoc(nm,nscc(nf),hday))
     emis=0
     epm2=0
     evoc=0
@@ -437,11 +488,19 @@ subroutine mobile_temporal_distribution
      mes=mes*fweek! computes nuber of weeks per month
 
 	do k=1,nf-2
-	  do i=1,nm
-		  do l=1,nh
+	  do i=1,nm  ! idcel(i)
+		  do l=1,hday
 	        do j=1,nscc(k)
     if(mst(i).eq.5) emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hEST(j,k,l)
-    if(mst(i).eq.6) emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hCST(j,k,l)
+    if(mst(i).eq.6) then
+        do ii=1,size(idcg)
+          if(idcg(ii).eq. idcel(i)) then
+            emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*tCST(ii,k,j,l)
+          else
+            emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hCST(j,k,l)
+          end if
+        end do
+    end if
     if(mst(i).eq.7) emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hMST(j,k,l)
     if(mst(i).eq.8) emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hPST(j,k,l)
 		    end do
@@ -452,10 +511,18 @@ subroutine mobile_temporal_distribution
 !
 	k=nf-1
    do i=1,nm
-		  do l=1,nh
+		  do l=1,hday
 	        do j=1,nscc(k)
     if(mst(i).eq.5) epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hEST(j,k,l)
-    if(mst(i).eq.6) epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hCST(j,k,l)
+    if(mst(i).eq.6)then
+        do ii=1,size(idcg)
+          if(idcg(ii).eq. idcel(i)) then
+            epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*tCST(ii,k,j,l)
+          else
+            epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hCST(j,k,l)
+          end if
+        end do
+    end if
     if(mst(i).eq.7) epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hMST(j,k,l)
     if(mst(i).eq.8) epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hPST(j,k,l)
 		    end do
@@ -465,10 +532,18 @@ subroutine mobile_temporal_distribution
 !
 	k=nf
    do i=1,nm
-		  do l=1,nh
+		  do l=1,hday
 	        do j=1,nscc(k)
     if(mst(i).eq.5) evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hEST(j,nf,l)
-    if(mst(i).eq.6) evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hCST(j,nf,l)
+    if(mst(i).eq.6)then
+        do ii=1,size(idcg)
+          if(idcg(ii).eq. idcel(i)) then
+            evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*tCST(ii,nf,j,l)
+          else
+            evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hCST(j,nf,l)
+          end if
+        end do
+    end if
     if(mst(i).eq.7) evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hMST(j,nf,l)
     if(mst(i).eq.8) evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hPST(j,nf,l)
 		    end do
@@ -476,6 +551,238 @@ subroutine mobile_temporal_distribution
 	  end do
 180 format(7x,"++++++    Starting Computations")
 	end subroutine mobile_temporal_distribution
+!  _                                    _ _
+! | | ___  ___     _ __ ___   _____   _(_) |
+! | |/ _ \/ _ \   | '_ ` _ \ / _ \ \ / / | |
+! | |  __/  __/   | | | | | | (_) \ V /| | |
+! |_|\___|\___|___|_| |_| |_|\___/ \_/ |_|_|
+!  _          |_____|
+! | |_ ___ _ __ ___  _ __
+! | __/ _ \ '_ ` _ \| '_ \
+! | ||  __/ | | | | | |_) |
+!  \__\___|_| |_| |_| .__/
+!                   |_|
+!> @brief reads netcdf files with gridded temporal profiles for CDMX
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  07/26/2020
+!>   @version  1.0
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+subroutine lee_movil_temp
+use netcdf
+integer :: ncid
+integer :: id,j,k,l
+integer :: varid  ;!> id_vardescr Vehicular types description
+integer :: id_varscc
+real,dimension(nxt,nyt,v_type,hday)::data_in
+real,dimension(nxt,nyt,hday):: xxlon,xxlat
+real,dimension(nxt,nyt):: e_co
+character(len=11),dimension(ispc):: ename
+character(len=26) :: FILE_NAME(iday)
+
+ename=(/'TP_CO        ','TP_NO        ','TP_VOC       ',&
+        'TP_VOC_diesel','TP_SO2       '/)
+FILE_NAME=(/'temporal_week.nc','temporal_saba.nc','temporal_domi.nc'/)
+do id=1,iday
+  write(6,180) FILE_NAME(id)
+  call check( nf90_open('../01_datos/time/'//FILE_NAME(id), NF90_NOWRITE, ncid) )
+  call check( nf90_inq_varid(ncid, "SCC", varid) )
+  call check( nf90_get_var(ncid, varid, cscc) )
+  do is=1,ispc
+    call check( nf90_inq_varid(ncid, ename(is), varid) )
+    ! Read the data.
+    call check( nf90_get_var(ncid, varid, data_in) )
+      do i=1,nxt
+        do j=1,nyt
+          do l=1,v_type
+          do ih=1,hday
+            t_prof_m(i,j,id,is,l,ih)=data_in(i,j,l,ih)
+          end do
+          end do
+        end do
+      end do
+  end do
+  if(id.eq.1)then
+    call check( nf90_inq_varid(ncid, "E_CO", varid) )
+    call check( nf90_get_var(ncid, varid, e_co) )
+    call check( nf90_inq_varid(ncid, "XLONG", varid) )
+    call check( nf90_get_var(ncid, varid, xxlon) )
+    call check( nf90_inq_varid(ncid, "XLAT", varid) )
+    call check( nf90_get_var(ncid, varid, xxlat) )
+    do i=1,nxt
+      do j=1,nyt
+        if(e_co(i,j).gt.0) then !only with temporal profiles
+          tlon(i,j)=xxlon(i,j,1)
+          tlat(i,j)=xxlat(i,j,1)
+        else
+          tlon(i,j)=0.
+          tlat(i,j)=0.
+        end if
+      end do
+    end do
+  end if
+  call check( nf90_close(ncid) )
+end do
+!print *,tlon(nxt/2-1,nyt/2-1),tlon(nxt/2,nyt/2),tlat(nxt/2-1,nyt/2-1),tlat(nxt/2,nyt/2)
+!print *,(t_prof_m(nxt/2,nyt/2,1,2,i,8),i=1,v_type)
+180 format(7x,"******  Reading file: ",A20)
+return
+end subroutine lee_movil_temp
+!  _               _                 _ _
+! | | ___  ___    | | ___   ___ __ _| (_)______ _
+! | |/ _ \/ _ \   | |/ _ \ / __/ _` | | |_  / _` |
+! | |  __/  __/   | | (_) | (_| (_| | | |/ / (_| |
+! |_|\___|\___|___|_|\___/ \___\__,_|_|_/___\__,_|
+!            |_____|
+!>  @brief Reada the lon,lat and utm coordinates for the output grid
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  07/25/2020
+!>   @version  1.0
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+subroutine lee_localiza
+    implicit NONE
+    character(len=39) :: flocaliza,cdum,titulo
+    integer i,j,k,idum,ncel
+    integer :: nx,ny
+    flocaliza='../01_datos/'//trim(zona)//'/'//'localiza.csv'
+    write(6,*)' >>>> Reading file -',flocaliza,' ---------'
+    open (unit=10,file=flocaliza,status='old',action='read')
+    read (10,*) cdum  !Header
+    read (10,*) nx,ny,titulo  ! Dimensions and Title
+    ncel=nx*ny
+    allocate(idcg2(ncel))
+    allocate(xlon(ncel),xlat(ncel))
+    do k=1,ncel
+      read(10,*) idcg2(k),xlon(k),xlat(k)
+    end do
+    close(10)
+end subroutine lee_localiza
+!        _     _
+!  _   _| |__ (_) ___ __ _ _ __
+! | | | | '_ \| |/ __/ _` | '__|
+! | |_| | |_) | | (_| (_| | |
+!  \__,_|_.__/|_|\___\__,_|_|
+!> @brief obtains the _i_,_j_ index for localization in emissions mesh the temporal profiles
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  07/24/2020
+!>   @version  2.2
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+subroutine ubicar !(idcg,xlon,xlat,tlon,tlat,idcg2)
+implicit none
+integer:: id,k ! domain index
+integer:: it,jt   ! temporal profile domain index
+integer :: ndx ! domain dimensions
+integer :: ntx,nty ! temporal profile domain dimensions
+integer,allocatable :: ixv(:),jyv(:)
+real :: lomin,lomax,lamin,lamax,diag,radio,menor
+logical,allocatable:: valor(:)
+
+ndx=size(xlon)
+ntx=size(tlon,1)
+nty=size(tlon,2)
+allocate(ixv(ndx),jyv(ndx),valor(ndx))
+valor=.false.
+!domain Temporal profiles
+lomin=minval(tlon)
+lomax=maxval(tlon)
+lamin=minval(tlat)
+lamax=maxval(tlat)
+radio=abs(tlon(ntx/2,nty/2)-tlon(ntx/2+1,nty/2+1)) &
+     +abs(tlat(ntx/2,nty/2)-tlat(ntx/2+1,nty/2+1))
+do id=1,ndx
+  if(xlon(id).ge.lomin.and.xlon(id).le.lomax &
+  .and. xlat(id).ge.lamin.and.xlat(id).le.lamax) then
+      menor=radio
+      do it=1,ntx
+        do jt=1,nty
+          diag=abs(xlon(id)-tlon(it,jt))+abs(xlat(id)-tlat(it,jt))
+          if(diag.lt.radio.and. diag .lt. menor) then
+            ixv(id)=it
+            jyv(id)=jt
+            if(diag.lt.menor) valor(id)=.true.
+            menor=diag
+          end if
+        end do
+      end do
+  end if
+end do
+idx=pack(ixv,valor)
+idy=pack(jyv,valor)
+idcg=pack(idcg2,valor)
+deallocate(ixv,jyv,valor)
+deallocate(idcg2,xlon,xlat)
+print *,"Array with:",size(idcg)," elements"
+return
+end subroutine ubicar
+!                                           __ _ _
+!   ___ _ __ ___  __ _      _ __   ___ _ __ / _(_) |
+!  / __| '__/ _ \/ _` |    | '_ \ / _ \ '__| |_| | |
+! | (__| | |  __/ (_| |    | |_) |  __/ |  |  _| | |
+!  \___|_|  \___|\__,_|____| .__/ \___|_|  |_| |_|_|
+!                    |_____|_|
+!>  @brief Develops a 24 hour profile for CST with or witput daylight savingd day
+!>   @param status NetCDF functions return a non-zero status codes on error.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  07/25/2020
+!>   @version  1.0
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+subroutine crea_perfil
+implicit none
+integer :: i,l,m
+integer :: is,it
+integer :: id(nf)
+allocate(tCST(size(idcg),nf, nscc(1) ,hday))
+!
+id =(/1,2,2,2,5,1,1,1,2,2,3/)
+! 1  2   3   4   5  6   7   8   9     10  11
+! CO,NH3,NO,NO2,SO2, CN CO2 CH4, PM10, PM25 VOC
+! 1  2   2  2   5    1  1   1    2     2    3,4
+  call map_scc ! for obtaining mscc array
+ 
+m=5-iverano
+do i=1,size(idcg)
+  do is=1,nf
+   do it=1,nscc(1)
+    do l=1,hday
+      if(m+l.gt.hday) then
+        if(daytype.eq.1) tCST(i,is,it,m+l-hday)=t_prof_m(idx(i),idy(i),3,id(is),mscc(it),m+l)*diap(1,1)
+        if(daytype.ge.2 .or. daytype.le.6) & !martes a sabado
+        tCST(i,is,it,m+l-hday)=1.!t_prof_m(idx(i),idy(i),1,id(is),mscc(it),m+l)*diap(1,1)
+        if(daytype.eq.7) tCST(i,is,it,m+l-hday)=t_prof_m(idx(i),idy(i),2,id(is),mscc(it),m+l)*diap(1,1)
+        else
+        if(daytype.eq.1) tCST(i,is,it,m+l)=t_prof_m(idx(i),idy(i),3,id(is),mscc(it),m+l)*dia(1,1)
+        if(daytype.ge.2 .or. daytype.le.6) &!martes a sabado
+        tCST(i,is,it,m+l)=t_prof_m(idx(i),idy(i),1,id(is),mscc(it),m+l)*dia(1,1)
+        if(daytype.eq.7) tCST(i,is,it,m+l)=t_prof_m(idx(i),idy(i),2,id(is),mscc(it),m+l)*dia(1,1)
+      end if
+    end do
+   end do
+  end do
+end do
+return
+180 format(I6,21(I3,x))
+end subroutine crea_perfil
+!>  @brief Maps corresponding SCC from TP file to movil emissions SCC
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  07/25/2020
+!>   @version  1.0
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+subroutine map_scc
+  implicit none
+  integer i,j,k
+  character(len=10):: comp
+  allocate(mscc(nscc(1)))
+  mscc=1
+  do i=1,nscc(1)
+    comp=iscc(i)
+    do j=2,v_type-1
+      if(comp.eq.cscc(j,1)) mscc(i)=j
+    end do
+    if(mscc(i).eq.1 .and. comp(1:4).eq."2230") mscc(i)=7
+  end do
+! 1 gasoline vehicles is allready assigned to all
+! v_type= 9 municipal truck is not considered.
+! 7 is for Diesel Trucks HDD
+end subroutine map_scc
 !            _    _ _
 !  _ __  ___| |__(_) |___
 ! | '  \/ _ \ '_ \ | / -_)
@@ -504,10 +811,10 @@ subroutine mobile_temporal_storing
     write(iun,'(I8,4A)')size(emis,dim=1),",",current_date,', ',cdia(daytype)
     do i=1,size(emis,dim=1)
       suma=0
-      do l=1,nh
+      do l=1,hday
         suma=suma+emis(i,k,l)
       end do
-      if(suma.gt.0) write(iun,100)idcel2(i),(emis(i,k,l),l=1,nh)
+      if(suma.gt.0) write(iun,100)idcel(i),(emis(i,k,l),l=1,hday)
     end do
     close(unit=iun)
   end do
@@ -522,10 +829,10 @@ subroutine mobile_temporal_storing
   do i=1,size(epm2,dim=1)
     do j=1,nscc(k)
       suma=0
-      do l=1,nh
+      do l=1,hday
         suma=suma+epm2(i,j,l)
       end do
-      if(suma.gt.0) write(iun,110)idcel2(i),iscc(j),(epm2(i,j,l),l=1,nh)
+      if(suma.gt.0) write(iun,110)idcel(i),iscc(j),(epm2(i,j,l),l=1,hday)
     end do
   end do
   close(iun)
@@ -539,53 +846,21 @@ subroutine mobile_temporal_storing
   do i=1,size(evoc,dim=1)
     do j=1,nscc(k)
       suma=0
-      do l=1,nh
+      do l=1,hday
         suma=suma+evoc(i,j,l)
       end do
-      if(suma.gt.0)write(iun,110)idcel2(i),iscc(j),(evoc(i,j,l),l=1,nh)
+      if(suma.gt.0)write(iun,110)idcel(i),iscc(j),(evoc(i,j,l),l=1,hday)
     end do
   end do
   close(iun)
 !$omp end parallel sections
-    deallocate(idcel,idcel2,mst)
-    deallocate(emiM)
-    deallocate(emis)
-    deallocate(evoc)
-    deallocate(epm2)
+
     write(6,180)
 110 format(I7,",",A10,",",23(ES12.4,","),ES12.4)
 170 format(5x,"Storing: ",A15,1x,A15)
-180 format(7x,"*****  DONE MOBILE TEMPORAL *****")
+180 format(7x,"*****  DONE SAVING DATAFILES *****")
 end subroutine mobile_temporal_storing
-!                        _
-!   ___ ___  _   _ _ __ | |_
-!  / __/ _ \| | | | '_ \| __|
-! | (_| (_) | |_| | | | | |_
-!  \___\___/ \__,_|_| |_|\__|
 !
-!>  @brief Counts the number of different cells in emissions file.
-!>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
-!>   @copyright Universidad Nacional Autonoma de Mexico 202
-subroutine count
-  integer i,j
-  idcel2(1)=idcel(1)
-  j=1
-  do i=2,nm
-    if(idcel2(j).ne.idcel(i)) then
-      j=j+1
-      idcel2(j)=idcel(i)
-    end if
-  end do
-  print *,'Number of unique grids',j,nm
-  allocate(emis(nm,nf-2,nh))
-  allocate(epm2(nm,nscc(nf-1),nh))
-  allocate(evoc(nm,nscc(nf),nh))
-  emis=0
-  evoc=0
-  emp2=0
-end subroutine count
 !> @brief Update temporal profile per day
 !>
 !> Currently uses EPA temporal profiles
@@ -663,8 +938,9 @@ end function
 !>   @date  07/13/2020
 !>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine lee_namelist_time
+subroutine lee_namelist_zone_time
     implicit none
+    NAMELIST /region_nml/ zona
     NAMELIST /fecha_nml/ idia,month,anio,periodo
     NAMELIST /verano_nml/ lsummer
     integer unit_nml
@@ -683,6 +959,7 @@ subroutine lee_namelist_time
         ACTION = 'READ'           ,      &
         ACCESS = 'SEQUENTIAL'     )
         !  Reading the file
+        READ (unit_nml , NML = region_nml )
         READ (unit_nml , NML = fecha_nml )
         READ (unit_nml , NML = verano_nml )
         !WRITE (6    , NML = verano_nml )
@@ -699,6 +976,6 @@ subroutine lee_namelist_time
         stop
     end if
     close(10)
-
-end subroutine lee_namelist_time
+return
+end subroutine lee_namelist_zone_time
 end program movil_temporal
