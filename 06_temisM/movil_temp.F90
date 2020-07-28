@@ -575,7 +575,7 @@ integer :: varid  ;!> id_vardescr Vehicular types description
 integer :: id_varscc
 real,dimension(nxt,nyt,v_type,hday)::data_in
 real,dimension(nxt,nyt,hday):: xxlon,xxlat
-real,dimension(nxt,nyt):: e_co
+real,dimension(nxt,nyt,v_type):: e_co
 character(len=11),dimension(ispc):: ename
 character(len=26) :: FILE_NAME(iday)
 
@@ -610,7 +610,7 @@ do id=1,iday
     call check( nf90_get_var(ncid, varid, xxlat) )
     do i=1,nxt
       do j=1,nyt
-        if(e_co(i,j).gt.0) then !only with temporal profiles
+        if(e_co(i,j,1).gt.0) then !only with temporal profiles
           tlon(i,j)=xxlon(i,j,1)
           tlat(i,j)=xxlat(i,j,1)
         else
@@ -623,7 +623,7 @@ do id=1,iday
   call check( nf90_close(ncid) )
 end do
 !print *,tlon(nxt/2-1,nyt/2-1),tlon(nxt/2,nyt/2),tlat(nxt/2-1,nyt/2-1),tlat(nxt/2,nyt/2)
-!print *,(t_prof_m(nxt/2,nyt/2,1,2,i,8),i=1,v_type)
+!print *,(t_prof_m(5,10,3,3,i,6),i=1,v_type)
 180 format(7x,"******  Reading file: ",A20)
 return
 end subroutine lee_movil_temp
@@ -710,8 +710,9 @@ idy=pack(jyv,valor)
 idcg=pack(idcg2,valor)
 deallocate(ixv,jyv,valor)
 deallocate(idcg2,xlon,xlat)
-print *,"Array with:",size(idcg)," elements"
+write(6,160) size(idcg)
 return
+160 format("Array with:",I5," elements")
 end subroutine ubicar
 !                                           __ _ _
 !   ___ _ __ ___  __ _      _ __   ___ _ __ / _(_) |
@@ -737,22 +738,21 @@ id =(/1,2,2,2,5,1,1,1,2,2,3/)
 ! CO,NH3,NO,NO2,SO2, CN CO2 CH4, PM10, PM25 VOC
 ! 1  2   2  2   5    1  1   1    2     2    3,4
   call map_scc ! for obtaining mscc array
- 
 m=5-iverano
 do i=1,size(idcg)
   do is=1,nf
    do it=1,nscc(1)
     do l=1,hday
       if(m+l.gt.hday) then
-        if(daytype.eq.1) tCST(i,is,it,m+l-hday)=t_prof_m(idx(i),idy(i),3,id(is),mscc(it),m+l)*diap(1,1)
+        if(daytype.eq.1) tCST(i,is,it,m+l-hday)=t_prof_m(idx(i),idy(i),3,id(is),mscc(it),m+l-hday)*diap(it,is)
         if(daytype.ge.2 .or. daytype.le.6) & !martes a sabado
-        tCST(i,is,it,m+l-hday)=1.!t_prof_m(idx(i),idy(i),1,id(is),mscc(it),m+l)*diap(1,1)
-        if(daytype.eq.7) tCST(i,is,it,m+l-hday)=t_prof_m(idx(i),idy(i),2,id(is),mscc(it),m+l)*diap(1,1)
+        tCST(i,is,it,m+l-hday)=t_prof_m(idx(i),idy(i),1,id(is),mscc(it),m+l-hday)*diap(it,is)
+        if(daytype.eq.7) tCST(i,is,it,m+l-hday)=t_prof_m(idx(i),idy(i),2,id(is),mscc(1),m+l-hday)*diap(it,is)
         else
-        if(daytype.eq.1) tCST(i,is,it,m+l)=t_prof_m(idx(i),idy(i),3,id(is),mscc(it),m+l)*dia(1,1)
+        if(daytype.eq.1) tCST(i,is,it,m+l)=t_prof_m(idx(i),idy(i),3,id(is),mscc(it),m+l)*dia(it,is)
         if(daytype.ge.2 .or. daytype.le.6) &!martes a sabado
-        tCST(i,is,it,m+l)=t_prof_m(idx(i),idy(i),1,id(is),mscc(it),m+l)*dia(1,1)
-        if(daytype.eq.7) tCST(i,is,it,m+l)=t_prof_m(idx(i),idy(i),2,id(is),mscc(it),m+l)*dia(1,1)
+        tCST(i,is,it,m+l)=t_prof_m(idx(i),idy(i),1,id(is),mscc(it),m+l)*dia(it,is)
+        if(daytype.eq.7) tCST(i,is,it,m+l)=t_prof_m(idx(i),idy(i),2,id(is),mscc(1),m+l)*dia(it,is)
       end if
     end do
    end do
