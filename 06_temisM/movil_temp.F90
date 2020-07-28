@@ -8,8 +8,8 @@
 !>
 !> Currently uses EPA temporal profiles
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  07/25/2020
+!>   @version  2.5
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 module movil_temporal_mod
 !> month of emissions output
@@ -72,11 +72,11 @@ real,dimension(nnscc,nf,hday):: hEST
 !> profile ID 1=mon 2=weekday 3=hourly per SCC and pollutant.
 integer,dimension(3,nnscc,nf):: profile  ! 1=mon 2=weekday 3=hourly
 !> SCC codes per file
-character (len=10),dimension(nnscc) ::iscc
+character (len=10),dimension(nnscc) ::iscc ;!> SCC codes from Temporal Profiles files
 character(len=10),dimension(v_type,1)::cscc
 !> Initial date of the emissions period
 character (len=19) :: current_date
-!> during summer period  consider timasvaing .true. or not .false.
+!> during summer period  consider daylight saving time .true. or not .false.
 logical :: lsummer ; !> Input file name
 character(len=14),dimension(nf) :: efile ; !> output file name
 character(len=14),dimension(nf) :: casn
@@ -104,7 +104,6 @@ common /emi_vars/dia,diap,hCST,hMST,hPST,hEST,efile,casn,iscc
 common /domain/ iverano,zona
 common /leenetcdf/profile,tlon,tlat,t_prof_m,cscc
 end module movil_temporal_mod
-
 !                       _ _    _                                       _
 !  _ __ ___   _____   _(_) |  | |_ ___ _ __ ___  _ __   ___  _ __ __ _| |
 ! | '_ ` _ \ / _ \ \ / / | |  | __/ _ \ '_ ` _ \| '_ \ / _ \| '__/ _` | |
@@ -117,8 +116,8 @@ end module movil_temporal_mod
 !
 !>  @brief Make temporal distribution of mobile emissions using profiles based on SCC.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  07/25/2020
+!>   @version  2.5
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program movil_temporal
    use movil_temporal_mod
@@ -144,8 +143,8 @@ program movil_temporal
 contains
 !>  @brief Deallocates allocated arrays.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  07/25/2020
+!>   @version  2.5
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine libera_memoria
 
@@ -173,8 +172,8 @@ end subroutine libera_memoria
 !    |_|                    |___|                       |___/
 !>  @brief Reads emissions and temporal profiles based on SCC.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  07/25/2020
+!>   @version  2.5
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine mobile_spatial_reading
   implicit none
@@ -469,8 +468,8 @@ end subroutine mobile_spatial_reading
 !
 !>  @brief Computes the hourly emissions based on SCC temporal profiles from annual to hourly.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  07/25/2020
+!>   @version  2.5
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine mobile_temporal_distribution
 	implicit none
@@ -563,6 +562,10 @@ subroutine mobile_temporal_distribution
 !  \__\___|_| |_| |_| .__/
 !                   |_|
 !> @brief reads netcdf files with gridded temporal profiles for CDMX
+!>
+!>  input files are ´temporal_week.nc´ ´temporal_saba.nc´ and ´temporal_domi.nc´
+!>  these contain temporal profiles TP for different pollutants (5) and vehicle type (8)
+!>  these profiles are for week days, saturday (saba) and sunday (domi)
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  07/26/2020
 !>   @version  1.0
@@ -664,9 +667,9 @@ end subroutine lee_localiza
 !> @brief obtains the _i_,_j_ index for localization in emissions mesh the temporal profiles
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  07/24/2020
-!>   @version  2.2
+!>   @version  2.5
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine ubicar !(idcg,xlon,xlat,tlon,tlat,idcg2)
+subroutine ubicar 
 implicit none
 integer:: id,k ! domain index
 integer:: it,jt   ! temporal profile domain index
@@ -793,10 +796,13 @@ end subroutine map_scc
 !               |_|                 |___|                    |___/
 !>  @brief Saves mobile emission with the temporal profile in hourly basis.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  07/25/2020
+!>   @version  2.5
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine mobile_temporal_storing
+#ifdef _OPENMP
+    use omp_lib
+#endif
   implicit none
   integer i,j,k,l,iun
   real suma
@@ -865,8 +871,8 @@ end subroutine mobile_temporal_storing
 !>
 !> Currently uses EPA temporal profiles
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  07/25/2020
+!>   @version  2.5
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !> @param perfili mobile temporal profile to be update
 !> @param idia day of the week 1 to 7 to be used to update the profile
@@ -889,8 +895,8 @@ end subroutine adecua
 !>  @brief Identifies if it is summert time period and if it is considered  or not.
 !>   Returns 1 if the date is within daysaving time period
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  07/25/2020
+!>   @version  2.5
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param ida  day in the month
 !>   @param mes  month of the year
@@ -935,8 +941,8 @@ end function
 !>
 !> reads variables idia, month, anio and periodo used for time specification
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  07/25/2020
+!>   @version  2.5
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine lee_namelist_zone_time
     implicit none
