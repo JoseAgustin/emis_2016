@@ -474,13 +474,16 @@ end subroutine mobile_spatial_reading
 subroutine mobile_temporal_distribution
 	implicit none
 	integer i,j,k,l,ival,ii
+logical,allocatable:: lsi(:)
 !
     allocate(emis(nm,nf-2,hday))
     allocate(epm2(nm,nscc(nf-1),hday))
     allocate(evoc(nm,nscc(nf),hday))
+    allocate(lsi(nm))
     emis=0
     epm2=0
     evoc=0
+    lsi=.true.
     write(6,180)
 ! For inorganics
 !
@@ -495,10 +498,11 @@ subroutine mobile_temporal_distribution
         do ii=1,size(idcg)
           if(idcg(ii).eq. idcel(i)) then
             emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*tCST(ii,k,j,l)
-          else
-            emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hCST(j,k,l)
+            lsi(i)=.false.
+            exit
           end if
         end do
+        if(lsi(i)) emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hCST(j,k,l)
     end if
     if(mst(i).eq.7) emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hMST(j,k,l)
     if(mst(i).eq.8) emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hPST(j,k,l)
@@ -517,10 +521,11 @@ subroutine mobile_temporal_distribution
         do ii=1,size(idcg)
           if(idcg(ii).eq. idcel(i)) then
             epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*tCST(ii,k,j,l)
-          else
-            epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hCST(j,k,l)
+            lsi(i)=.false.
+            exit
           end if
         end do
+        if(lsi(i)) epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hCST(j,k,l)
     end if
     if(mst(i).eq.7) epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hMST(j,k,l)
     if(mst(i).eq.8) epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hPST(j,k,l)
@@ -538,10 +543,11 @@ subroutine mobile_temporal_distribution
         do ii=1,size(idcg)
           if(idcg(ii).eq. idcel(i)) then
             evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*tCST(ii,nf,j,l)
-          else
-            evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hCST(j,nf,l)
+            lsi(i)=.false.
+            exit
           end if
         end do
+        if(lsi(i)) evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hCST(j,nf,l)
     end if
     if(mst(i).eq.7) evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hMST(j,nf,l)
     if(mst(i).eq.8) evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hPST(j,nf,l)
@@ -549,6 +555,7 @@ subroutine mobile_temporal_distribution
 		  end do
 	  end do
 180 format(7x,"++++++    Starting Computations")
+    deallocate(lsi)
 	end subroutine mobile_temporal_distribution
 !  _                                    _ _
 ! | | ___  ___     _ __ ___   _____   _(_) |
@@ -747,15 +754,15 @@ do i=1,size(idcg)
    do it=1,nscc(1)
     do l=1,hday
       if(m+l.gt.hday) then
-        if(daytype.eq.1) tCST(i,is,it,m+l-hday)=t_prof_m(idx(i),idy(i),3,id(is),mscc(it),m+l-hday)*diap(it,is)
+        if(daytype.eq.1) tCST(i,is,it,m+l-hday)=t_prof_m(idx(i),idy(i),3,id(is),mscc(it),l)*diap(it,is)
         if(daytype.ge.2 .or. daytype.le.6) & !martes a sabado
-        tCST(i,is,it,m+l-hday)=t_prof_m(idx(i),idy(i),1,id(is),mscc(it),m+l-hday)*diap(it,is)
-        if(daytype.eq.7) tCST(i,is,it,m+l-hday)=t_prof_m(idx(i),idy(i),2,id(is),mscc(1),m+l-hday)*diap(it,is)
+        tCST(i,is,it,m+l-hday)=t_prof_m(idx(i),idy(i),1,id(is),mscc(it),l)*diap(it,is)
+        if(daytype.eq.7) tCST(i,is,it,m+l-hday)=t_prof_m(idx(i),idy(i),2,id(is),mscc(1),l)*diap(it,is)
         else
-        if(daytype.eq.1) tCST(i,is,it,m+l)=t_prof_m(idx(i),idy(i),3,id(is),mscc(it),m+l)*dia(it,is)
+        if(daytype.eq.1) tCST(i,is,it,m+l)=t_prof_m(idx(i),idy(i),3,id(is),mscc(it),l)*dia(it,is)
         if(daytype.ge.2 .or. daytype.le.6) &!martes a sabado
-        tCST(i,is,it,m+l)=t_prof_m(idx(i),idy(i),1,id(is),mscc(it),m+l)*dia(it,is)
-        if(daytype.eq.7) tCST(i,is,it,m+l)=t_prof_m(idx(i),idy(i),2,id(is),mscc(1),m+l)*dia(it,is)
+        tCST(i,is,it,m+l)=t_prof_m(idx(i),idy(i),1,id(is),mscc(it),l)*dia(it,is)
+        if(daytype.eq.7) tCST(i,is,it,m+l)=t_prof_m(idx(i),idy(i),2,id(is),mscc(1),l)*dia(it,is)
       end if
     end do
    end do
