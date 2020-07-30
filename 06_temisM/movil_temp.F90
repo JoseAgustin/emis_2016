@@ -379,7 +379,7 @@ subroutine mobile_spatial_reading
         fds:  do i=1,nscc(k)
             call adecua(profile(3,i,k),daytype,perfil)
             if(iprof.eq.perfil) then
-            m=4-iverano
+            m=5-iverano
             do l=1,hday
             if(daytype.eq.1 )then
                 if(m+l.gt.hday) then
@@ -393,7 +393,7 @@ subroutine mobile_spatial_reading
                 end if
             end if  ! daytype
             end do
-            m=5-iverano
+            m=6-iverano
             do l=1,hday
             if(daytype.eq.1) then
                 if(m+l.gt.hday) then
@@ -407,7 +407,7 @@ subroutine mobile_spatial_reading
                 end if
             end if !daytype
             end do
-            m=6-iverano
+            m=7-iverano
             do l=1,hday
             if(daytype.eq.1) then
                 if(m+l.gt.hday) then
@@ -421,7 +421,7 @@ subroutine mobile_spatial_reading
                 end if
             end if !daytype
             end do
-            m=7-iverano
+            m=8-iverano
             do l=1,hday
             if(daytype.eq.1 )then
                 if(m+l.gt.hday) then
@@ -748,7 +748,7 @@ id =(/1,2,2,2,5,1,1,1,2,2,3/)
 ! CO,NH3,NO,NO2,SO2, CN CO2 CH4, PM10, PM25 VOC
 ! 1  2   2  2   5    1  1   1    2     2    3,4
   call map_scc ! for obtaining mscc array
-m=5-iverano
+m=7-iverano
 do i=1,size(idcg)
   do is=1,nf
    do it=1,nscc(1)
