@@ -13,7 +13,7 @@ It can process all the country or a preselected area from:
 |         |monterrey3|monterrey|Saltillo-MTY, MTY|
 |         |ecaim3    | ecaim | Central Mexico |
 |         | bajio3   | bajio | Guanajuato State|
-|   |queretaro |  |Qro State|
+|   |queretaro |  |Queretaro State|
 |   | |cdjuarez | Juarez City, Chi|
 |   | |tijuana |Tijuana City, BC|
 |   | |mexicali | Mexicali City, BC|
@@ -93,17 +93,17 @@ Cada uno de estos subdirectorios contiene los archivos para la distribución esp
 - aeropuerto.csv - celdas que abarca el (los) aeropuerto(s)
 - agricola.csv – celdas con fracción de área agrícola.
 - bosque.csv – celdas con fracción de vegetación no agrícola.[^1]
--  CARRETERAS.csv – celdas con fracción de superficie de carreteras.
-- csv – celdas que abarcan la centrales camioneras
-- csv – celdas correspondientes a la superficie de estaciones y patios de ferrocarril.
-- gri\_pav.csv – celdas correspondientes a la superfice de vialidades pavimentadas
+- CARRETERAS.csv – celdas con fracción de superficie de carreteras.
+- centrales.csv – celdas que abarcan la centrales camioneras.
+- ffc.csv – celdas correspondientes a la superficie de estaciones y patios de ferrocarril.
+- gri\_pav.csv – celdas correspondientes a la superfice de vialidades pavimentadas.
 - gri\_pob.csv – celdas con fracción de población urbana, rural y total.
 - gri\_ter.csv – celdas con fracciones de superficie de vialidades de terracería.
-- csv – contiene la localización en lon, lat, utm y la población para cada celda del área de estudio.
-- csv - celdas correspondientes a la superficie de puertos marítimos
-- csv – celdas con fracción de superficie de vialidades en ciudades.
+- localiza.csv – contiene la localización en lon, lat, utm y la población para cada celda del área de estudio.
+- puertos.csv - celdas correspondientes a la superficie de puertos marítimos.
+- VIALIDADES.csv – celdas con fracción de superficie de vialidades en ciudades.
 
-La fracción en cada celda es relativa al municipio de donde se encuentra, así si en la celda se tienen 100 mi2 de área agrícola y en el municipio hay 1000 m^2 en la fracción correspondiente a la celda se tendría un valor de 0.1 (100/1000).
+La fracción en cada celda es relativa al municipio de donde se encuentra, así si en la celda se tienen 100 m^2 de área agrícola y en el municipio hay 1000 m^2 en la fracción correspondiente a la celda se tendría un valor de 0.1 (100/1000).
 
 En el caso de población el se tiene que para cada celda se tiene tres categorías: población urbana, rural y la suma de ambas. La proporción es con base a la población del municipio para cada categoría.
 
@@ -115,7 +115,7 @@ Cada archivo posee las siguientes columnas:
 
 En el directorio time contiene los siguientes archivos:
 
-  1.  anio2016.csv – contiene la fecha y el tipo de día (lun a dom) para cada día del año 2016
+  1. anio2016.csv – contiene la fecha y el tipo de día (lun a dom) para cada día del año 2016
   2. temporal\_01.txt- contiene el código SCC y su correspondiente perfil anual, semanal y horario.
   3. temporal\_mon.txt – contiene el perfil anual y la proporcion de emisiones mensuales.
   4. temporal\_week.txt – contiene el perfil semanal y la propocion para cada día de la semana.
