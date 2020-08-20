@@ -127,7 +127,7 @@ implicit none
 !$omp end parallel do
   print *,"***** DONE PM2.5",csource," SPECIATION *****"
 200 format(I7,x,I3,x,24(ES11.4,x),I3)
-701 format(I7,",",24(ES11.4,","))
+701 format(I7,24(",",ES11.4))
 end subroutine guarda
 !                        _
 !   ___ ___  _   _ _ __ | |_
@@ -218,6 +218,7 @@ subroutine lee(isource)
   character(len=10) :: cdum
   character(len=10) :: isccf
   character(len=27) :: fname
+  character(len=20) :: FMT
   logical ::lfil
   SELECT CASE (isource)
   CASE(1)
@@ -273,6 +274,7 @@ subroutine lee(isource)
   end do
   close(15)
   !print '(15I5)',(profile(i),i=1,lfa)
+ !323 format(2i10,60F10.4)
   print *,'Start count'
   call count  ! counts the number of different profiles
   print *,'Finishing count'
@@ -287,7 +289,7 @@ subroutine lee(isource)
   allocate(cname(nclass))
   read(16,*)cdum
   read(16,*) nclass,(cname(i),i=1,nclass)
-  !print *,nclass
+  !print *,nclass,FMT
   !print '(<nclass>(A,x))',cname
   allocate(fclass(size(prof2),nclass))
   do
@@ -301,11 +303,11 @@ subroutine lee(isource)
     end do
   end do
 300 continue
+  write(FMT,"('(2I10,',I0,'F10.4)')")nclass
   do i=1,size(prof2)
-    write(6,323) prof2(i),i,(fclass(i,l),l=1,nclass)
+    write(6,FMT) prof2(i),i,(fclass(i,l),l=1,nclass)
   end do
   close(16)
   return
-323 format(2i10,60F10.4)
 end subroutine lee
 end module PM25_speciation_mod

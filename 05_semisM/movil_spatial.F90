@@ -79,26 +79,23 @@ contains
 subroutine mobile_spatial_storing
     integer i,j,k,iun
 	character(len=15) ::name
+    character(len=24):: FMT
+    character(len=34):: FFT
+    write(FMT,"('(I8,',I0,'('','',A11))')")size(jscc)
+    write(FFT,"('(I8,',I0,'('','',ES12.4),'','',I2)')")size(jscc)
 	do i=1,npol
 	name='M_'//trim(pol(i))//'.csv'
 	open(newunit=iun,file=name)
 	write(iun,*)'GRIDCODE, emissions in gram per year'
-	write(iun,210)size(jscc),(jscc(j),j=1,size(jscc))
+	write(iun,FMT)size(jscc),(jscc(j),j=1,size(jscc))
 	do k=1,size(grid2)
-	  write(iun,220) grid2(k),(1000000*pemi(k,i,j),j=1,size(jscc)),im2(k)
+	  write(iun,FFT) grid2(k),(1000000*pemi(k,i,j),j=1,size(jscc)),im2(k)
 	end do
 	close(iun)
 	end do
     print *,"+++++   DONE SPATIAL MOVIL +++++"
     deallocate(grid2,jscc,im2,emid,iscc,ei)
     deallocate(grid,id2,streeF,highwF,im,pemi)
-#ifndef PGI
-210 format(i8,",",<size(jscc)>(A11,","))
-220 format(i8,",",<size(jscc)>(ES12.4,","),I2)
-#else
-210 format(i8,",",30(A11,","))
-220 format(i8,",",30(ES12.4,","),I2)
-#endif
 end subroutine mobile_spatial_storing
 !                  _     _ _
 !  _ __ ___   ___ | |__ (_) | ___

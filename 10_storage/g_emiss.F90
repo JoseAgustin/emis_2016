@@ -1033,7 +1033,7 @@ integer function juliano(year,mes,day)
   iyear=int2char(year)
   imes=int2char(mes)
   iday=int2char(day)
-  if (mod(iyear,4)==0.and.mod(iyear,100)/=0) month(2)=29
+  if (mod(iyear,4)==0.and.mod(iyear-1500,400)/=0) month(2)=29
   if (imes==1) then
     juliano=iday
     else

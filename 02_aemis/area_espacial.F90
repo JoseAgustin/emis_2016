@@ -410,14 +410,20 @@ end subroutine area_spatial_locating
 !     |_|                      |_____|                         |___/
 subroutine area_spatial_storing
     implicit none
+    character(len=32):: FMT
+    character(len=65):: FTT
     integer i,k,l,iun
     real suma
+!310 format(I9,",",I6,",",F7.4,",",F7.4,60(",",ES12.5))
+
     Print *,"   ***   Guardando Emisiones de Area   ***"
+    write(FMT,"('(I3,'',g_per_year'',',I0,'('','',A10))')")nnscc
+    write(FTT,"('(I9,'','',I6,2('',''F7.4),',I0,'('','',ES12.5))')")nnscc
 !$omp parallel do private(iun,i,l,suma)
     do k=1,nf
         open(newunit=iun,file=ofile(k),ACTION='write')
         write(iun,*)'grid,CID,Furb,Frural,SCCs'
-        write(iun,300)nscc(k),(scc(k,i),i=1,nscc(k))
+        write(iun,FMT)nscc(k),(scc(k,i),i=1,nscc(k))
         print *,"   Agricola ",ofile(k)
         do i=1,size(fa)
             suma=0
@@ -425,7 +431,7 @@ subroutine area_spatial_storing
                suma=suma+eagr(i,k,l)
             end do
             if (suma.gt.0) &
-&           write(iun,310) gria(i),ida(i),0.,fa(i),(eagr(i,k,l),l=1,nscc(k))
+&           write(iun,FTT) gria(i),ida(i),0.,fa(i),(eagr(i,k,l),l=1,nscc(k))
         end do
         print *,"   Bosque",k
         do i=1,size(fb)
@@ -434,7 +440,7 @@ subroutine area_spatial_storing
             suma=suma+ebos(i,k,l)
             end do
             if (suma.gt.0) &
-&            write(iun,310) grib(i),idb(i),0.,fb(i),(ebos(i,k,l),l=1,nscc(k))
+&            write(iun,FTT) grib(i),idb(i),0.,fb(i),(ebos(i,k,l),l=1,nscc(k))
         end do
         print *,"   Poblacion",k
         do i=1,size(fp1)
@@ -443,7 +449,7 @@ subroutine area_spatial_storing
             suma=suma+epob(i,k,l)
             end do
             if (suma.gt.0) &
-&            write(iun,310) grip(i),idp(i),fp1(i),fp2(i),(epob(i,k,l),l=1,nscc(k))
+&            write(iun,FTT) grip(i),idp(i),fp1(i),fp2(i),(epob(i,k,l),l=1,nscc(k))
         end do
         print *,"   Aeropuerto"
         do i=1,size(fe)
@@ -452,7 +458,7 @@ subroutine area_spatial_storing
             suma=suma+eaer(i,k,l)
             end do
             if (suma.gt.0) &
-&        write(iun,310) grie(i),ide(i),fe(i),0.,(eaer(i,k,l),l=1,nscc(k))
+&        write(iun,FTT) grie(i),ide(i),fe(i),0.,(eaer(i,k,l),l=1,nscc(k))
         end do
         print *,"   Centrales Autobuses"
         do i=1,size(fu)
@@ -461,7 +467,7 @@ subroutine area_spatial_storing
             suma=suma+ecen(i,k,l)
             end do
             if (suma.gt.0) &
-&        write(iun,310) griu(i),idu(i),fu(i),0.,(ecen(i,k,l),l=1,nscc(k))
+&        write(iun,FTT) griu(i),idu(i),fu(i),0.,(ecen(i,k,l),l=1,nscc(k))
         end do
         print *,"   Puertos Maritimos"
         do i=1,size(fm)
@@ -470,7 +476,7 @@ subroutine area_spatial_storing
             suma=suma+epue(i,k,l)
             end do
             if (suma.gt.0) &
-&        write(iun,310) grim(i),idm(i),fm(i),0.,(epue(i,k,l),l=1,nscc(k))
+&        write(iun,FTT) grim(i),idm(i),fm(i),0.,(epue(i,k,l),l=1,nscc(k))
         end do
         print *,"   Ferrocarriles"
         do i=1,size(ft)
@@ -479,7 +485,7 @@ subroutine area_spatial_storing
             suma=suma+etre(i,k,l)
             end do
             if (suma.gt.0) &
-&          write(iun,310) grit(i),idt(i),ft(i),0.,(etre(i,k,l),l=1,nscc(k))
+&          write(iun,FTT) grit(i),idt(i),ft(i),0.,(etre(i,k,l),l=1,nscc(k))
         end do
     print *,"   Terraceria"
     do i=1,size(fr)
@@ -488,7 +494,7 @@ subroutine area_spatial_storing
         suma=suma+eter(i,k,l)
         end do
         if (suma.gt.0) &
-&        write(iun,310) grir(i),idr(i),fr(i),0.,(eter(i,k,l),l=1,nscc(k))
+&        write(iun,FTT) grir(i),idr(i),fr(i),0.,(eter(i,k,l),l=1,nscc(k))
         end do
     print *,"   Vialidades"
     do i=1,size(fv)
@@ -497,7 +503,7 @@ subroutine area_spatial_storing
         suma=suma+evia(i,k,l)
         end do
         if (suma.gt.0) &
-&        write(iun,310) griv(i),idv(i),fv(i),0.,(evia(i,k,l),l=1,nscc(k))
+&        write(iun,FTT) griv(i),idv(i),fv(i),0.,(evia(i,k,l),l=1,nscc(k))
         end do
     close(10)
     end do
@@ -511,13 +517,6 @@ subroutine area_spatial_storing
     deallocate (grit,idt,ft,etre)
     deallocate (grir,idr,fr,eter)
     deallocate (griv,idv,fv,evia)
-#ifndef PGI
-300 format(I3,", g_per_year",<nnscc>(",",A10))
-310 format(I9,",",I6,",",F,",",F,<nnscc>(",",ES12.5))
-#else
-300 format(I3,", g_per_year",60(",",A10))
-310 format(I9,",",I6,",",F7.4,",",F7.4,60(",",ES12.5))
-#endif
 end subroutine area_spatial_storing
 !>	@brief Counts the number of lines per surrogate file.
 !>   @author  Jose Agustin Garcia Reynoso
