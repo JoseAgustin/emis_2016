@@ -135,7 +135,7 @@ implicit none
 	real rdum
 	logical fil1,fil2
   character(len=10)::jscc
-	character(len=35)::cdum,canio
+	character(len=40)::cdum,canio
 	character(len=18):: nfile,nfilep
 
    write(current_date,'(I4,"-",I2.2,"-",I2.2,A9)')anio,month,idia,'_00:00:00'
