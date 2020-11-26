@@ -512,6 +512,7 @@ logical,allocatable:: lsi(:)
 	end do
 !  For PM2.5
 !
+   lsi=.true.
 	k=nf-1
    do i=1,nm
 		  do l=1,hday
@@ -534,6 +535,7 @@ logical,allocatable:: lsi(:)
 	  end do
 !  For VOCs
 !
+   lsi=.true.
 	k=nf
    do i=1,nm
 		  do l=1,hday
