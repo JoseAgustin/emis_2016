@@ -483,79 +483,78 @@ logical,allocatable:: lsi(:)
     emis=0
     epm2=0
     evoc=0
-    lsi=.true.
     write(6,180)
 ! For inorganics
 !
      mes=mes*fweek! computes nuber of weeks per month
-
-	do k=1,nf-2
-	  do i=1,nm  ! idcel(i)
-		  do l=1,hday
-	        do j=1,nscc(k)
-    if(mst(i).eq.5) emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hEST(j,k,l)
-    if(mst(i).eq.6) then
-        do ii=1,size(idcg)
-          if(idcg(ii).eq. idcel(i)) then
-            emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*tCST(ii,k,j,l)
-            lsi(i)=.false.
-            exit
-          end if
+  do k=1,nf-2
+    lsi=.true.
+    do i=1,nm  ! idcel(i)
+      do l=1,hday
+        do j=1,nscc(k)
+        if(mst(i).eq.5) emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hEST(j,k,l)
+          if(mst(i).eq.6) then
+            do ii=1,size(idcg)
+              if(idcg(ii).eq. idcel(i)) then
+                emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*tCST(ii,k,j,l)
+                lsi(i)=.false.
+                exit
+              end if
+            end do
+          if(lsi(i) ) emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hCST(j,k,l)
+        end if
+        if(mst(i).eq.7) emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hMST(j,k,l)
+        if(mst(i).eq.8) emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hPST(j,k,l)
         end do
-        if(lsi(i)) emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hCST(j,k,l)
-    end if
-    if(mst(i).eq.7) emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hMST(j,k,l)
-    if(mst(i).eq.8) emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hPST(j,k,l)
-		    end do
-		  end do
-	  end do
-	end do
+      end do
+    end do
+  end do
 !  For PM2.5
 !
-   lsi=.true.
-	k=nf-1
-   do i=1,nm
-		  do l=1,hday
-	        do j=1,nscc(k)
-    if(mst(i).eq.5) epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hEST(j,k,l)
-    if(mst(i).eq.6)then
-        do ii=1,size(idcg)
-          if(idcg(ii).eq. idcel(i)) then
-            epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*tCST(ii,k,j,l)
-            lsi(i)=.false.
-            exit
-          end if
-        end do
-        if(lsi(i)) epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hCST(j,k,l)
-    end if
-    if(mst(i).eq.7) epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hMST(j,k,l)
-    if(mst(i).eq.8) epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hPST(j,k,l)
-		    end do
-		  end do
-	  end do
+  lsi=.true.
+  k=nf-1
+  do i=1,nm
+    do l=1,hday
+      do j=1,nscc(k)
+      if(mst(i).eq.5) epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hEST(j,k,l)
+        if(mst(i).eq.6)then
+          do ii=1,size(idcg)
+            if(idcg(ii).eq. idcel(i)) then
+              epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*tCST(ii,k,j,l)
+              lsi(i)=.false.
+              exit
+            end if
+          end do
+          if(lsi(i)) epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hCST(j,k,l)
+        end if
+      if(mst(i).eq.7) epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hMST(j,k,l)
+      if(mst(i).eq.8) epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hPST(j,k,l)
+      end do
+    end do
+  end do
 !  For VOCs
 !
-   lsi=.true.
-	k=nf
-   do i=1,nm
-		  do l=1,hday
-	        do j=1,nscc(k)
-    if(mst(i).eq.5) evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hEST(j,nf,l)
-    if(mst(i).eq.6)then
-        do ii=1,size(idcg)
-          if(idcg(ii).eq. idcel(i)) then
-            evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*tCST(ii,nf,j,l)
-            lsi(i)=.false.
-            exit
-          end if
-        end do
-        if(lsi(i)) evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hCST(j,nf,l)
-    end if
-    if(mst(i).eq.7) evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hMST(j,nf,l)
-    if(mst(i).eq.8) evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hPST(j,nf,l)
-		    end do
-		  end do
-	  end do
+  lsi=.true.
+  k=nf
+  do i=1,nm
+    do l=1,hday
+      do j=1,nscc(k)
+      if(mst(i).eq.5) evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hEST(j,nf,l)
+        if(mst(i).eq.6)then
+          do ii=1,size(idcg)
+            if(idcg(ii).eq. idcel(i)) then
+              evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*tCST(ii,nf,j,l)
+              lsi(i)=.false.
+              exit
+            end if
+          end do
+          if(lsi(i)) evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hCST(j,nf,l)
+      end if
+      if(mst(i).eq.7) evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hMST(j,nf,l)
+      if(mst(i).eq.8) evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hPST(j,nf,l)
+      end do
+    end do
+  end do
 180 format(7x,"++++++    Starting Computations")
     deallocate(lsi)
 	end subroutine mobile_temporal_distribution
