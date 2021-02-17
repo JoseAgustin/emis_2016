@@ -1217,17 +1217,17 @@ call check( nf90_put_var(ncid2,id_var(isp(ikk)),efs,start=(/1,1,1,1/),count=(/nx
     else
 !
     if(periodo.eq.1) then
-     call check( nf90_put_var(ncid, id_var(isp(ikk)),eft*0.8,start=(/1,1,1,1/)) )
-     call check( nf90_put_var(ncid, id_var(isp(ikk+5)),eft*0.2,start=(/1,1,1,1/)) )
+     call check( nf90_put_var(ncid, id_var(isp(ikk)),eft*0.2,start=(/1,1,1,1/)) )
+     call check( nf90_put_var(ncid, id_var(isp(ikk+5)),eft*0.8,start=(/1,1,1,1/)) )
     else
       call copy_val_12to23
 !$omp parallel sections num_threads (2)
 !$omp section
-      call check( nf90_put_var(ncid ,id_var(isp(ikk)),eft*0.8,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
-      call check( nf90_put_var(ncid ,id_var(isp(ikk+5)),eft*0.2,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
+      call check( nf90_put_var(ncid ,id_var(isp(ikk)),eft*0.2,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
+      call check( nf90_put_var(ncid ,id_var(isp(ikk+5)),eft*0.8,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
 !$omp section
-      call check( nf90_put_var(ncid2,id_var(isp(ikk)),efs*0.8,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
-      call check( nf90_put_var(ncid2,id_var(isp(ikk+5)),efs*0.2,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
+      call check( nf90_put_var(ncid2,id_var(isp(ikk)),efs*0.2,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
+      call check( nf90_put_var(ncid2,id_var(isp(ikk+5)),efs*0.8,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
 !$omp end parallel sections
     end if !periodo
     end if
