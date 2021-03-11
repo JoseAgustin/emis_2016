@@ -270,7 +270,7 @@ implicit none
 	end if
 	read (16,'(A)') cdum
      do
-	    read(16,*,END=210)iprof,(itfrc(l),l=1,13)
+	    read(16,*,END=215)iprof,(itfrc(l),l=1,13)
 !$omp parallel do
 	    do i=1,nl
 	      if(iprof.eq.profile(1,i)) then
@@ -279,7 +279,7 @@ implicit none
 		end do !i
 !$omp end parallel do
 	 end do
- 210 continue
+ 215 continue
     ! print '(A3,<nl>(f6.3))','mon',(mes(i),i=1,nl)
 	 print *,'   Done Temporal_mon'
 !  Reading and findig weekely  profile

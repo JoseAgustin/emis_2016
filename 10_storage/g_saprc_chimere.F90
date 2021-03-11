@@ -543,11 +543,11 @@ tiempo: do it=iit,eit
             end do
 !
             if(periodo.eq.1) then
-                call check( nf90_put_var(ncid, id_var(isp(ikk)),ea*0.8,start=(/1,1,1,it+1/)) )
-                call check( nf90_put_var(ncid, id_var(isp(ikk+5)),ea*0.2,start=(/1,1,1,it+1/)) )
+                call check( nf90_put_var(ncid, id_var(isp(ikk)),ea*0.2,start=(/1,1,1,it+1/)) )
+                call check( nf90_put_var(ncid, id_var(isp(ikk+5)),ea*0.8,start=(/1,1,1,it+1/)) )
             else
-                call check( nf90_put_var(ncid, id_var(isp(ikk)),ea*0.8,start=(/1,1,1,it-11/)) )        !******
-                call check( nf90_put_var(ncid, id_var(isp(ikk+5)),ea*0.2,start=(/1,1,1,it-11/)) )        !******
+                call check( nf90_put_var(ncid, id_var(isp(ikk)),ea*0.2,start=(/1,1,1,it-11/)) )        !******
+                call check( nf90_put_var(ncid, id_var(isp(ikk+5)),ea*0.8,start=(/1,1,1,it-11/)) )        !******
             endif
 		 end do aerosol
 		end do tiempo
