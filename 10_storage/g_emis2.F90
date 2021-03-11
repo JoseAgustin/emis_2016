@@ -94,7 +94,7 @@ common /domain/ ncel,nl,nx,ny,CDIM,SUPF1,zona
 common /fileout/id_varlong,id_varlat,id_varpop,&
 id_unlimit,id_utmx,id_utmy,id_utmz,ncid,ncid2
 common /date/ current_date,cday,mecha,titulo
-common /nlm_vars/month,idia,anio,periodo
+common /nlm_vars/model,month,idia,anio,periodo
 end module emissions_save_vars_mod
 !                 _         _
 !   ___ _ __ ___ (_)___ ___(_) ___  _ __  ___     ___  __ ___   _____     _ __   ___
@@ -140,7 +140,7 @@ subroutine lee_namelist
 implicit none
   NAMELIST /region_nml/ zona
   NAMELIST /fecha_nml/ idia,month,anio,periodo
-  NAMELIST /chem_nml/ mecha
+  NAMELIST /chem_nml/ mecha,model
   integer:: unit_nml=9
   logical existe
   existe = .FALSE.
@@ -158,8 +158,9 @@ implicit none
     READ (unit_nml , NML = region_nml )
     READ (unit_nml , NML = fecha_nml)
     READ (unit_nml , NML = chem_nml )
-    !WRITE (6    , NML = chem_nml )
     close(unit_nml)
+   ! WRITE (6    , NML = chem_nml )
+    if (trim(mecha).ne."saprc99") model=0
   else
     stop '***** No namelist_emis.nml in .. directory'
   end if
@@ -558,6 +559,18 @@ subroutine setup_mecha
         allocate(fnameA(nf),fnameM(nf),fnameP(nf))
         allocate(scala(nf),scalm(nf),scalp(nf))
         allocate(id_var(radm))
+    if (model.eq.1) then
+    ename=(/&
+    'CO         ','NO         ','NO2        ','NH3        ','SO2        ','CH4        ',&
+    'ACET       ','ALK3       ','ALK4       ','ALK5       ','ARO1       ','ARO2       ',&
+    'BACL       ','BALD       ','C2H6       ','C3H8       ','CCHO       ','CCO_OH     ',&
+    'CRES       ','C2H4       ','GLY        ','HCHO       ','HCOOH      ','C5H8       ',&
+    'IPRD       ','MEK        ','MEOH       ','MACR       ','MGLY       ','MVK        ',&
+    'OLE1       ','OLE2       ','PHEN       ','PRD2       ','RCHO       ','RCO_OH     ',&
+    'APINEN     ','CO2        ','PPM_big    ','PPM_fin    ','E_SO4I     ','E_NO3I     ',&
+    'E_PM25I    ','OCAR_fin   ','BCAR_fin   ','E_SO4J     ','E_NO3J     ','E_PM25J    ',&
+    'OCAR_finj  ','BCAR_finj  '/)
+    else
     ename=['E_CO       ','E_NO       ','E_NO2      ','E_NH3      ','E_SO2      ',&
     'E_CH4      ','E_ACET     ','E_ALK3     ','E_ALK4     ','E_ALK5     ','E_ARO1     ',&
     'E_ARO2     ','E_BACL     ','E_BALD     ','E_C2H6     ','E_C3H8     ','E_CCHO     ',&
@@ -567,6 +580,7 @@ subroutine setup_mecha
     'E_RCO_OH   ','E_TERP     ','E_CO2      ','E_PM_10    ','E_PM25     ','E_SO4I     ',&
     'E_NO3I     ','E_PM25I    ','E_ORGI     ','E_ECI      ','E_SO4J     ','E_NO3J     ',&
     'E_PM25J    ','E_ORGJ     ','E_ECJ      ']
+    end if
     cname=['Carbon Monoxide ','Nitrogen Oxide  ','Nitrogen Dioxide','Ammonia         ',&
     'Sulfur Dioxide  ','Methane         ','Acetone         ','Alkanes 3       ',&
     'Alkanes 4       ','Alkanes 5       ','Aromatics 1     ','Aromatics 2     ',&
@@ -624,6 +638,7 @@ subroutine setup_mecha
         21,22,23,24,25, 26,27,28,29,30, &
         31,32,33,34,35, 36,37,38,39,40, &
         41,42,43,44,45, 46,47,48,49,50/)
+     if (model.eq.1) then ! for chimere
         WTM=(/ 28.0, 30.00, 46.00, 17.00, 64.0,  16.043,&
         58.08, 58.61, 77.60,118.89, 95.16,118.72,&
         86.09,106.13, 30.07, 36.73, 44.05, 60.05,&
@@ -631,7 +646,17 @@ subroutine setup_mecha
         100.12, 72.11, 32.04, 70.09, 72.07, 70.09,&
         72.34, 75.78, 94.11,116.16, 58.08, 74.08,&
         136.238,44.,&
+        100.,100.,100.,100.,100.,100.,100./)
+      else !for WRF
+        WTM=(/  28.0, 30.00, 46.00, 17.00,  64.0, 16.043,&
+        58.08, 58.61, 77.60,118.89, 95.16,118.72,&
+        86.09,106.13, 30.07, 36.73, 44.05, 60.05,&
+        108.14, 28.05, 58.04, 30.03, 46.03, 68.12,& !
+        100.12, 72.11, 32.04, 70.09, 72.07, 70.09,&
+        72.34, 75.78, 94.11,116.16, 58.08, 74.08,&
+        136.238,44.,&
         3600.,3600.,3600.,3600.,3600.,3600.,3600./)
+      end if
         call lee_namelist_mecha('saprc  ')
     case default
         print *,"   **************************"
@@ -707,6 +732,7 @@ print *,"Inicializa archivo de salida ",FILE_NAME(1:40)
     !print *,"   Atributos Globales NF90_GLOBAL ****"
     !Atributos Globales NF90_GLOBAL
     call check( nf90_put_att(ncid, NF90_GLOBAL, "TITLE",titulo))
+    if (model.eq.1)  call check( nf90_put_att(ncid, NF90_GLOBAL, "Sub_title","CHIMERE model"))
     call check( nf90_put_att(ncid, NF90_GLOBAL, "START_DATE",iTime))
     call check( nf90_put_att(ncid, NF90_GLOBAL, "DAY ",cday))
     call check( nf90_put_att(ncid, NF90_GLOBAL, "SIMULATION_START_DATE",iTime))
@@ -780,7 +806,11 @@ print *,"Inicializa archivo de salida ",FILE_NAME(1:40)
     !print *,"Especies",ncid
     do i=1,radm
     if(i.lt.ipm-1 ) then
-    call crea_attr(ncid,4,dimids4,ename(i),cname(i),"mol km^-2 hr^-1",id_var(i))
+     if(model.eq.1) then
+     call crea_attr(ncid,4,dimids4,ename(i),cname(i),"molecule cm-2 s-1",id_var(i))
+    else
+     call crea_attr(ncid,4,dimids4,ename(i),cname(i),"mol km^-2 hr^-1",id_var(i))
+    end if
     else
     call crea_attr(ncid,4,dimids4,ename(i),cname(i),"ug m-2 s-1",id_var(i))
     end if
@@ -1017,6 +1047,7 @@ subroutine lee_emis(ii,borra)
     end if
     if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
     if(ii.eq.imt) is=jmt
+    if(model.eq.1.and.ii.eq.1) SUPF1=SUPF1*6.022e23/1e10/3.6e3 !mol h-1 km-2 -> molec s-1 cm-2
     constant=scala(ii)*SUPF1/WTM(is)
     write(6,'(i4,x,A,A,2ES11.1)') ii,ruta//fnameA(ii),current_date(1:13),constant
     do
@@ -1157,8 +1188,13 @@ subroutine escribe_var(ikk)
     character(len=19):: iTime
     character(len=19),dimension(1,1)::Times
 
-    FILE_NAME='wrfchemi_d01_'//trim(mecha(1:5))//'_'&
-    &//trim(zona(1:8))//'_'//current_date(1:19)
+    if (model.eq.1) then
+        FILE_NAME='AEMISSIONS.'//trim(mecha(1:5))//'_'&
+        &//trim(zona(1:8))//'_'//current_date(1:19)
+    else
+        FILE_NAME='wrfchemi_d01_'//trim(mecha(1:5))//'_'&
+        &//trim(zona(1:8))//'_'//current_date(1:19)
+    end if
    iTime=current_date
     if(periodo.eq.1) then
         iit= 1
@@ -1167,8 +1203,13 @@ subroutine escribe_var(ikk)
         iit=1
         eit=12
         write(iTime(12:13),'(I2.2)') 12
-        FILE_NAME2='wrfchemi_d01_'//trim(mecha(1:5))//'_'//&
-        &trim(zona(1:8))//'_'//iTime
+        if (model.eq.1) then
+            FILE_NAME2='AEMISSIONS.'//trim(mecha(1:5))//'_'//&
+            &trim(zona(1:8))//'_'//iTime
+        else
+            FILE_NAME2='wrfchemi_d01_'//trim(mecha(1:5))//'_'//&
+            &trim(zona(1:8))//'_'//iTime
+        end if
     end if
     if(ikk.eq.1) then
       call setup_file(FILE_NAME,0,ncid)

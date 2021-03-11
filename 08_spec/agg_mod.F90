@@ -9,7 +9,8 @@ module voc_split
   integer,parameter :: nspecies=292 ;!> max number chemical species
   integer,parameter :: ncat=40      ;!>number the clasess in profiles_spc.txt
   integer :: nclass    ;!> line number in area file TCOV_2016.txt
-  integer :: lfa          ;!> Emission layer from point source
+  integer :: lfa       ;!> model type 0 WRF 1 CHIMERE
+  integer :: model     ;!> Emission layer from point source
   integer,allocatable :: capa(:,:) ;!> mission layer from point source to be written
   integer,allocatable :: layer(:,:) ;!> grid id from emissions file
   integer,allocatable ::grid(:) ;!> different grid id from emissions file
@@ -27,7 +28,7 @@ module voc_split
   character (len=19) :: current_date
   !> Photochemical mecanism in profile_MECHA.csv file
   character (len=19) ::cprof
-  common /date/ lfa,current_date,cdia,cprof,mecha
+  common /date/ model,lfa,current_date,cdia,cprof,mecha
 contains
 !  _                                          _ _     _
 ! | | ___  ___     _ __   __ _ _ __ ___   ___| (_)___| |_
@@ -41,7 +42,7 @@ contains
 !>   @version  2.1
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine lee_namelist
-    NAMELIST /chem_nml/ mecha
+    NAMELIST /chem_nml/ mecha,model
     integer unit_nml
     logical existe
     unit_nml = 9
