@@ -30,9 +30,9 @@ lsummer = .true.
 /
 ! Quimica a utilizar
 ! Los mecanismos a usar:
-!  cbm04 cbm05 mozart racm2 radm2 saprc99
-!  IF saprc99  model= 0 WRF 1 CHIMERE
+!  cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07
+!  IF saprc07  model= 0 WRF 1 CHIMERE
 &chem_nml
-mecha='radm2'
+mecha='saprc07'
 model=1
 /

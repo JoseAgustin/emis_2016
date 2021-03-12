@@ -160,7 +160,7 @@ implicit none
     READ (unit_nml , NML = chem_nml )
     close(unit_nml)
    ! WRITE (6    , NML = chem_nml )
-    if (trim(mecha).ne."saprc99") model=0
+    if (trim(mecha).ne."saprc07") model=0
   else
     stop '***** No namelist_emis.nml in .. directory'
   end if
@@ -224,6 +224,7 @@ end subroutine lee_namelist_mecha
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine setup_mecha
     IMPLICIT NONE
+    integer :: i
     select case (mecha)
     case("cbm04")
         print *,"   **************************************"
@@ -559,19 +560,9 @@ subroutine setup_mecha
         allocate(fnameA(nf),fnameM(nf),fnameP(nf))
         allocate(scala(nf),scalm(nf),scalp(nf))
         allocate(id_var(radm))
-    if (model.eq.1) then
-    ename=(/&
-    'CO         ','NO         ','NO2        ','NH3        ','SO2        ','CH4        ',&
-    'ACET       ','ALK3       ','ALK4       ','ALK5       ','ARO1       ','ARO2       ',&
-    'BACL       ','BALD       ','C2H6       ','C3H8       ','CCHO       ','CCO_OH     ',&
-    'CRES       ','C2H4       ','GLY        ','HCHO       ','HCOOH      ','C5H8       ',&
-    'IPRD       ','MEK        ','MEOH       ','MACR       ','MGLY       ','MVK        ',&
-    'OLE1       ','OLE2       ','PHEN       ','PRD2       ','RCHO       ','RCO_OH     ',&
-    'APINEN     ','CO2        ','PPM_big    ','PPM_fin    ','E_SO4I     ','E_NO3I     ',&
-    'E_PM25I    ','OCAR_fin   ','BCAR_fin   ','E_SO4J     ','E_NO3J     ','E_PM25J    ',&
-    'OCAR_finj  ','BCAR_finj  '/)
-    else
-    ename=['E_CO       ','E_NO       ','E_NO2      ','E_NH3      ','E_SO2      ',&
+
+    ename=[&
+    'E_CO       ','E_NO       ','E_NO2      ','E_NH3      ','E_SO2      ',&
     'E_CH4      ','E_ACET     ','E_ALK3     ','E_ALK4     ','E_ALK5     ','E_ARO1     ',&
     'E_ARO2     ','E_BACL     ','E_BALD     ','E_C2H6     ','E_C3H8     ','E_CCHO     ',&
     'E_CCO_OH   ','E_CRES     ','E_ETHENE   ','E_GLY      ','E_HCHO     ','E_HCOOH    ',&
@@ -580,7 +571,7 @@ subroutine setup_mecha
     'E_RCO_OH   ','E_TERP     ','E_CO2      ','E_PM_10    ','E_PM25     ','E_SO4I     ',&
     'E_NO3I     ','E_PM25I    ','E_ORGI     ','E_ECI      ','E_SO4J     ','E_NO3J     ',&
     'E_PM25J    ','E_ORGJ     ','E_ECJ      ']
-    end if
+
     cname=['Carbon Monoxide ','Nitrogen Oxide  ','Nitrogen Dioxide','Ammonia         ',&
     'Sulfur Dioxide  ','Methane         ','Acetone         ','Alkanes 3       ',&
     'Alkanes 4       ','Alkanes 5       ','Aromatics 1     ','Aromatics 2     ',&
@@ -633,11 +624,11 @@ subroutine setup_mecha
     'T_ANNCO2.csv      ','T_ANNPM10.csv     ','T_ANNPM25.csv     ','GSO4_P.txt        ',&
     'PNO3_P.txt        ','OTHE_P.txt        ','POA_P.txt         ','PEC_P.txt         ',&
     'T_ANNCH4.csv      ','T_ANNCN.csv       '/)
-        isp=(/ 1, 2, 3, 4, 5, 6, 7, 8, 9,10, &
-        11,12,13,14,15, 16,17,18,19,20, &
-        21,22,23,24,25, 26,27,28,29,30, &
-        31,32,33,34,35, 36,37,38,39,40, &
-        41,42,43,44,45, 46,47,48,49,50/)
+        isp=(/ 1, 2, 3, 4, 5,  6, 7, 8, 9,10, &
+              11,12,13,14,15, 16,17,18,19,20, &
+              21,22,23,24,25, 26,27,28,29,30, &
+              31,32,33,34,35, 36,37,38,39,40, &
+              41,42,43,44,45, 46,47,48,49,50/)
      if (model.eq.1) then ! for chimere
         WTM=(/ 28.0, 30.00, 46.00, 17.00, 64.0,  16.043,&
         58.08, 58.61, 77.60,118.89, 95.16,118.72,&
@@ -658,7 +649,125 @@ subroutine setup_mecha
         3600.,3600.,3600.,3600.,3600.,3600.,3600./)
       end if
         call lee_namelist_mecha('saprc  ')
-    case default
+    case ("saprc07")
+    print *,"Setup variables for ",mecha
+      nf=49    ! number of files antropogenic
+      ns=47    ! number of compounds
+      radm=ns+5 ! number of Mechanism classes
+      ipm=42  ! Posicion del archivo PM2.5
+      icn=49    ! Posicion archivo CN del INEM
+      jcn=47    ! Posicion archivo CN de especiacion
+      imt=48    ! Posicion archivo CH4 del INEM
+      jmt=6     ! Posicion archivo CH4 de especiacion
+      allocate(ename(radm),cname(radm))
+      allocate(isp(radm))
+      allocate(wtm(ns))
+      allocate(fnameA(nf),fnameM(nf),fnameP(nf))
+      allocate(scala(nf),scalm(nf),scalp(nf))
+      allocate(id_var(radm))
+      if (model.eq.1) then
+      ename=(/&
+      'CO         ','NO         ','NO2        ','NH3        ','SO2        ',&
+      'CH4        ','AACD       ','ACET       ','ACYE       ','ALK1       ','ALK2       ',&
+      'ALK3       ','ALK4       ','ALK5       ','ARO1       ','ARO2       ','BACL       ',&
+      'BALD       ','BENZ       ','CCHO       ','CRES       ','ETHE       ','FACD       ',&
+      'GLY        ','HCHO       ','IPRD       ','ISOP       ','MACR       ','MEK        ',&
+      'MEOH       ','MGLY       ','MVK        ','OLE1       ','OLE2       ','PACD       ',&
+      'PRD2       ','RCHO       ','RNO3       ','TERP       ','CO2        ','PPM_big    ',&
+      'PPM_fin    ','E_SO4I     ','E_NO3I     ','E_PM25I    ','OCAR_fin   ','BCAR_fin   ',&
+      'E_SO4J     ','E_NO3J     ','E_PM25J    ','OCAR_coa   ','BCAR_coa   '/)
+      else
+      ename=[&
+       'E_CO       ','E_NO       ','E_NO2      ','E_NH3      ','E_SO2      ',&
+       'E_CH4      ','E_AACD     ','E_ACET     ','E_ACYE     ','E_ALK1     ',&
+       'E_ALK2     ','E_ALK3     ','E_ALK4     ','E_ALK5     ','E_ARO1     ',&
+       'E_ARO2     ','E_BACL     ','E_BALD     ','E_BENZ     ','E_CCHO     ',&
+       'E_CRES     ','E_ETHE     ','E_FACD     ','E_GLY      ','E_HCHO     ',&
+       'E_IPRD     ','E_ISOP     ','E_MACR     ','E_MEK      ','E_MEOH     ',&
+       'E_MGLY     ','E_MVK      ','E_OLE1     ','E_OLE2     ','E_PACD     ',&
+       'E_PRD2     ','E_RCHO     ','E_RNO3     ','E_TERP     ','E_CO2      ',&
+       'E_PM_10    ','E_PM25     ','E_SO4I     ','E_NO3I     ','E_PM25I    ',&
+       'E_ORGI     ','E_ECI      ','E_SO4J     ','E_NO3J     ','E_PM25J    ',&
+       'E_ORGJ     ','E_ECJ      ']
+      end if
+    cname=['Carbon Monoxide ','Nitrogen Oxide  ','Nitrogen Dioxide','Ammonia         ',&
+    'Sulfur Dioxide  ','Methane         ','Acetic Acid. Als','Acetone         ',&
+    'Acetylene       ','Alkanes ALK1    ','Alkanes ALK2    ','Alkanes ALK3    ',&
+    'Alkanes ALK4    ','Alkanes ALK5    ','AromaticskOH < 2','AromaticskOH > 2',&
+    'Biacetyl        ','Aromatic aldehyd','Benzene         ','Acetaldehyde    ',&
+    'Phenols and Cres','Ethene          ','Formic Acid     ','Glyoxal         ',&
+    'Formaldehyde    ','Lumped isoprene ','Isoprene        ','Methacrolein    ',&
+    'Ketones and othe','Methanol        ','Methyl Glyoxal  ','Methyl Vinyl Ket',&
+    'Alkenes (other t','Alkenes with kOH','Higher organic a','Ketones and othe',&
+    'Lumped C3+ Aldeh','Lumped Organic N','Terpenes        ',&
+    'Carbon Dioxide  ','PM_10           ','PM 2.5 um mode  ',&
+    'Sulfates Particl','Nitrates Particl','OTHER Particles ','Organic C partic',&
+    'Elemental Carbon','Sulfates J mode ','Nitrates J mode ','OTHER           ',&
+    'Organic Carbon  ','Elemental Carbon']
+
+  fnameA=['TACO__2016.csv    ',&
+      'TANOx_2016.csv    ','TANOx_2016.csv    ','TANH3_2016.csv    ','TASO2_2016.csv    ',&
+      'SAPRC07_CH4_A.txt ','SAPRC07_AACD_A.txt','SAPRC07_ACET_A.txt','SAPRC07_ACYE_A.txt',&
+      'SAPRC07_ALK1_A.txt','SAPRC07_ALK2_A.txt','SAPRC07_ALK3_A.txt','SAPRC07_ALK4_A.txt',&
+      'SAPRC07_ALK5_A.txt','SAPRC07_ARO1_A.txt','SAPRC07_ARO2_A.txt','SAPRC07_BACL_A.txt',&
+      'SAPRC07_BALD_A.txt','SAPRC07_BENZ_A.txt','SAPRC07_CCHO_A.txt','SAPRC07_CRES_A.txt',&
+      'SAPRC07_ETHE_A.txt','SAPRC07_FACD_A.txt','SAPRC07_GLY_A.txt ','SAPRC07_HCHO_A.txt',&
+      'SAPRC07_IPRD_A.txt','SAPRC07_ISOP_A.txt','SAPRC07_MACR_A.txt','SAPRC07_MEK_A.txt ',&
+      'SAPRC07_MEOH_A.txt','SAPRC07_MGLY_A.txt','SAPRC07_MVK_A.txt ','SAPRC07_OLE1_A.txt',&
+      'SAPRC07_OLE2_A.txt','SAPRC07_PACD_A.txt','SAPRC07_PRD2_A.txt','SAPRC07_RCHO_A.txt',&
+      'SAPRC07_RNO3_A.txt','SAPRC07_TERP_A.txt',&
+      'TACO2_2016.csv    ','TAPM102016.csv    ','TAPM2_2016.csv    ','GSO4_A.txt        ',&
+      'PNO3_A.txt        ','OTHE_M.txt        ','POA_A.txt         ','PEC_A.txt         ',&
+      'TACH4_2016.csv    ','TACN__2016.csv    ']
+fnameM =(/'TMCO__2016.csv    ',&
+          'TMNO__2016.csv    ','TMNO__2016.csv    ','TMNH3_2016.csv    ','TMSO2_2016.csv    ',&
+          'SAPRC07_CH4_M.txt ','SAPRC07_AACD_M.txt','SAPRC07_ACET_M.txt','SAPRC07_ACYE_M.txt',&
+          'SAPRC07_ALK1_M.txt','SAPRC07_ALK2_M.txt','SAPRC07_ALK3_M.txt','SAPRC07_ALK4_M.txt',&
+          'SAPRC07_ALK5_M.txt','SAPRC07_ARO1_M.txt','SAPRC07_ARO2_M.txt','SAPRC07_BACL_M.txt',&
+          'SAPRC07_BALD_M.txt','SAPRC07_BENZ_M.txt','SAPRC07_CCHO_M.txt','SAPRC07_CRES_M.txt',&
+          'SAPRC07_ETHE_M.txt','SAPRC07_FACD_M.txt','SAPRC07_GLY_M.txt ','SAPRC07_HCHO_M.txt',&
+          'SAPRC07_IPRD_M.txt','SAPRC07_ISOP_M.txt','SAPRC07_MACR_M.txt','SAPRC07_MEK_M.txt ',&
+          'SAPRC07_MEOH_M.txt','SAPRC07_MGLY_M.txt','SAPRC07_MVK_M.txt ','SAPRC07_OLE1_M.txt',&
+          'SAPRC07_OLE2_M.txt','SAPRC07_PACD_M.txt','SAPRC07_PRD2_M.txt','SAPRC07_RCHO_M.txt',&
+          'SAPRC07_RNO3_M.txt','SAPRC07_TERP_M.txt',&
+          'TMCO2_2016.csv    ','TMPM102016.csv    ','TMPM2_2016.csv    ','GSO4_M.txt        ',&
+          'PNO3_M.txt        ','OTHE_M.txt        ','POA_M.txt         ','PEC_M.txt         ',&
+          'TMCH4_2016.csv    ','TMCN__2016.csv    '/)
+fnameP=(/'T_ANNCO.csv       ',&
+        'T_ANNNOX.csv      ','T_ANNNOX.csv      ','T_ANNNH3.csv      ','T_ANNSO2.csv      ',&
+        'SAPRC07_CH4_P.txt ','SAPRC07_AACD_P.txt','SAPRC07_ACET_P.txt','SAPRC07_ACYE_P.txt',&
+        'SAPRC07_ALK1_P.txt','SAPRC07_ALK2_P.txt','SAPRC07_ALK3_P.txt','SAPRC07_ALK4_P.txt',&
+        'SAPRC07_ALK5_P.txt','SAPRC07_ARO1_P.txt','SAPRC07_ARO2_P.txt','SAPRC07_BACL_P.txt',&
+        'SAPRC07_BALD_P.txt','SAPRC07_BENZ_P.txt','SAPRC07_CCHO_P.txt','SAPRC07_CRES_P.txt',&
+        'SAPRC07_ETHE_P.txt','SAPRC07_FACD_P.txt','SAPRC07_GLY_P.txt ','SAPRC07_HCHO_P.txt',&
+        'SAPRC07_IPRD_P.txt','SAPRC07_ISOP_P.txt','SAPRC07_MACR_P.txt','SAPRC07_MEK_P.txt ',&
+        'SAPRC07_MEOH_P.txt','SAPRC07_MGLY_P.txt','SAPRC07_MVK_P.txt ','SAPRC07_OLE1_P.txt',&
+        'SAPRC07_OLE2_P.txt','SAPRC07_PACD_P.txt','SAPRC07_PRD2_P.txt','SAPRC07_RCHO_P.txt',&
+        'SAPRC07_RNO3_P.txt','SAPRC07_TERP_P.txt',&
+        'T_ANNCO2.csv      ','T_ANNPM10.csv     ','T_ANNPM25.csv     ','GSO4_P.txt        ',&
+        'PNO3_P.txt        ','OTHE_P.txt        ','POA_P.txt         ','PEC_P.txt         ',&
+        'T_ANNCH4.csv      ','T_ANNCN.csv       '/)
+      isp=(/ 1, 2, 3, 4, 5, 6, 7, 8, 9,10, &
+            11,12,13,14,15, 16,17,18,19,20, &
+            21,22,23,24,25, 26,27,28,29,30, &
+            31,32,33,34,35, 36,37,38,39,40, &
+            41,42,43,44,45, 46,47,48,49,50, &
+            51,52/)
+      WTM=(/28.0, 30.00, 46.00, 17.00,  64.0, 16.043,&
+            60.05,58.08,26.03728, 30.07, 36.73, 58.61,&
+            77.6, 118.89, 95.16, 118.72, 86.09, 106.13,&
+           78.11184, 44.05, 108.14, 28.05, 46.03, 58.04,&
+           30.03, 100.12, 68.12, 70.09, 72.11, 32.04,&
+           72.07, 70.09, 72.34, 75.78, 74.08, 116.16,&
+           58.08,  147.18,  136.24,&
+           3600.,3600.,3600.,3600.,3600.,3600.,3600./)
+        if (model.eq.1) then ! for chimere
+           do i=ns-7,ns
+             WTM(i)=100.
+           end do
+        end if
+        call lee_namelist_mecha('saprc7 ')
+      case default
         print *,"   **************************"
         print *," Mechanism :",mecha," does not exists!!"
         print *,"   **************************"
@@ -1058,14 +1167,14 @@ end subroutine lee_localiza
 subroutine lee_emis(ii,borra)
     implicit none
     integer,INTENT(in):: ii
-    integer :: i,ih,is,j,k,levl,levld,iun
+    integer :: i,ih,is,j,k,levl,levld
+    integer :: iun
     real ::rdum, constant
     real,dimension(nh)::edum
     character (len=15)::ruta
     character(len=13) cdum,crdum
     logical,INTENT(in) ::borra
     if (borra) eft =0
-    !print *,fnameA(ii),fnameM(ii),fnameP(ii),ii
 !$omp parallel sections num_threads (3) private(i,j,ih,k,idcf,constant,is,iun,edum,ruta)
 !$omp section
     if (ii.le.5 .or. (ii.ge.ipm-2 .and. ii.le.ipm).or.ii.eq.icn .or. ii .eq.imt)then

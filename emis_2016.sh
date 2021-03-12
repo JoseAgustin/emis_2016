@@ -25,10 +25,11 @@ dominio=ecaim3
 HacerArea=1
 #
 # Selecciona mecanismo
-# Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99
+# Los mecanismos a usar:
+# cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07
 #
-MECHA=radm2
-# Si saprc99 AQM_SELECT = 0 WRF 1 CHIMERE
+MECHA=saprc07
+# Si saprc07 AQM_SELECT = 0 WRF 1 CHIMERE
 AQM_SELECT=1
 #  Build the namelist_emis.nml file
 # Cambiar aqui la fecha
@@ -92,8 +93,8 @@ lsummer = .true.
 /
 ! Quimica a utilizar
 ! Los mecanismos a usar:
-!  cbm04 cbm05 mozart racm2 radm2 saprc99
-!  if saprc99  model= 0 WRF 1 CHIMERE
+!  cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07
+!  if saprc07  model= 0 WRF 1 CHIMERE
 &chem_nml
 mecha='$MECHA'
 model=$AQM_SELECT
@@ -160,8 +161,8 @@ lsummer = .true.
 /
 ! Quimica a utilizar
 ! Los mecanismos a usar:
-!  cbm04 cbm05 mozart racm2 radm2 saprc99
-!  IF saprc99  model= 0 WRF 1 CHIMERE
+!  cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07
+!  IF saprc07  model= 0 WRF 1 CHIMERE
 &chem_nml
 mecha='$MECHA'
 model=$AQM_SELECT
