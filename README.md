@@ -196,7 +196,8 @@ En este directorio se realiza la especiación química de los VOC para luego agr
 - profile\_cbm05.csv – Mecanimso químico Carbon Bond V
 - profile\_mozart.csv – Mecanismo MOZART (Model for OZone And Related chemical Tracers
 - profile\_racm2.csv – Mecanismo Regional Atmospheric Chemistry Mechanism (RACM)
-- profile\_saprc99.csv -Mecanismo Statewide Air Pollution Research Center (SAPRC)
+- profile\_saprc99.csv -Mecanismo Statewide Air Pollution Research Center (SAPRC 1999)
+- profile\_saprc07.csv -Mecanismo Statewide Air Pollution Research Center (SAPRC 2007)
 - profile\_radm2.csv – Mecanismo Regional Acid Deposition Model, ver 2. (RADM2)
 
 Para la realización de esto se emplean tres programas, uno para cada tipo de fuente así:
@@ -292,9 +293,9 @@ En el directorio principal emis\_2016 se edita el script emis\_2016.sh
 
          HacerArea=1
 
-  3. Se selecciona el mecanismo, asignado el valor en MECHA en el caso de __saprc99__  se puede asignar  la variable  `model = 0` para  WRF  y  ` =1` para CHIMERE
+  3. Se selecciona el mecanismo, asignado el valor en MECHA en el caso de __saprc07__  se puede asignar  la variable  `model = 0` para  WRF  y  ` =1` para CHIMERE
 
-          # Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99
+          # Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07
           #
           MECHA=radm2
           model =0
