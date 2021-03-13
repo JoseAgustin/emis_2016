@@ -591,6 +591,10 @@ LTLIBOBJS
 LIBOBJS
 WITH_R4_FALSE
 WITH_R4_TRUE
+WITH_PGI_FALSE
+WITH_PGI_TRUE
+WITH_GFOR_FALSE
+WITH_GFOR_TRUE
 WITH_OMPI_FALSE
 WITH_OMPI_TRUE
 OPENMP_FCFLAGS
@@ -4394,6 +4398,23 @@ else
 fi
 
 
+ if test "x$FC" = "xgfortran"; then
+  WITH_GFOR_TRUE=
+  WITH_GFOR_FALSE='#'
+else
+  WITH_GFOR_TRUE='#'
+  WITH_GFOR_FALSE=
+fi
+
+ if test "x$FC" = "xpgfortran"; then
+  WITH_PGI_TRUE=
+  WITH_PGI_FALSE='#'
+else
+  WITH_PGI_TRUE='#'
+  WITH_PGI_FALSE=
+fi
+
+
 # Checks for library functions.
 #
 
@@ -4597,6 +4618,14 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${WITH_OMPI_TRUE}" && test -z "${WITH_OMPI_FALSE}"; then
   as_fn_error $? "conditional \"WITH_OMPI\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${WITH_GFOR_TRUE}" && test -z "${WITH_GFOR_FALSE}"; then
+  as_fn_error $? "conditional \"WITH_GFOR\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${WITH_PGI_TRUE}" && test -z "${WITH_PGI_FALSE}"; then
+  as_fn_error $? "conditional \"WITH_PGI\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${WITH_R4_TRUE}" && test -z "${WITH_R4_FALSE}"; then

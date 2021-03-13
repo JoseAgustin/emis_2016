@@ -828,8 +828,8 @@ subroutine setup_file(FILE_NAME,istart,ncid)
     JULDAY=juliano(anio,month,idia)
 ! Open NETCDF emissions file
 !    call check( nf90_create(path =FILE_NAME,cmode = or(nf90_clobber,nf90_64bit_offset), ncid = ncid) )
-!   call check( nf90_create(path =FILE_NAME,cmode = NF90_NETCDF4,ncid = ncid) )
-   call check( nf90_create(path =FILE_NAME,cmode = NF90_CLASSIC_MODEL,ncid = ncid) )
+   call check( nf90_create(path =FILE_NAME,cmode = NF90_NETCDF4,ncid = ncid) )
+!   call check( nf90_create(path =FILE_NAME,cmode = NF90_CLASSIC_MODEL,ncid = ncid) )
 !     Define dimensiones
     dim=(/1,19,nx,ny,1,zlev/)
     !print *, "    Dimensions definition ****"

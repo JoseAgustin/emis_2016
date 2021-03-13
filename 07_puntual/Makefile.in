@@ -254,6 +254,7 @@ top_srcdir = @top_srcdir@
 #
 # Compiler flags
 # Parallel version
+@WITH_GFOR_TRUE@AM_FCFLAGS = -DPGI
 @WITH_OMPI_TRUE@AM_FCFLAGS = $(OPENMP_FCFLAGS)
 
 # Additional files to be cleaned with 'make clean'

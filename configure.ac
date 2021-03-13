@@ -116,6 +116,9 @@ AC_ARG_ENABLE([parallel],
     fi
 AM_CONDITIONAL([WITH_OMPI], [test "x$parallel" = "xtrue"])
 
+AM_CONDITIONAL([WITH_GFOR],[test "x$FC" = "xgfortran"])
+AM_CONDITIONAL([WITH_PGI],[test "x$FC" = "xpgfortran"])
+
 # Checks for library functions.
 #
 
