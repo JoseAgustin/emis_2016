@@ -25,11 +25,11 @@ integer,parameter :: zlev=8 ;!> number of files antropogenic
 integer :: nf    ;!> number of compounds
 integer :: ns    ;!> =ns+5 number of Mechanism classes
 integer :: radm  ;!> Position of pm2.5 in the variables array
-integer :: ipm   ;!> Position of BC in variables array from INEM
-integer :: icn   ;!> Position of BC in variables array from Speciation file
-integer :: jcn   ;!> Position of CH4 in variables array from INEM
-integer :: imt   ;!> Position of CH4 in variables array from Speciation file
-integer :: jmt   ;!> day in emissions output file
+integer :: L_PM25   ;!> Position of BC in variables array from INEM
+integer :: L_CN_i   ;!> Position of BC in variables array from Speciation file
+integer :: L_CN_S   ;!> Position of CH4 in variables array from INEM
+integer :: L_CH4_i   ;!> Position of CH4 in variables array from Speciation file
+integer :: L_CH4_S   ;!> day in emissions output file
 integer :: idia  ;!> month in emissions output file
 integer :: month ;!> year in emissions output file
 integer :: anio  ;!> model ID for output 0=WRF 1=CHIMERE 2=CMAQ
@@ -90,7 +90,7 @@ character (len=19) ::  mecha
 character (len=40) :: titulo
 !> geogrphical area selected in namelist_emis.nml
 character(len=12):: zona
-common /quimicos/ nf,ns,radm,ipm,icn,jcn,imt,jmt
+common /quimicos/ nf,ns,radm,L_PM25,L_CN_i,L_CN_S,L_CH4_i,L_CH4_S
 common /domain/ ncel,nl,nx,ny,CDIM,SUPF1,zona
 common /fileout/id_varlong,id_varlat,id_varpop,&
 id_unlimit,id_utmx,id_utmy,id_utmz,ncid,ncid2
@@ -237,11 +237,11 @@ subroutine setup_mecha
         nf=30    ! number of files antropogenic
         ns=28    ! number of compounds
         radm=ns+5 ! number of Mechanism classes
-        ipm=23  ! Posicion del archivo PM2.5
-        icn=30    ! Posicion archivo CN del INEM
-        jcn=28    ! Posicion archivo CN de especiacion
-        imt=29    ! Posicion archivo CH4 del INEM
-        jmt=7     ! Posicion archivo CH4 de especiacion
+        L_PM25=23  ! Posicion del archivo PM2.5
+        L_CN_i=30    ! Posicion archivo CN del INEM
+        L_CN_S=28    ! Posicion archivo CN de especiacion
+        L_CH4_i=29    ! Posicion archivo CH4 del INEM
+        L_CH4_S=7     ! Posicion archivo CH4 de especiacion
         allocate(ename(radm),cname(radm))
         allocate(isp(radm))
         allocate(wtm(ns))
@@ -315,11 +315,11 @@ subroutine setup_mecha
         nf=39    ! number of files antropogenic
         ns=37    ! number of compounds
         radm=ns+5 ! number of Mechanism classes
-        ipm=32  ! Posicion del archivo PM2.5
-        icn=39    ! Posicion archivo CN del INEM
-        jcn=37    ! Posicion archivo CN de especiacion
-        imt=38    ! Posicion archivo CH4 del INEM
-        jmt=6     ! Posicion archivo CH4 de especiacion
+        L_PM25=32  ! Posicion del archivo PM2.5
+        L_CN_i=39    ! Posicion archivo CN del INEM
+        L_CN_S=37    ! Posicion archivo CN de especiacion
+        L_CH4_i=38    ! Posicion archivo CH4 del INEM
+        L_CH4_S=6     ! Posicion archivo CH4 de especiacion
         allocate(ename(radm),cname(radm))
         allocate(isp(radm))
         allocate(wtm(ns))
@@ -395,11 +395,11 @@ subroutine setup_mecha
         nf=55    ! number of files antropogenic
         ns=53    ! number of compounds
         radm=ns+5 ! number of Mechanism classes
-        ipm=48  ! Posicion del archivo PM2.5
-        icn=55    ! Posicion archivo CN del INEM
-        jcn=52    ! Posicion archivo CN de especiacion
-        imt=54    ! Posicion archivo CH4 del INEM
-        jmt=6     ! Posicion archivo CH4 de especiacion
+        L_PM25=48  ! Posicion del archivo PM2.5
+        L_CN_i=55    ! Posicion archivo CN del INEM
+        L_CN_S=52    ! Posicion archivo CN de especiacion
+        L_CH4_i=54    ! Posicion archivo CH4 del INEM
+        L_CH4_S=6     ! Posicion archivo CH4 de especiacion
         allocate(ename(radm),cname(radm))
         allocate(isp(radm))
         allocate(wtm(ns))
@@ -491,11 +491,11 @@ subroutine setup_mecha
         nf=36    ! number of files antropogenic
         ns=34    ! number of compounds
         radm=ns+5 ! number of Mechanism classes
-        ipm=29  ! Posicion del archivo PM2.5
-        icn=36    ! Posicion archivo CN del INEM
-        jcn=34    ! Posicion archivo CN de especiacion
-        imt=35    ! Posicion archivo CH4 del INEM
-        jmt=7     ! Posicion archivo CH4 de especiacion
+        L_PM25=29  ! Posicion del archivo PM2.5
+        L_CN_i=36    ! Posicion archivo CN del INEM
+        L_CN_S=34    ! Posicion archivo CN de especiacion
+        L_CH4_i=35    ! Posicion archivo CH4 del INEM
+        L_CH4_S=7     ! Posicion archivo CH4 de especiacion
         allocate(ename(radm),cname(radm))
         allocate(isp(radm))
         allocate(wtm(ns))
@@ -561,11 +561,11 @@ subroutine setup_mecha
         nf=47    ! number of files antropogenic
         ns=45    ! number of compounds
         radm=ns+5 ! number of Mechanism classes
-        ipm=40  ! Posicion del archivo PM2.5
-        icn=47    ! Posicion archivo CN del INEM
-        jcn=45    ! Posicion archivo CN de especiacion
-        imt=46    ! Posicion archivo CH4 del INEM
-        jmt=6     ! Posicion archivo CH4 de especiacion
+        L_PM25=40  ! Posicion del archivo PM2.5
+        L_CN_i=47    ! Posicion archivo CN del INEM
+        L_CN_S=45    ! Posicion archivo CN de especiacion
+        L_CH4_i=46    ! Posicion archivo CH4 del INEM
+        L_CH4_S=6     ! Posicion archivo CH4 de especiacion
         allocate(ename(radm),cname(radm))
         allocate(isp(radm))
         allocate(wtm(ns))
@@ -666,11 +666,11 @@ subroutine setup_mecha
       nf=49    ! number of files antropogenic
       ns=47    ! number of compounds
       radm=ns+5 ! number of Mechanism classes
-      ipm=42  ! Posicion del archivo PM2.5
-      icn=49    ! Posicion archivo CN del INEM
-      jcn=47    ! Posicion archivo CN de especiacion
-      imt=48    ! Posicion archivo CH4 del INEM
-      jmt=6     ! Posicion archivo CH4 de especiacion
+      L_PM25=42  ! Posicion del archivo PM2.5
+      L_CN_i=49    ! Posicion archivo CN del INEM
+      L_CN_S=47    ! Posicion archivo CN de especiacion
+      L_CH4_i=48    ! Posicion archivo CH4 del INEM
+      L_CH4_S=6     ! Posicion archivo CH4 de especiacion
       allocate(ename(radm),cname(radm))
       allocate(isp(radm))
       allocate(wtm(ns))
@@ -956,13 +956,13 @@ subroutine setup_file(FILE_NAME,istart,ncid)
     call check( nf90_put_att(ncid, id_utmz, "units", "None"))
     !print *,"Especies",ncid
     do i=1,radm
-    if(i.lt.ipm-1 ) then
+    if(i.lt.L_PM25-1 ) then !for gases
       if(model.eq.1) then
        call crea_attr(ncid,4,dimids4,ename(i),cname(i),"molecule cm-2 s-1",id_var(i))
      else
        call crea_attr(ncid,4,dimids4,ename(i),cname(i),"mol km^-2 hr^-1",id_var(i))
      end if
-    else
+    else                  !for particles
       if(model.eq.1) then
         call crea_attr(ncid,4,dimids4,ename(i),cname(i),"molecule cm-2 s-1",id_var(i))
       else
@@ -1000,13 +1000,13 @@ subroutine guarda_variables
     if(periodo.eq.2) allocate(efs(nx,ny,zlev,nh/2))
     eft=0.
     do i=1,nf
-        if(i.eq.icn .or. i.eq.imt) cycle
-        if(i.eq.jcn ) then
-            call lee_emis(ii=  i,borra=.true.)
-            call lee_emis(ii=icn,borra=.false.)
-        else if(i.eq.jmt) then
-            call lee_emis(ii=  i,borra=.true.)
-            call lee_emis(ii=imt,borra=.false.)
+        if(i.eq.L_CN_i .or. i.eq.L_CH4_i) cycle
+        if(i.eq.L_CN_S ) then
+            call lee_emis(ii=  i   ,borra=.true. )
+            call lee_emis(ii=L_CN_i,borra=.false.)
+        else if(i.eq.L_CH4_S) then
+            call lee_emis(ii=  i    ,borra=.true. )
+            call lee_emis(ii=L_CH4_i,borra=.false.)
         else
             call lee_emis(ii=  i,borra=.true.)
         end if
@@ -1025,11 +1025,12 @@ end subroutine guarda_variables
 !>   @date  07/13/2020
 !>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-!>   @param  iyear year number for identify leap year
-!>   @param  imes month number for identify number of days
+!>   @param  iyear year number for identifying leap year
+!>   @param  imes month number for identifying number of days
 !>   @param  iday day number
-integer function juliano(iyear,imes,iday)
+ function juliano(iyear,imes,iday) result(jdia)
     implicit none
+    integer :: jdia
     integer,intent(in) :: iyear
     integer,intent(in) :: imes
     integer,intent(in) :: iday
@@ -1037,10 +1038,10 @@ integer function juliano(iyear,imes,iday)
     integer i
 
     if (mod(iyear,4)==0.and.mod(iyear,100)/=0) month(2)=29 !Bisiesto
-    juliano=iday
+    jdia=iday
     if (imes.gt.1) then
         do i=1,imes-1
-            juliano=juliano+month(i)
+            jdia=jdia+month(i)
         end do
     end if
     return
@@ -1057,8 +1058,9 @@ end function
 !>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param  num number of the month
-character(len=3)function mes(num)
-    character*2 num
+   function mes(num)
+    character(len=3) :: mes
+    character(len=2),intent(in) :: num
     select case (num)
     case('01');mes='Jan'
     case('02');mes='Feb'
@@ -1186,12 +1188,12 @@ subroutine lee_emis(ii,borra)
     character (len=15)::ruta
     character(len=13) cdum,crdum
     logical,INTENT(in) ::borra
-    if (borra) eft =0
+    if (borra) eft =0.
 !$omp parallel sections num_threads (3) private(i,j,ih,k,idcf,constant,is,iun,edum,ruta)
 !$omp section
-    if (ii.le.5 .or. (ii.ge.ipm-2 .and. ii.le.ipm).or.ii.eq.icn .or. ii .eq.imt)then
+    if (ii.le.5 .or. (ii.ge.L_PM25-2 .and. ii.le.L_PM25).or.ii.eq.L_CN_i .or. ii .eq.L_CH4_i)then
         ruta="../04_temis/"
-    else if( ii.gt. ipm) then; ruta="../09_pm25spec/"
+    else if( ii.gt. L_PM25) then; ruta="../09_pm25spec/"
     else;     ruta="../08_spec/"; end if
     open(newunit=iun,file=trim(ruta)//fnameA(ii),status='OLD',action='READ')
     read(iun,*)cdum
@@ -1201,13 +1203,13 @@ subroutine lee_emis(ii,borra)
     else
         read(iun,*)j,current_date
     end if
-    if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
-    if(ii.eq.imt) is=jmt
+    if(ii.ge.L_PM25-1) then; is=L_PM25 ;else ;is=ii;end if
+    if(ii.eq.L_CH4_i) is=L_CH4_S
     if(model.eq.1.and.ii.eq.1) SUPF1=SUPF1*6.022e23/1e10/3.6e3 !mol h-1 km-2 -> molec s-1 cm-2
     constant=scala(ii)*SUPF1/WTM(is)
     write(6,'(i4,x,A,A,2ES11.1)') ii,ruta//fnameA(ii),current_date(1:13),constant
     do
-        if(ii.eq.ipm) then
+        if(ii.eq.L_PM25) then
             read(iun,*,END=100) idcf,rdum,(edum(ih),ih=1,nh)
         else
             read(iun,*,END=100) idcf,(edum(ih),ih=1,nh)
@@ -1228,9 +1230,9 @@ subroutine lee_emis(ii,borra)
     end do
 100 close(iun)
 !$omp section
-    if (ii.le.5 .or. (ii.ge.ipm-2 .and. ii.le.ipm).or.ii.eq.icn .or. ii .eq.imt)then
+    if (ii.le.5 .or. (ii.ge.L_PM25-2 .and. ii.le.L_PM25).or.ii.eq.L_CN_i .or. ii .eq.L_CH4_i)then
         ruta="../06_temisM/"
-    else if( ii.gt. ipm) then; ruta="../09_pm25spec/"
+    else if( ii.gt. L_PM25) then; ruta="../09_pm25spec/"
     else;     ruta="../08_spec/"; end if
     open(newunit=iun,file=trim(ruta)//fnameM(ii),status='OLD',action='READ')
     read(iun,*)cdum
@@ -1240,12 +1242,12 @@ subroutine lee_emis(ii,borra)
     else
         read(iun,*)j,current_date
     end if
-    if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
-    if(ii.eq.imt) is=jmt
+    if(ii.ge.L_PM25-1) then; is=L_PM25 ;else ;is=ii;end if
+    if(ii.eq.L_CH4_i) is=L_CH4_S
     write(6,'(i4,x,A,A,f7.1)') ii,ruta//fnameM(ii),current_date(1:13)
     constant=scalm(ii)*SUPF1/WTM(is)
     do
-        if(ii.eq.ipm) then !for PM2.5
+        if(ii.eq.L_PM25) then !for PM2.5
             read(iun,*,END=200) idcf,crdum,(edum(ih),ih=1,nh)
         else
             read(iun,*,END=200) idcf,(edum(ih),ih=1,nh)
@@ -1268,9 +1270,9 @@ subroutine lee_emis(ii,borra)
 !
 !  For point sources
 !$omp section
-    if (ii.le.5 .or. (ii.ge.ipm-2 .and. ii.le.ipm).or.ii.eq.icn .or. ii .eq.imt)then
+    if (ii.le.5 .or. (ii.ge.L_PM25-2 .and. ii.le.L_PM25).or.ii.eq.L_CN_i .or. ii .eq.L_CH4_i)then
         ruta="../07_puntual/"
-    else if( ii.gt. ipm) then; ruta="../09_pm25spec/"
+    else if( ii.gt. L_PM25) then; ruta="../09_pm25spec/"
     else;     ruta="../08_spec/"; end if
     open(newunit=iun,file=trim(ruta)//fnameP(ii),status='OLD',action='READ')
     read(iun,*)cdum
@@ -1280,13 +1282,13 @@ subroutine lee_emis(ii,borra)
     else
         read(iun,*)j,current_date
     end if
-    if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
-    if(ii.eq.imt) is=jmt
+    if(ii.ge.L_PM25-1) then; is=L_PM25 ;else ;is=ii;end if
+    if(ii.eq.L_CH4_i) is=L_CH4_S
     write(6,'(i4,x,A,A,f7.1)') ii,ruta//fnameP(ii),current_date(1:13)
     constant=scalp(ii)*SUPF1/WTM(is)
     rdum=SUPF1/WTM(is)
     do
-        if(ii.eq.ipm) then   !for PM2.5
+        if(ii.eq.L_PM25) then   !for PM2.5
             read(iun,*,END=300) crdum,idcf,levl,(edum(ih),ih=1,nh),levld
         !print *,idcf,rdum,levl,(edum(ih),ih=1,nh)
         else
@@ -1399,7 +1401,7 @@ subroutine escribe_var(ikk)
         endif
       it=0
     end if   ! for ikk == 1
-    if( ikk.lt.ipm-1) then !for gases
+    if( ikk.lt.L_PM25-1) then !for gases
         if(periodo.eq.1) then
 call check( nf90_put_var(ncid, id_var(isp(ikk)),eft,start=(/1,1,1,1/),count=(/nx,ny,zlev,24/)))
         else
