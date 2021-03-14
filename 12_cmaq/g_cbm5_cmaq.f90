@@ -27,7 +27,7 @@
 !   Se actualiza las fechas y datos         21/06/2019
 !   Se incluye descripción de archivo        8/10/2019
 !
-module varsc
+module emissions_vars
     integer ::ncel   ! number of cell in the grid
     integer ::nl     ! number of lines in files
     integer :: nx,ny ! grid dimensions
@@ -44,72 +44,126 @@ module varsc
     integer,parameter :: imt=29    ! Posicion archivo CH4 del INEM
     integer,parameter :: jmt=7     ! Posicion archivo CH4 de especiacion
     integer,allocatable :: idcg(:) ! ID cell in grid
-    integer,allocatable:: utmz(:),utmzd(:,:)  !utmz
+    integer,allocatable:: utmz(:),utmzd(:,:)  ;!> day in emissions output file
+    integer :: idia  ;!> month in emissions output file
+    integer :: month ;!> year in emissions output file
+    integer :: anio  ;!> model ID for output 0=WRF 1=CHIMERE 2=CMAQ
+    integer :: model ;!> =1 uno 24 hr, =2 dos de 12hrs c/u
+    integer ::periodo;
     real,allocatable:: eft(:,:,:,:,:)  ! emissions by nx,ny,file,nh,level
     real,allocatable :: lon(:),lat(:),pop(:)
     real,allocatable :: utmx(:),utmy(:)
     real,allocatable :: xlon(:,:),xlat(:,:),pob(:,:)
     real,allocatable :: utmxd(:,:),utmyd(:,:)
     real :: CDIM      ! celdimension in km
-
+!> geogrphical area selected in namelist_emis.nml
+    character(len=363) :: var_list
+    character(len=12):: zona
     character(len=3) :: cday
-    character(len=11),dimension(radm):: ename=(/'CO   ','NH3  ','NO   ', &
-    'NO2  ','SO2  ','ALD2 ','CH4  ','ALDX ','ETH  ','ETHA ', &
-    'ETOH ','IOLE ','MEOH ','FORM ','ISOP ','OLE  ','PAR  ', &
-    'TERP ','TOL  ','XYL  ','CO2  ', &
-    'PM_10','PMFP ','PSO4 ','PNO3 ','PM25I',&
-    'APOCI','PEC  '/)
-    character(len=16),dimension(radm):: cname=(/'Carbon Monoxide ','NH3             ','NO              ', &
-    'NO2  ','SO2  ','Acetaldehyde','METHANE','C3+Aldehydes','Ethene','Ethane', &
-    'Ethanol','Internal OLE  ','Methanol','HCHO ','Isoprene','TOB (R-C=C)','Paraffin (C-C)', &
-    'Terpenes','Toluene+others','Xylene+others','Carbon Dioxide', &
-    'PM_10','PM_25 ','Sulfates ','Nitrates ','PM25I',&
-    'Organic ','Elemental Carbon'/)
+    character(len=11),dimension(radm):: ename=(/&
+        'CO         ','NH3        ','NO         ', 'NO2        ',&
+        'SO2        ','ALD2       ','CH4        ','ALDX       ','ETH        ',&
+        'ETHA       ','ETOH       ','IOLE       ','MEOH       ','FORM       ',&
+        'ISOP       ','OLE        ','PAR        ','TERP       ','TOL        ',&
+        'XYL        ','CO2        ','PM_10      ','PMFP       ','PSO4I      ',&
+        'PNO3I      ','PM25I      ','APOCI      ','PECI       '/)
+    character(len=16),dimension(radm):: &
+     cname=(/'Carbon Monoxide ','Ammonia NH3     ','NO              ', &
+        'NO2             ','SO2             ','Acetaldehyde    ','METHANE         ',&
+        'C3+Aldehydes    ','Ethene          ','Ethane          ','Ethanol         ',&
+        'Internal OLE    ','Methanol        ','Formaldehyde    ','Isoprene        ',&
+        'TOB (R-C=C)     ','Paraffin (C-C)  ','Terpenes        ','Toluene+others  ',&
+        'Xylene+others   ','Carbon Dioxide  ','PM 10um mode    ','PM 2.5um mode   ',&
+        'Sulfates        ','Nitrates        ','PM2.5I          ','Organic Carbon  ',&
+        'Elemental Carbon'/)
     character (len=19) :: current_date,current_datem,mecha
     character (len=40)  ::titulo
-    common /domain/ ncel,nl,nx,ny,zlev,CDIM
+    common /domain/ ncel,nl,nx,ny,zlev,CDIM,zona
     common /date/ current_date,cday,mecha,cname,titulo
-end module varsc
+    common /nlm_vars/model,month,idia,anio,periodo
+end module emissions_vars
 
 program guarda_nc
-use varsc
+use emissions_vars
 use netcdf
+    call lee_namelist
 
 	call lee
-	
-	!call calculos
-	
+		
 	call store
 contains
+!  _                                          _ _     _
+! | | ___  ___     _ __   __ _ _ __ ___   ___| (_)___| |_
+! | |/ _ \/ _ \   | '_ \ / _` | '_ ` _ \ / _ \ | / __| __|
+! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_
+! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|
+!            |_____|
+!>  @brief Reads global namelist input file
+!>
+!>   for setting up geographical, temporal and chemical mechamism settings
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  07/13/2020
+!>   @version  2.2
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+subroutine lee_namelist
+implicit none
+  NAMELIST /region_nml/ zona
+  NAMELIST /fecha_nml/ idia,month,anio,periodo
+  NAMELIST /chem_nml/ mecha,model
+  integer:: unit_nml=9
+  logical existe
+  existe = .FALSE.
+  write(6,*)' >>>> Reading file - ../namelist_emis.nml'
+  inquire ( FILE = '../namelist_emis.nml' , EXIST = existe )
+  if ( existe ) then
+  !  Opening the file.
+    open ( FILE   = '../namelist_emis.nml' ,      &
+    UNIT   =  unit_nml        ,      &
+    STATUS = 'OLD'            ,      &
+    FORM   = 'FORMATTED'      ,      &
+    ACTION = 'READ'           ,      &
+    ACCESS = 'SEQUENTIAL'     )
+    !  Reading the file
+    READ (unit_nml , NML = region_nml )
+    READ (unit_nml , NML = fecha_nml)
+    READ (unit_nml , NML = chem_nml )
+    close(unit_nml)
+   ! WRITE (6    , NML = chem_nml )
+    if (trim(mecha).ne."saprc07") model=0
+  else
+    stop '***** No namelist_emis.nml in .. directory'
+  end if
+end subroutine lee_namelist
 subroutine lee
     IMPLICIT NONE
     integer :: ii,i,j,k,levl,levld,ih
     integer :: is     ! indice de compuesto
     integer :: iunit=14
-    real ::rdum
+    real ::rdum, constant
     real,dimension(nh)::edum
     real,dimension(ns)::wtm
     real,dimension(nf)::scala,scalm,scalp
     character(len=46) :: description
-    character(len=13) cdum
+    character(len=39) flocaliza,cdum
+    character (len=15)::ruta
     character(len=17),dimension(nf):: fnameA,fnameM,fnameP
     data fnameA /&
-    & 'TACO__2014.csv'  ,'TANH3_2014.csv' ,'TANOx_2014.csv'  ,'TANOx_2014.csv','TASO2_2014.csv',&
+    & 'TACO__2016.csv'  ,'TANH3_2016.csv' ,'TANOx_2016.csv'  ,'TANOx_2016.csv','TASO2_2016.csv',&
 	& 'CBM05_ALD2_A.txt','CBM05_CH4_A.txt','CBM05_ALDX_A.txt','CBM05_ETH_A.txt',&
 	& 'CBM05_ETHA_A.txt','CBM05_ETOH_A.txt','CBM05_IOLE_A.txt','CBM05_MEOH_A.txt',&
 	& 'CBM05_FORM_A.txt','CBM05_ISOP_A.txt','CBM05_OLE_A.txt','CBM05_PAR_A.txt',&
 	& 'CBM05_TERP_A.txt','CBM05_TOL_A.txt', 'CBM05_XYL_A.txt',&
-	& 'TACO2_2014.csv' ,'TAPM102014.csv','TAPM2_2014.csv',&
+	& 'TACO2_2016.csv' ,'TAPM102016.csv','TAPM2_2016.csv',&
 	& 'GSO4_A.txt','PNO3_A.txt','OTHE_A.txt','POA_A.txt','PEC_A.txt',&
-    & 'TACH4_2014.csv','TACN__2014.csv'/
-	data fnameM /'TMCO__2014.csv','TMNH3_2014.csv','TMNO_2014.csv','TMNO2_2014.csv','TMSO2_2014.csv',&
+    & 'TACH4_2016.csv','TACN__2016.csv'/
+	data fnameM /'TMCO__2016.csv','TMNH3_2016.csv','TMNO__2016.csv','TMNO2_2016.csv','TMSO2_2016.csv',&
     & 'CBM05_ALD2_M.txt','CBM05_CH4_M.txt','CBM05_ALDX_M.txt' ,'CBM05_ETH_M.txt',&
     & 'CBM05_ETHA_M.txt','CBM05_ETOH_M.txt','CBM05_IOLE_M.txt','CBM05_MEOH_M.txt',&
     & 'CBM05_FORM_M.txt','CBM05_ISOP_M.txt','CBM05_OLE_M.txt','CBM05_PAR_M.txt',&
     & 'CBM05_TERP_M.txt','CBM05_TOL_M.txt','CBM05_XYL_M.txt',&
-    & 'TMCO2_2014.csv','TMPM102014.csv','TMPM2_2014.csv',&
+    & 'TMCO2_2016.csv','TMPM102016.csv','TMPM2_2016.csv',&
 	& 'GSO4_M.txt','PNO3_M.txt','OTHE_M.txt','POA_M.txt','PEC_M.txt',&
-    & 'TMCH4_2014.csv','TMCN__2014.csv'/
+    & 'TMCH4_2016.csv','TMCN__2016.csv'/
     data fnameP /'T_ANNCO.csv','T_ANNNH3.csv','T_ANNNOX.csv','T_ANNNOX.csv','T_ANNSO2.csv',&
     & 'CBM05_ALD2_P.txt','CBM05_CH4_P.txt','CBM05_ALDX_P.txt' ,'CBM05_ETH_P.txt',&
     & 'CBM05_ETHA_P.txt','CBM05_ETOH_P.txt','CBM05_IOLE_P.txt','CBM05_MEOH_P.txt',&
@@ -150,17 +204,18 @@ subroutine lee
       stop '***** No namelist.cbm05'
     ENDIF
        mecha="CMB05"
-	write(6,*)' >>>> Reading file -  localiza.csv ---------'
-
-	open (unit=10,file='localiza.csv',status='old',action='read')
+    flocaliza='../01_datos/'//trim(zona)//'/'//'localiza.csv'
+    write(6,*)' >>>> Reading file -',flocaliza,' ---------'
+    write(var_list,'(33A11)') ename
+	open (unit=10,file=flocaliza,status='old',action='read')
 	read (10,*) cdum  !Header
 	read (10,*) nx,ny,titulo  !Header
 	ncel=nx*ny
-	allocate(idcg(ncel),lon(ncel),lat(ncel),pop(ncel))
-   allocate(utmx(ncel),utmy(ncel),utmz(ncel))
-	allocate(xlon(nx,ny),xlat(nx,ny),pob(nx,ny))
-   allocate(utmxd(nx,ny),utmyd(nx,ny),utmzd(nx,ny))
-	allocate(eft(nx,ny,nf,nh,8))
+    allocate(idcg(ncel),lon(ncel),lat(ncel),pop(ncel))
+    allocate(utmx(ncel),utmy(ncel),utmz(ncel))
+    allocate(xlon(nx,ny),xlat(nx,ny),pob(nx,ny))
+    allocate(utmxd(nx,ny),utmyd(nx,ny),utmzd(nx,ny))
+    allocate(eft(nx,ny,nf,nh,8))
     zlev=0
     eft=0
 	do k=1,ncel
@@ -181,9 +236,12 @@ subroutine lee
     CDIM=(utmx(2)-utmx(1))/1000.  ! from meters to km
     print *,CDIM,trim(titulo)
 	close(10)
-
 	do ii=1,nf
-		open(11,file=fnameA(ii),status='OLD',action='READ')
+        if (ii.le.5 .or. (ii.ge.ipm-2 .and. ii.le.ipm).or.ii.eq.icn .or. ii .eq.imt)then
+            ruta="../04_temis/"
+        else if( ii.gt. ipm) then; ruta="../09_pm25spec/"
+        else;     ruta="../08_spec/"; end if
+		open(11,file=trim(ruta)//fnameA(ii),status='OLD',action='READ')
         read(11,*)cdum
 		if (ii.eq.1)then
             read(11,*)j,current_date,cday  !j number of lines in file
@@ -195,7 +253,8 @@ subroutine lee
         is= ii
         if(ii.eq.icn) is=jcn  ! suma todo el Carbono Negro
         if(ii.eq.imt) is=jmt   ! suma todo el Metano
-        write(6,'(i4,x,A,A,I3,I3)') ii,fnameA(ii),current_date,is
+    constant=scala(ii)/WTM(is)
+    write(6,'(i4,x,A,A,2ES11.1)') ii,ruta//fnameA(ii),current_date(1:13),constant
 		do
 		 if(ii.eq.ipm) then !for PM2.5
 		 read(11,*,END=100) idcf,rdum,(edum(ih),ih=1,nh)
@@ -216,7 +275,11 @@ subroutine lee
 		end do busca
 		end do
  100 close(11)
- 		open(11,file=fnameM(ii),status='OLD',action='READ')
+        if (ii.le.5 .or. (ii.ge.ipm-2 .and. ii.le.ipm).or.ii.eq.icn .or. ii .eq.imt)then
+            ruta="../06_temisM/"
+        else if( ii.gt. ipm) then; ruta="../09_pm25spec/"
+        else;     ruta="../08_spec/"; end if
+ 		open(11,file=trim(ruta)//fnameM(ii),status='OLD',action='READ')
 		read(11,*)cdum
 		if (ii.eq.1)then
             read(11,*)j,current_date,cday  !j number of lines in file
@@ -224,8 +287,11 @@ subroutine lee
         else    
             read(11,*)j,current_date
         end if
-        write(6,'(i4,x,A,A)') ii,fnameM(ii),current_date
-		do 
+    if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
+    if(ii.eq.imt) is=jmt
+    write(6,'(i4,x,A,A,f7.1)') ii,ruta//fnameM(ii),current_date(1:13)
+    constant=scalm(ii)/WTM(is)
+       do
 		 if(ii.eq.ipm) then !for PM2.5
 		 read(11,*,END=200) idcf,rdum,(edum(ih),ih=1,nh)
 		 else
@@ -247,8 +313,11 @@ subroutine lee
 		end do	
  200 close(11)
 !  For point sources
-!	if (ii.ne.2) then
-		open(11,file=fnameP(ii),status='OLD',action='READ')
+    if (ii.le.5 .or. (ii.ge.ipm-2 .and. ii.le.ipm).or.ii.eq.icn .or. ii .eq.imt)then
+        ruta="../07_puntual/"
+    else if( ii.gt. ipm) then; ruta="../09_pm25spec/"
+    else;     ruta="../08_spec/"; end if
+		open(11,file=trim(ruta)//fnameP(ii),status='OLD',action='READ')
 		read(11,*)cdum
 		if (ii.eq.1)then
             read(11,*)j,current_date,cday  !j number of lines in file
@@ -256,14 +325,20 @@ subroutine lee
         else    
             read(11,*)j,current_date
         end if
-        write(6,'(i4,x,A,A)') ii,fnameP(ii),current_date
-		do 
+if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
+if(ii.eq.imt) is=jmt
+write(6,'(i4,x,A,A,f7.1)') ii,ruta//fnameP(ii),current_date(1:13)
+constant=scalp(ii)/WTM(is)
+rdum=1./WTM(is)
+       do
 		 if(ii.eq.ipm) then   !for PM2.5
-		 read(11,*,END=300) idcf,rdum,levl,(edum(ih),ih=1,nh),levld
-         !print *,idcf,rdum,levl,(edum(ih),ih=1,nh)
+		   read(11,*,END=300) idcf,rdum,levl,(edum(ih),ih=1,nh),levld
+           !print *,idcf,rdum,levl,(edum(ih),ih=1,nh)
 		 else
-		 read(11,*,END=300) idcf,levl,(edum(ih),ih=1,nh),levld
+		   read(11,*,END=300) idcf,levl,(edum(ih),ih=1,nh),levld
 		 end if
+    zlev =max(zlev,levl,levld)
+    if(levl.gt.zlev .or.levld.gt.zlev) Stop "*** Change dimension line  allocate(eft.."
 		 k=0
 		 busca3: do j=1,ny
 		  do i=1,nx
@@ -273,20 +348,18 @@ subroutine lee
                 ! Emission from g to gmol by 1/WTM
                 if(ih.gt.9 .and. ih.lt.19) then
                   if(levl.lt.2) then
-                    eft(i,j,is,ih,levl)=eft(i,j,is,ih,levl)+edum(ih)/WTM(is)*scalp(ii)
+                    eft(i,j,is,ih,levl)=eft(i,j,is,ih,levl)+edum(ih)*constant
                   else
-                    eft(i,j,is,ih,levl)=eft(i,j,is,ih,levl)+edum(ih)/WTM(is)
+                    eft(i,j,is,ih,levl)=eft(i,j,is,ih,levl)+edum(ih)*rdum
                   end if
                 else
                   if(levld.lt.2) then
-                    eft(i,j,is,ih,levld)=eft(i,j,is,ih,levld)+edum(ih)/WTM(is)*scalp(ii)
+                    eft(i,j,is,ih,levld)=eft(i,j,is,ih,levld)+edum(ih)*constant
                   else
-                    eft(i,j,is,ih,levld)=eft(i,j,is,ih,levld)+edum(ih)/WTM(is)
+                    eft(i,j,is,ih,levld)=eft(i,j,is,ih,levld)+edum(ih)*rdum
                   end if
                 end if
 			  end do
-          zlev =max(zlev,levl,levld)
-          if(zlev.gt.8) Stop "*** Change dimension line  allocate(eft.."
 			  exit busca3
 			end if
 		 end do
@@ -335,8 +408,8 @@ subroutine store
                  11,12,13,14,15, 16,17,18,19,20, &
                  21,22,23,24,25, 26,27,28/
 
-    data sdim /"TSTEP               ","DATE-TIME         ","COL         ",&
-    &          "ROW        ","VAR         ","LAY"/
+    data sdim /"TSTEP              ","DATE-TIME          ","COL                ",&
+    &          "ROW                ","VAR                ","LAY                "/
 
 	 print *,"Guarda Archivo"	 
 ! ******************************************************************
@@ -360,7 +433,7 @@ subroutine store
         FILE_NAME='cmaq.d01.'//trim(mecha)//'.'//iTime
 	 end if
 	  ! Open NETCDF emissions file	
-       call check( nf90_create(FILE_NAME, nf90_clobber, ncid) )
+       call check( nf90_create(path=FILE_NAME,cmode = or(nf90_clobber,nf90_64bit_offset),ncid=ncid) )
 !     Define dimensiones
 		  dim(1)=1
 		  dim(2)=2
@@ -381,7 +454,7 @@ subroutine store
       !Attributos Globales NF90_GLOBAL
       call check( nf90_put_att(ncid, NF90_GLOBAL, "TITLE",titulo))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "IOAPI_VERSION","$Id: @(#) ioapi library version 3.0 OpenMP enabled $"))
-      call check( nf90_put_att(ncid, NF90_GLOBAL, "EXEC_ID","????????????????                                                                "))
+      call check( nf90_put_att(ncid, NF90_GLOBAL, "EXEC_ID","????????????????"))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "FTYPE ",1))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "CDATE ",intc(current_date(1:4))*1000+julday))!
       call check( nf90_put_att(ncid, NF90_GLOBAL, "CTIME ",0))!
@@ -410,62 +483,24 @@ call check( nf90_put_att(ncid, NF90_GLOBAL, "IOAPI_VERSION","$Id: @(#) ioapi lib
       call check( nf90_put_att(ncid, NF90_GLOBAL, "VGLVLS ","0,0"))!
       call check( nf90_put_att(ncid, NF90_GLOBAL, "GDNAM ","MEXICO_9"))!
       call check( nf90_put_att(ncid, NF90_GLOBAL, "UPNAM ","CREATESET"))!
-      call check( nf90_put_att(ncid, NF90_GLOBAL, "VAR-LIST ","CO              NH3            NO              NO2             SO2             ALD2            CH4             ALDX            ETH             ETHA            ETOH            IOLE                 MEOH            FORM            ISOP            OLE             PAR             TERP            TOL             XYL             CO2             PM_10           PMFP            PSO4            PNO3            PM25I           POA             PEC                          "))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "FILEDESC","Area source emissions data                                                      /FROM/ CCAUNAM                                                                 /VERSION/ CIEM1.0_                                                                                                                                            /BASE YEAR/     2014                                                            /NUMBER OF FILES/   1                                                           /FILE POSITION/   1                                                             /NUMBER OF VARIABLES/  28"))
+      call check( nf90_put_att(ncid, NF90_GLOBAL, "VAR-LIST ",var_list))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "FILEDESC","Area source emissions data /FROM/ CCAUNAM /VERSION/ "&
+//"CIEM1.0_ /BASE YEAR/ 2016 /NUMBER OF FILES/   1/FILE POSITION/   1/NUMBER OF VARIABLES/  28"))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "HISTORY",""))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "MECHANISM",mecha))
       call check( nf90_put_att(ncid, NF90_GLOBAL, "CREATION_DATE",hoy))
 
 	print *,"Define las variables"
 !  Define las variables
-	call check( nf90_def_var(ncid, "TFLAG", NF90_INT, dimids3,id_var(radm+1) ) )
+	  call check( nf90_def_var(ncid, "TFLAG", NF90_INT, dimids3,id_var(radm+1)))
 !      Assign  attributes
       call check( nf90_put_att(ncid, id_var(radm+1), "units", "<YYYYDDD,HHMMSS>"  ) )
       call check( nf90_put_att(ncid, id_var(radm+1), "long_name", "FLAG           "  ) )
-      call check( nf90_put_att(ncid, id_var(radm+1), "var_desc", "Timestep-valid flags:  (1) YYYYDDD or (2) HHMMSS                                "  ) )
-!  Attributos para cada variable 
-!    call check( nf90_def_var(ncid, "XLONG", NF90_REAL,(/id_dim(3),id_dim(4),id_dim(1)/),id_varlong ) )
-!       ! Assign  attributes
-!      call check( nf90_put_att(ncid, id_varlong, "FieldType", 104 ) )
-!      call check( nf90_put_att(ncid, id_varlong, "MemoryOrder", "XYZ") )
-!      call check( nf90_put_att(ncid, id_varlong, "description", "LONGITUDE, WEST IS NEGATIVE") )
-!      call check( nf90_put_att(ncid, id_varlong, "units", "degree_east"))
-!      call check( nf90_put_att(ncid, id_varlong, "axis", "X") )
-!    call check( nf90_def_var(ncid, "XLAT", NF90_REAL,(/id_dim(3),id_dim(4),id_dim(1)/),id_varlat ) )
-       ! Assign  attributes
-!      call check( nf90_put_att(ncid, id_varlat, "FieldType", 104 ) )
-!      call check( nf90_put_att(ncid, id_varlat, "MemoryOrder", "XYZ") )
-!      call check( nf90_put_att(ncid, id_varlat, "description", "LATITUDE, SOUTH IS NEGATIVE") )
-!      call check( nf90_put_att(ncid, id_varlat, "units", "degree_north"))
-!      call check( nf90_put_att(ncid, id_varlat, "axis", "Y") )
-!     print *," Pob"
-!    call check( nf90_def_var(ncid,"POB",NF90_REAL,(/id_dim(3),id_dim(4),id_dim(1)/) ,id_varpop ) )
-!        ! Assign  attributes
-!      call check( nf90_put_att(ncid, id_varpop, "FieldType", 104 ) )
-!      call check( nf90_put_att(ncid, id_varpop, "MemoryOrder", "XYZ") )
-!      call check(nf90_put_att(ncid,id_varpop,"description","Population in each grid"))
-!      call check( nf90_put_att(ncid, id_varpop, "units", "number"))
-! Para Mercator
-!    call check( nf90_def_var(ncid, "UTMx", NF90_REAL,(/id_dim(3),id_dim(4)/),id_utmx ) )
-    ! Assign  attributes
-!      call check( nf90_put_att(ncid, id_utmx, "FieldType", 104 ) )
-!      call check( nf90_put_att(ncid, id_utmx, "MemoryOrder", "XYZ") )
-!      call check( nf90_put_att(ncid, id_utmx, "description", "UTM coordinate west-east") )
-!      call check( nf90_put_att(ncid, id_utmx, "units", "km"))
-!      call check( nf90_put_att(ncid, id_utmx, "axis", "X") )
-!    call check( nf90_def_var(ncid, "UTMy", NF90_REAL,(/id_dim(3),id_dim(4)/),id_utmy ) )
-    ! Assign  attributes
-!      call check( nf90_put_att(ncid, id_utmy, "FieldType", 104 ) )
-!      call check( nf90_put_att(ncid, id_utmy, "MemoryOrder", "XYZ") )
-!      call check( nf90_put_att(ncid, id_utmy, "description", "UTM coordinate sotuth-north") )
-!      call check( nf90_put_att(ncid, id_utmy, "units", "km"))
-!      call check( nf90_put_att(ncid, id_utmy, "axis", "Y") )
-!    call check( nf90_def_var(ncid, "UTMz", NF90_INT,(/id_dim(3),id_dim(4)/),id_utmz ) )
-    ! Assign  attributes
-!      call check( nf90_put_att(ncid, id_utmz, "FieldType", 104 ) )
-!      call check( nf90_put_att(ncid, id_utmz, "MemoryOrder", "XYZ") )
-!      call check( nf90_put_att(ncid, id_utmz, "description", "UTM Zone") )
-!      call check( nf90_put_att(ncid, id_utmz, "units", "None"))
+      call check( nf90_put_att(ncid, id_var(radm+1), "var_desc", "Timestep-valid flags: "&
+//"(1) YYYYDDD or (2) HHMMSS                                "  ) )
+!  Attributos para cada variable
+print *," Pob"
+    call check( nf90_def_var(ncid,"POB",NF90_REAL,(/id_dim(3),id_dim(4),id_dim(1)/) ,id_varpop ) )
 	do i=1,radm
 		if(i.lt.ipm-1 ) then
 			call crea_attr(ncid,4,dimids4,ename(i),cname(i),id_var(i))
@@ -476,11 +511,7 @@ call check( nf90_put_att(ncid, NF90_GLOBAL, "FILEDESC","Area source emissions da
 !
 !   Terminan definiciones
 		call check( nf90_enddef(ncid) )
-!  Coordenadas Mercator UTM
-!    call check( nf90_put_var(ncid, id_utmx,utmxd,start=(/1,1/)) )
-!    call check( nf90_put_var(ncid, id_utmy,utmyd,start=(/1,1/)) )
-!    call check( nf90_put_var(ncid, id_utmz,utmzd,start=(/1,1/)) )
-!
+
 !    Inicia loop de tiempo
 
 tiempo: do it=iit,eit
@@ -502,12 +533,12 @@ tiempo: do it=iit,eit
             call check( nf90_put_var(ncid,id_var(radm+1),TFLAG,start=(/1,ikk,it+1/)) )
 !            call check( nf90_put_var(ncid, id_varlong,xlon,start=(/1,1,it+1/)) )
 !            call check( nf90_put_var(ncid, id_varlat,xlat,start=(/1,1,it+1/)) )
-!            call check( nf90_put_var(ncid, id_varpop,pob,  start=(/1,1,it+1/)) )
+            call check( nf90_put_var(ncid, id_varpop,pob,  start=(/1,1,it+1/)) )
 			  else
             call check( nf90_put_var(ncid,id_var(radm+1),TFLAG,start=(/1,ikk,it-11/)) )
  !           call check( nf90_put_var(ncid, id_varlong,xlon,start=(/1,1,it-11/)) )
  !           call check( nf90_put_var(ncid, id_varlat,xlat,start=(/1,1,it-11/)) )
- !           call check( nf90_put_var(ncid, id_varpop,pob,start=(/1,1,it-11/)) )
+            call check( nf90_put_var(ncid, id_varpop,pob,start=(/1,1,it-11/)) )
 			  endif
             do i=1, nx
               do j=1, ny

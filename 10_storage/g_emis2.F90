@@ -24,7 +24,7 @@ integer,parameter :: nh=24  ;!> Layer of emission (1 to 8)
 integer,parameter :: zlev=8 ;!> number of files antropogenic
 integer :: nf    ;!> number of compounds
 integer :: ns    ;!> =ns+5 number of Mechanism classes
-integer ::radm   ;!> Position of pm2.5 in the variables array
+integer :: radm  ;!> Position of pm2.5 in the variables array
 integer :: ipm   ;!> Position of BC in variables array from INEM
 integer :: icn   ;!> Position of BC in variables array from Speciation file
 integer :: jcn   ;!> Position of CH4 in variables array from INEM
@@ -32,7 +32,8 @@ integer :: imt   ;!> Position of CH4 in variables array from Speciation file
 integer :: jmt   ;!> day in emissions output file
 integer :: idia  ;!> month in emissions output file
 integer :: month ;!> year in emissions output file
-integer :: anio  ;!> =1 uno 24 hr, =2 dos de 12hrs c/u
+integer :: anio  ;!> model ID for output 0=WRF 1=CHIMERE 2=CMAQ
+integer :: model ;!> =1 uno 24 hr, =2 dos de 12hrs c/u
 integer ::periodo;!> number of cell in the grid
 integer ::ncel   ;!>  number of lines in files
 integer ::nl     ;!> longitude values in grid
@@ -247,13 +248,24 @@ subroutine setup_mecha
         allocate(fnameA(nf),fnameM(nf),fnameP(nf))
         allocate(scala(nf),scalm(nf),scalp(nf))
         allocate(id_var(radm))
-    ename=(/'E_CO       ','E_NH3      ','E_NO       ','E_NO2      ',&
-    'E_SO2      ','E_ALD2     ','E_CH4      ','E_ALDX     ','E_ETH      ',&
-    'E_ETHA     ','E_ETOH     ','E_IOLE     ','E_MEOH     ','E_HCHO     ',&
-    'E_ISOP     ','E_OLE      ','E_PAR      ','E_TERP     ','E_TOL      ',&
-    'E_XYL      ','E_CO2      ','E_PM_10    ','E_PM25     ','E_SO4I     ',&
-    'E_NO3I     ','E_PM25I    ','E_ORGI     ','E_ECI      ','E_SO4J     ',&
-    'E_NO3J     ','E_PM25J    ','E_ORGJ     ','E_ECJ      '/)
+    if(model.eq.2)then
+     ename=(/&
+     'CO         ','NH3        ','NO         ', 'NO2        ',&
+     'SO2        ','ALD2       ','CH4        ','ALDX       ','ETH        ',&
+     'ETHA       ','ETOH       ','IOLE       ','MEOH       ','FORM       ',&
+     'ISOP       ','OLE        ','PAR        ','TERP       ','TOL        ',&
+     'XYL        ','CO2        ','PM_10      ','PMFP       ','PSO4I      ',&
+     'PNO3I      ','PM25I      ','APOCI      ','PECI       ','PSO4J      ',&
+     'PNO3J      ','PM25J      ','APOCJ      ','PECJ       '/)
+    else
+     ename=(/'E_CO       ','E_NH3      ','E_NO       ','E_NO2      ',&
+     'E_SO2      ','E_ALD2     ','E_CH4      ','E_ALDX     ','E_ETH      ',&
+     'E_ETHA     ','E_ETOH     ','E_IOLE     ','E_MEOH     ','E_HCHO     ',&
+     'E_ISOP     ','E_OLE      ','E_PAR      ','E_TERP     ','E_TOL      ',&
+     'E_XYL      ','E_CO2      ','E_PM_10    ','E_PM25     ','E_SO4I     ',&
+     'E_NO3I     ','E_PM25I    ','E_ORGI     ','E_ECI      ','E_SO4J     ',&
+     'E_NO3J     ','E_PM25J    ','E_ORGJ     ','E_ECJ      '/)
+    end if
     cname=(/'Carbon Monoxide ','Ammonia NH3     ','NO              ', &
     'NO2             ','SO2             ','Acetaldehyde    ','METHANE         ',&
     'C3+Aldehydes    ','Ethene          ','Ethane          ','Ethanol         ',&
