@@ -7,7 +7,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([DIETE], [2.5], [agustin@atmosfera.unam.mx])
+AC_INIT([DIETE], [2.7], [agustin@atmosfera.unam.mx])
 # Define our M4 macro directory
 AC_CONFIG_AUX_DIR([autoconf])
 AM_INIT_AUTOMAKE([1.11 foreign])
@@ -115,6 +115,9 @@ AC_ARG_ENABLE([parallel],
     FCFLAGS="${FCFLAGS} -O2";
     fi
 AM_CONDITIONAL([WITH_OMPI], [test "x$parallel" = "xtrue"])
+
+AM_CONDITIONAL([WITH_GFOR],[test "x$FC" = "xgfortran"])
+AM_CONDITIONAL([WITH_PGI],[test "x$FC" = "xpgfortran"])
 
 # Checks for library functions.
 #

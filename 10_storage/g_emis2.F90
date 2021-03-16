@@ -24,15 +24,16 @@ integer,parameter :: nh=24  ;!> Layer of emission (1 to 8)
 integer,parameter :: zlev=8 ;!> number of files antropogenic
 integer :: nf    ;!> number of compounds
 integer :: ns    ;!> =ns+5 number of Mechanism classes
-integer ::radm   ;!> Position of pm2.5 in the variables array
-integer :: ipm   ;!> Position of BC in variables array from INEM
-integer :: icn   ;!> Position of BC in variables array from Speciation file
-integer :: jcn   ;!> Position of CH4 in variables array from INEM
-integer :: imt   ;!> Position of CH4 in variables array from Speciation file
-integer :: jmt   ;!> day in emissions output file
+integer :: radm  ;!> Position of pm2.5 in the variables array
+integer :: L_PM25   ;!> Position of BC in variables array from INEM
+integer :: L_CN_i   ;!> Position of BC in variables array from Speciation file
+integer :: L_CN_S   ;!> Position of CH4 in variables array from INEM
+integer :: L_CH4_i   ;!> Position of CH4 in variables array from Speciation file
+integer :: L_CH4_S   ;!> day in emissions output file
 integer :: idia  ;!> month in emissions output file
 integer :: month ;!> year in emissions output file
-integer :: anio  ;!> =1 uno 24 hr, =2 dos de 12hrs c/u
+integer :: anio  ;!> model ID for output 0=WRF 1=CHIMERE 2=CMAQ
+integer :: model ;!> =1 uno 24 hr, =2 dos de 12hrs c/u
 integer ::periodo;!> number of cell in the grid
 integer ::ncel   ;!>  number of lines in files
 integer ::nl     ;!> longitude values in grid
@@ -89,12 +90,12 @@ character (len=19) ::  mecha
 character (len=40) :: titulo
 !> geogrphical area selected in namelist_emis.nml
 character(len=12):: zona
-common /quimicos/ nf,ns,radm,ipm,icn,jcn,imt,jmt
+common /quimicos/ nf,ns,radm,L_PM25,L_CN_i,L_CN_S,L_CH4_i,L_CH4_S
 common /domain/ ncel,nl,nx,ny,CDIM,SUPF1,zona
 common /fileout/id_varlong,id_varlat,id_varpop,&
 id_unlimit,id_utmx,id_utmy,id_utmz,ncid,ncid2
 common /date/ current_date,cday,mecha,titulo
-common /nlm_vars/month,idia,anio,periodo
+common /nlm_vars/model,month,idia,anio,periodo
 end module emissions_save_vars_mod
 !                 _         _
 !   ___ _ __ ___ (_)___ ___(_) ___  _ __  ___     ___  __ ___   _____     _ __   ___
@@ -140,7 +141,7 @@ subroutine lee_namelist
 implicit none
   NAMELIST /region_nml/ zona
   NAMELIST /fecha_nml/ idia,month,anio,periodo
-  NAMELIST /chem_nml/ mecha
+  NAMELIST /chem_nml/ mecha,model
   integer:: unit_nml=9
   logical existe
   existe = .FALSE.
@@ -158,8 +159,9 @@ implicit none
     READ (unit_nml , NML = region_nml )
     READ (unit_nml , NML = fecha_nml)
     READ (unit_nml , NML = chem_nml )
-    !WRITE (6    , NML = chem_nml )
     close(unit_nml)
+   ! WRITE (6    , NML = chem_nml )
+    if (trim(mecha).ne."saprc07") model=0
   else
     stop '***** No namelist_emis.nml in .. directory'
   end if
@@ -223,6 +225,7 @@ end subroutine lee_namelist_mecha
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine setup_mecha
     IMPLICIT NONE
+    integer :: i
     select case (mecha)
     case("cbm04")
         print *,"   **************************************"
@@ -234,24 +237,35 @@ subroutine setup_mecha
         nf=30    ! number of files antropogenic
         ns=28    ! number of compounds
         radm=ns+5 ! number of Mechanism classes
-        ipm=23  ! Posicion del archivo PM2.5
-        icn=30    ! Posicion archivo CN del INEM
-        jcn=28    ! Posicion archivo CN de especiacion
-        imt=29    ! Posicion archivo CH4 del INEM
-        jmt=7     ! Posicion archivo CH4 de especiacion
+        L_PM25=23  ! Posicion del archivo PM2.5
+        L_CN_i=30    ! Posicion archivo CN del INEM
+        L_CN_S=28    ! Posicion archivo CN de especiacion
+        L_CH4_i=29    ! Posicion archivo CH4 del INEM
+        L_CH4_S=7     ! Posicion archivo CH4 de especiacion
         allocate(ename(radm),cname(radm))
         allocate(isp(radm))
         allocate(wtm(ns))
         allocate(fnameA(nf),fnameM(nf),fnameP(nf))
         allocate(scala(nf),scalm(nf),scalp(nf))
         allocate(id_var(radm))
-    ename=(/'E_CO       ','E_NH3      ','E_NO       ','E_NO2      ',&
-    'E_SO2      ','E_ALD2     ','E_CH4      ','E_ALDX     ','E_ETH      ',&
-    'E_ETHA     ','E_ETOH     ','E_IOLE     ','E_MEOH     ','E_HCHO     ',&
-    'E_ISOP     ','E_OLE      ','E_PAR      ','E_TERP     ','E_TOL      ',&
-    'E_XYL      ','E_CO2      ','E_PM_10    ','E_PM25     ','E_SO4I     ',&
-    'E_NO3I     ','E_PM25I    ','E_ORGI     ','E_ECI      ','E_SO4J     ',&
-    'E_NO3J     ','E_PM25J    ','E_ORGJ     ','E_ECJ      '/)
+    if(model.eq.2)then
+     ename=(/&
+     'CO         ','NH3        ','NO         ', 'NO2        ',&
+     'SO2        ','ALD2       ','CH4        ','ALDX       ','ETH        ',&
+     'ETHA       ','ETOH       ','IOLE       ','MEOH       ','FORM       ',&
+     'ISOP       ','OLE        ','PAR        ','TERP       ','TOL        ',&
+     'XYL        ','CO2        ','PM_10      ','PMFP       ','PSO4I      ',&
+     'PNO3I      ','PM25I      ','APOCI      ','PECI       ','PSO4J      ',&
+     'PNO3J      ','PM25J      ','APOCJ      ','PECJ       '/)
+    else
+     ename=(/'E_CO       ','E_NH3      ','E_NO       ','E_NO2      ',&
+     'E_SO2      ','E_ALD2     ','E_CH4      ','E_ALDX     ','E_ETH      ',&
+     'E_ETHA     ','E_ETOH     ','E_IOLE     ','E_MEOH     ','E_HCHO     ',&
+     'E_ISOP     ','E_OLE      ','E_PAR      ','E_TERP     ','E_TOL      ',&
+     'E_XYL      ','E_CO2      ','E_PM_10    ','E_PM25     ','E_SO4I     ',&
+     'E_NO3I     ','E_PM25I    ','E_ORGI     ','E_ECI      ','E_SO4J     ',&
+     'E_NO3J     ','E_PM25J    ','E_ORGJ     ','E_ECJ      '/)
+    end if
     cname=(/'Carbon Monoxide ','Ammonia NH3     ','NO              ', &
     'NO2             ','SO2             ','Acetaldehyde    ','METHANE         ',&
     'C3+Aldehydes    ','Ethene          ','Ethane          ','Ethanol         ',&
@@ -301,11 +315,11 @@ subroutine setup_mecha
         nf=39    ! number of files antropogenic
         ns=37    ! number of compounds
         radm=ns+5 ! number of Mechanism classes
-        ipm=32  ! Posicion del archivo PM2.5
-        icn=39    ! Posicion archivo CN del INEM
-        jcn=37    ! Posicion archivo CN de especiacion
-        imt=38    ! Posicion archivo CH4 del INEM
-        jmt=6     ! Posicion archivo CH4 de especiacion
+        L_PM25=32  ! Posicion del archivo PM2.5
+        L_CN_i=39    ! Posicion archivo CN del INEM
+        L_CN_S=37    ! Posicion archivo CN de especiacion
+        L_CH4_i=38    ! Posicion archivo CH4 del INEM
+        L_CH4_S=6     ! Posicion archivo CH4 de especiacion
         allocate(ename(radm),cname(radm))
         allocate(isp(radm))
         allocate(wtm(ns))
@@ -381,11 +395,11 @@ subroutine setup_mecha
         nf=55    ! number of files antropogenic
         ns=53    ! number of compounds
         radm=ns+5 ! number of Mechanism classes
-        ipm=48  ! Posicion del archivo PM2.5
-        icn=55    ! Posicion archivo CN del INEM
-        jcn=52    ! Posicion archivo CN de especiacion
-        imt=54    ! Posicion archivo CH4 del INEM
-        jmt=6     ! Posicion archivo CH4 de especiacion
+        L_PM25=48  ! Posicion del archivo PM2.5
+        L_CN_i=55    ! Posicion archivo CN del INEM
+        L_CN_S=52    ! Posicion archivo CN de especiacion
+        L_CH4_i=54    ! Posicion archivo CH4 del INEM
+        L_CH4_S=6     ! Posicion archivo CH4 de especiacion
         allocate(ename(radm),cname(radm))
         allocate(isp(radm))
         allocate(wtm(ns))
@@ -477,11 +491,11 @@ subroutine setup_mecha
         nf=36    ! number of files antropogenic
         ns=34    ! number of compounds
         radm=ns+5 ! number of Mechanism classes
-        ipm=29  ! Posicion del archivo PM2.5
-        icn=36    ! Posicion archivo CN del INEM
-        jcn=34    ! Posicion archivo CN de especiacion
-        imt=35    ! Posicion archivo CH4 del INEM
-        jmt=7     ! Posicion archivo CH4 de especiacion
+        L_PM25=29  ! Posicion del archivo PM2.5
+        L_CN_i=36    ! Posicion archivo CN del INEM
+        L_CN_S=34    ! Posicion archivo CN de especiacion
+        L_CH4_i=35    ! Posicion archivo CH4 del INEM
+        L_CH4_S=7     ! Posicion archivo CH4 de especiacion
         allocate(ename(radm),cname(radm))
         allocate(isp(radm))
         allocate(wtm(ns))
@@ -547,18 +561,20 @@ subroutine setup_mecha
         nf=47    ! number of files antropogenic
         ns=45    ! number of compounds
         radm=ns+5 ! number of Mechanism classes
-        ipm=40  ! Posicion del archivo PM2.5
-        icn=47    ! Posicion archivo CN del INEM
-        jcn=45    ! Posicion archivo CN de especiacion
-        imt=46    ! Posicion archivo CH4 del INEM
-        jmt=6     ! Posicion archivo CH4 de especiacion
+        L_PM25=40  ! Posicion del archivo PM2.5
+        L_CN_i=47    ! Posicion archivo CN del INEM
+        L_CN_S=45    ! Posicion archivo CN de especiacion
+        L_CH4_i=46    ! Posicion archivo CH4 del INEM
+        L_CH4_S=6     ! Posicion archivo CH4 de especiacion
         allocate(ename(radm),cname(radm))
         allocate(isp(radm))
         allocate(wtm(ns))
         allocate(fnameA(nf),fnameM(nf),fnameP(nf))
         allocate(scala(nf),scalm(nf),scalp(nf))
         allocate(id_var(radm))
-    ename=['E_CO       ','E_NO       ','E_NO2      ','E_NH3      ','E_SO2      ',&
+
+    ename=[&
+    'E_CO       ','E_NO       ','E_NO2      ','E_NH3      ','E_SO2      ',&
     'E_CH4      ','E_ACET     ','E_ALK3     ','E_ALK4     ','E_ALK5     ','E_ARO1     ',&
     'E_ARO2     ','E_BACL     ','E_BALD     ','E_C2H6     ','E_C3H8     ','E_CCHO     ',&
     'E_CCO_OH   ','E_CRES     ','E_ETHENE   ','E_GLY      ','E_HCHO     ','E_HCOOH    ',&
@@ -567,6 +583,7 @@ subroutine setup_mecha
     'E_RCO_OH   ','E_TERP     ','E_CO2      ','E_PM_10    ','E_PM25     ','E_SO4I     ',&
     'E_NO3I     ','E_PM25I    ','E_ORGI     ','E_ECI      ','E_SO4J     ','E_NO3J     ',&
     'E_PM25J    ','E_ORGJ     ','E_ECJ      ']
+
     cname=['Carbon Monoxide ','Nitrogen Oxide  ','Nitrogen Dioxide','Ammonia         ',&
     'Sulfur Dioxide  ','Methane         ','Acetone         ','Alkanes 3       ',&
     'Alkanes 4       ','Alkanes 5       ','Aromatics 1     ','Aromatics 2     ',&
@@ -619,11 +636,12 @@ subroutine setup_mecha
     'T_ANNCO2.csv      ','T_ANNPM10.csv     ','T_ANNPM25.csv     ','GSO4_P.txt        ',&
     'PNO3_P.txt        ','OTHE_P.txt        ','POA_P.txt         ','PEC_P.txt         ',&
     'T_ANNCH4.csv      ','T_ANNCN.csv       '/)
-        isp=(/ 1, 2, 3, 4, 5, 6, 7, 8, 9,10, &
-        11,12,13,14,15, 16,17,18,19,20, &
-        21,22,23,24,25, 26,27,28,29,30, &
-        31,32,33,34,35, 36,37,38,39,40, &
-        41,42,43,44,45, 46,47,48,49,50/)
+        isp=(/ 1, 2, 3, 4, 5,  6, 7, 8, 9,10, &
+              11,12,13,14,15, 16,17,18,19,20, &
+              21,22,23,24,25, 26,27,28,29,30, &
+              31,32,33,34,35, 36,37,38,39,40, &
+              41,42,43,44,45, 46,47,48,49,50/)
+     if (model.eq.1) then ! for chimere
         WTM=(/ 28.0, 30.00, 46.00, 17.00, 64.0,  16.043,&
         58.08, 58.61, 77.60,118.89, 95.16,118.72,&
         86.09,106.13, 30.07, 36.73, 44.05, 60.05,&
@@ -631,9 +649,137 @@ subroutine setup_mecha
         100.12, 72.11, 32.04, 70.09, 72.07, 70.09,&
         72.34, 75.78, 94.11,116.16, 58.08, 74.08,&
         136.238,44.,&
+        100.,100.,100.,100.,100.,100.,100./)
+      else !for WRF
+        WTM=(/  28.0, 30.00, 46.00, 17.00,  64.0, 16.043,&
+        58.08, 58.61, 77.60,118.89, 95.16,118.72,&
+        86.09,106.13, 30.07, 36.73, 44.05, 60.05,&
+        108.14, 28.05, 58.04, 30.03, 46.03, 68.12,& !
+        100.12, 72.11, 32.04, 70.09, 72.07, 70.09,&
+        72.34, 75.78, 94.11,116.16, 58.08, 74.08,&
+        136.238,44.,&
         3600.,3600.,3600.,3600.,3600.,3600.,3600./)
+      end if
         call lee_namelist_mecha('saprc  ')
-    case default
+    case ("saprc07")
+    print *,"Setup variables for ",mecha
+      nf=49    ! number of files antropogenic
+      ns=47    ! number of compounds
+      radm=ns+5 ! number of Mechanism classes
+      L_PM25=42  ! Posicion del archivo PM2.5
+      L_CN_i=49    ! Posicion archivo CN del INEM
+      L_CN_S=47    ! Posicion archivo CN de especiacion
+      L_CH4_i=48    ! Posicion archivo CH4 del INEM
+      L_CH4_S=6     ! Posicion archivo CH4 de especiacion
+      allocate(ename(radm),cname(radm))
+      allocate(isp(radm))
+      allocate(wtm(ns))
+      allocate(fnameA(nf),fnameM(nf),fnameP(nf))
+      allocate(scala(nf),scalm(nf),scalp(nf))
+      allocate(id_var(radm))
+      if (model.eq.1) then
+      ename=(/&
+      'CO         ','NO         ','NO2        ','NH3        ','SO2        ',&
+      'CH4        ','AACD       ','ACET       ','ACYE       ','ALK1       ','ALK2       ',&
+      'ALK3       ','ALK4       ','ALK5       ','ARO1       ','ARO2       ','BACL       ',&
+      'BALD       ','BENZ       ','CCHO       ','CRES       ','ETHE       ','FACD       ',&
+      'GLY        ','HCHO       ','IPRD       ','ISOP       ','MACR       ','MEK        ',&
+      'MEOH       ','MGLY       ','MVK        ','OLE1       ','OLE2       ','PACD       ',&
+      'PRD2       ','RCHO       ','RNO3       ','TERP       ','CO2        ','PPM_big    ',&
+      'PPM_fin    ','E_SO4I     ','E_NO3I     ','E_PM25I    ','OCAR_fin   ','BCAR_fin   ',&
+      'E_SO4J     ','E_NO3J     ','E_PM25J    ','OCAR_coa   ','BCAR_coa   '/)
+      else
+      ename=[&
+       'E_CO       ','E_NO       ','E_NO2      ','E_NH3      ','E_SO2      ',&
+       'E_CH4      ','E_AACD     ','E_ACET     ','E_ACYE     ','E_ALK1     ',&
+       'E_ALK2     ','E_ALK3     ','E_ALK4     ','E_ALK5     ','E_ARO1     ',&
+       'E_ARO2     ','E_BACL     ','E_BALD     ','E_BENZ     ','E_CCHO     ',&
+       'E_CRES     ','E_ETHE     ','E_FACD     ','E_GLY      ','E_HCHO     ',&
+       'E_IPRD     ','E_ISOP     ','E_MACR     ','E_MEK      ','E_MEOH     ',&
+       'E_MGLY     ','E_MVK      ','E_OLE1     ','E_OLE2     ','E_PACD     ',&
+       'E_PRD2     ','E_RCHO     ','E_RNO3     ','E_TERP     ','E_CO2      ',&
+       'E_PM_10    ','E_PM25     ','E_SO4I     ','E_NO3I     ','E_PM25I    ',&
+       'E_ORGI     ','E_ECI      ','E_SO4J     ','E_NO3J     ','E_PM25J    ',&
+       'E_ORGJ     ','E_ECJ      ']
+      end if
+    cname=['Carbon Monoxide ','Nitrogen Oxide  ','Nitrogen Dioxide','Ammonia         ',&
+    'Sulfur Dioxide  ','Methane         ','Acetic Acid. Als','Acetone         ',&
+    'Acetylene       ','Alkanes ALK1    ','Alkanes ALK2    ','Alkanes ALK3    ',&
+    'Alkanes ALK4    ','Alkanes ALK5    ','AromaticskOH < 2','AromaticskOH > 2',&
+    'Biacetyl        ','Aromatic aldehyd','Benzene         ','Acetaldehyde    ',&
+    'Phenols and Cres','Ethene          ','Formic Acid     ','Glyoxal         ',&
+    'Formaldehyde    ','Lumped isoprene ','Isoprene        ','Methacrolein    ',&
+    'Ketones and othe','Methanol        ','Methyl Glyoxal  ','Methyl Vinyl Ket',&
+    'Alkenes (other t','Alkenes with kOH','Higher organic a','Ketones and othe',&
+    'Lumped C3+ Aldeh','Lumped Organic N','Terpenes        ',&
+    'Carbon Dioxide  ','PM_10           ','PM 2.5 um mode  ',&
+    'Sulfates Particl','Nitrates Particl','OTHER Particles ','Organic C partic',&
+    'Elemental Carbon','Sulfates J mode ','Nitrates J mode ','OTHER           ',&
+    'Organic Carbon  ','Elemental Carbon']
+
+  fnameA=['TACO__2016.csv    ',&
+      'TANOx_2016.csv    ','TANOx_2016.csv    ','TANH3_2016.csv    ','TASO2_2016.csv    ',&
+      'SAPRC07_CH4_A.txt ','SAPRC07_AACD_A.txt','SAPRC07_ACET_A.txt','SAPRC07_ACYE_A.txt',&
+      'SAPRC07_ALK1_A.txt','SAPRC07_ALK2_A.txt','SAPRC07_ALK3_A.txt','SAPRC07_ALK4_A.txt',&
+      'SAPRC07_ALK5_A.txt','SAPRC07_ARO1_A.txt','SAPRC07_ARO2_A.txt','SAPRC07_BACL_A.txt',&
+      'SAPRC07_BALD_A.txt','SAPRC07_BENZ_A.txt','SAPRC07_CCHO_A.txt','SAPRC07_CRES_A.txt',&
+      'SAPRC07_ETHE_A.txt','SAPRC07_FACD_A.txt','SAPRC07_GLY_A.txt ','SAPRC07_HCHO_A.txt',&
+      'SAPRC07_IPRD_A.txt','SAPRC07_ISOP_A.txt','SAPRC07_MACR_A.txt','SAPRC07_MEK_A.txt ',&
+      'SAPRC07_MEOH_A.txt','SAPRC07_MGLY_A.txt','SAPRC07_MVK_A.txt ','SAPRC07_OLE1_A.txt',&
+      'SAPRC07_OLE2_A.txt','SAPRC07_PACD_A.txt','SAPRC07_PRD2_A.txt','SAPRC07_RCHO_A.txt',&
+      'SAPRC07_RNO3_A.txt','SAPRC07_TERP_A.txt',&
+      'TACO2_2016.csv    ','TAPM102016.csv    ','TAPM2_2016.csv    ','GSO4_A.txt        ',&
+      'PNO3_A.txt        ','OTHE_M.txt        ','POA_A.txt         ','PEC_A.txt         ',&
+      'TACH4_2016.csv    ','TACN__2016.csv    ']
+fnameM =(/'TMCO__2016.csv    ',&
+          'TMNO__2016.csv    ','TMNO__2016.csv    ','TMNH3_2016.csv    ','TMSO2_2016.csv    ',&
+          'SAPRC07_CH4_M.txt ','SAPRC07_AACD_M.txt','SAPRC07_ACET_M.txt','SAPRC07_ACYE_M.txt',&
+          'SAPRC07_ALK1_M.txt','SAPRC07_ALK2_M.txt','SAPRC07_ALK3_M.txt','SAPRC07_ALK4_M.txt',&
+          'SAPRC07_ALK5_M.txt','SAPRC07_ARO1_M.txt','SAPRC07_ARO2_M.txt','SAPRC07_BACL_M.txt',&
+          'SAPRC07_BALD_M.txt','SAPRC07_BENZ_M.txt','SAPRC07_CCHO_M.txt','SAPRC07_CRES_M.txt',&
+          'SAPRC07_ETHE_M.txt','SAPRC07_FACD_M.txt','SAPRC07_GLY_M.txt ','SAPRC07_HCHO_M.txt',&
+          'SAPRC07_IPRD_M.txt','SAPRC07_ISOP_M.txt','SAPRC07_MACR_M.txt','SAPRC07_MEK_M.txt ',&
+          'SAPRC07_MEOH_M.txt','SAPRC07_MGLY_M.txt','SAPRC07_MVK_M.txt ','SAPRC07_OLE1_M.txt',&
+          'SAPRC07_OLE2_M.txt','SAPRC07_PACD_M.txt','SAPRC07_PRD2_M.txt','SAPRC07_RCHO_M.txt',&
+          'SAPRC07_RNO3_M.txt','SAPRC07_TERP_M.txt',&
+          'TMCO2_2016.csv    ','TMPM102016.csv    ','TMPM2_2016.csv    ','GSO4_M.txt        ',&
+          'PNO3_M.txt        ','OTHE_M.txt        ','POA_M.txt         ','PEC_M.txt         ',&
+          'TMCH4_2016.csv    ','TMCN__2016.csv    '/)
+fnameP=(/'T_ANNCO.csv       ',&
+        'T_ANNNOX.csv      ','T_ANNNOX.csv      ','T_ANNNH3.csv      ','T_ANNSO2.csv      ',&
+        'SAPRC07_CH4_P.txt ','SAPRC07_AACD_P.txt','SAPRC07_ACET_P.txt','SAPRC07_ACYE_P.txt',&
+        'SAPRC07_ALK1_P.txt','SAPRC07_ALK2_P.txt','SAPRC07_ALK3_P.txt','SAPRC07_ALK4_P.txt',&
+        'SAPRC07_ALK5_P.txt','SAPRC07_ARO1_P.txt','SAPRC07_ARO2_P.txt','SAPRC07_BACL_P.txt',&
+        'SAPRC07_BALD_P.txt','SAPRC07_BENZ_P.txt','SAPRC07_CCHO_P.txt','SAPRC07_CRES_P.txt',&
+        'SAPRC07_ETHE_P.txt','SAPRC07_FACD_P.txt','SAPRC07_GLY_P.txt ','SAPRC07_HCHO_P.txt',&
+        'SAPRC07_IPRD_P.txt','SAPRC07_ISOP_P.txt','SAPRC07_MACR_P.txt','SAPRC07_MEK_P.txt ',&
+        'SAPRC07_MEOH_P.txt','SAPRC07_MGLY_P.txt','SAPRC07_MVK_P.txt ','SAPRC07_OLE1_P.txt',&
+        'SAPRC07_OLE2_P.txt','SAPRC07_PACD_P.txt','SAPRC07_PRD2_P.txt','SAPRC07_RCHO_P.txt',&
+        'SAPRC07_RNO3_P.txt','SAPRC07_TERP_P.txt',&
+        'T_ANNCO2.csv      ','T_ANNPM10.csv     ','T_ANNPM25.csv     ','GSO4_P.txt        ',&
+        'PNO3_P.txt        ','OTHE_P.txt        ','POA_P.txt         ','PEC_P.txt         ',&
+        'T_ANNCH4.csv      ','T_ANNCN.csv       '/)
+      isp=(/ 1, 2, 3, 4, 5, 6, 7, 8, 9,10, &
+            11,12,13,14,15, 16,17,18,19,20, &
+            21,22,23,24,25, 26,27,28,29,30, &
+            31,32,33,34,35, 36,37,38,39,40, &
+            41,42,43,44,45, 46,47,48,49,50, &
+            51,52/)
+      WTM=(/28.0, 30.00, 46.00, 17.00,  64.0, 16.043,&
+            60.05,58.08,26.03728, 30.07, 36.73, 58.61,&
+            77.6, 118.89, 95.16, 118.72, 86.09, 106.13,&
+           78.11184, 44.05, 108.14, 28.05, 46.03, 58.04,&
+           30.03, 100.12, 68.12, 70.09, 72.11, 32.04,&
+           72.07, 70.09, 72.34, 75.78, 74.08, 116.16,&
+           58.08,  147.18,  136.24,&
+           3600.,3600.,3600.,3600.,3600.,3600.,3600./)
+        if (model.eq.1) then ! for chimere
+           do i=ns-7,ns
+             WTM(i)=100.
+           end do
+        end if
+        call lee_namelist_mecha('saprc7 ')
+      case default
         print *,"   **************************"
         print *," Mechanism :",mecha," does not exists!!"
         print *,"   **************************"
@@ -664,6 +810,7 @@ subroutine setup_file(FILE_NAME,istart,ncid)
     integer :: i,j,k,Layer
     integer :: dimids2(2),dimids3(3),dimids4(4)
     integer,dimension(NDIMS):: dim,id_dim
+    integer ::id_spec,id_Srtlen,id_specV
     integer :: JULDAY
 
     character (len=19),dimension(NDIMS) ::sdim
@@ -675,8 +822,11 @@ subroutine setup_file(FILE_NAME,istart,ncid)
 !
     data sdim /"Time               ","DateStrLen         ","west_east          ",&
     &          "south_north        ","bottom_top         ","emissions_zdim_stag"/
-
-print *,"Inicializa archivo de salida ",FILE_NAME(1:40)
+     if (model.eq.1) then
+      sdim(5)="bottom_top2        "
+      sdim(6)="bottom_top         "
+     end if
+    print *,"Inicializa archivo de salida ",FILE_NAME(1:40)
 ! ******************************************************************
     call date_and_time(date,time)
     hoy=date(7:8)//'-'//mes(date(5:6))//'-'//date(1:4)//' '//time(1:2)//':'//time(3:4)//':'//time(5:10)
@@ -690,8 +840,8 @@ print *,"Inicializa archivo de salida ",FILE_NAME(1:40)
     JULDAY=juliano(anio,month,idia)
 ! Open NETCDF emissions file
 !    call check( nf90_create(path =FILE_NAME,cmode = or(nf90_clobber,nf90_64bit_offset), ncid = ncid) )
-!   call check( nf90_create(path =FILE_NAME,cmode = NF90_NETCDF4,ncid = ncid) )
-   call check( nf90_create(path =FILE_NAME,cmode = NF90_CLASSIC_MODEL,ncid = ncid) )
+   call check( nf90_create(path =FILE_NAME,cmode = NF90_NETCDF4,ncid = ncid) )
+!   call check( nf90_create(path =FILE_NAME,cmode = NF90_CLASSIC_MODEL,ncid = ncid) )
 !     Define dimensiones
     dim=(/1,19,nx,ny,1,zlev/)
     !print *, "    Dimensions definition ****"
@@ -700,12 +850,23 @@ print *,"Inicializa archivo de salida ",FILE_NAME(1:40)
     do i=2,NDIMS
         call check( nf90_def_dim(ncid, sdim(i), dim(i), id_dim(i)) )
     end do
-
+    if (model.eq.1) then
+       call check( nf90_def_dim(ncid,"Species", radm, id_spec) )
+       call check( nf90_def_dim(ncid,"SpStrLen", 23, id_Srtlen) )
+    end if
     dimids2 = (/id_dim(2),id_dim(1)/)
     dimids3 = (/id_dim(3),id_dim(2),id_dim(1) /)
     dimids4 = (/id_dim(3),id_dim(4),id_dim(6),id_dim(1)/)
     !print *,"   Atributos Globales NF90_GLOBAL ****"
     !Atributos Globales NF90_GLOBAL
+    if (model.eq.1) then
+       titulo=trim(titulo)//" CHIMERE"
+       call check( nf90_put_att(ncid, NF90_GLOBAL,"Sub_title","Emissions file - Surface + Point sources"))
+       call check( nf90_put_att(ncid, NF90_GLOBAL,"Domain","ECAIM"))
+       call check( nf90_put_att(ncid, NF90_GLOBAL, "Generating_process","Generated by DiETE"))
+       call check( nf90_put_att(ncid, NF90_GLOBAL, "Conventions",""))
+       call check( nf90_put_att(ncid, NF90_GLOBAL, "Emission_factor","1.00"))
+    end if
     call check( nf90_put_att(ncid, NF90_GLOBAL, "TITLE",titulo))
     call check( nf90_put_att(ncid, NF90_GLOBAL, "START_DATE",iTime))
     call check( nf90_put_att(ncid, NF90_GLOBAL, "DAY ",cday))
@@ -734,21 +895,37 @@ print *,"Inicializa archivo de salida ",FILE_NAME(1:40)
     !print *,"Define las variables"
     !  Define las variables
     call check( nf90_def_var(ncid, "Times", NF90_CHAR, dimids2,id_unlimit ) )
+    call check( nf90_put_att(ncid, id_unlimit, "units", "Date string"))
+    call check( nf90_put_att(ncid, id_unlimit, "long_name", "Format YYYY-MM-DD_HH:MN:SS"))
+    if (model.eq.1) then
+      call check( nf90_def_var(ncid, "species",NF90_CHAR,(/id_Srtlen,id_spec/),id_specV) )
+      call check( nf90_put_att(ncid, id_specV, "units", "-"))
+      call check( nf90_put_att(ncid, id_specV, "long_name", "Species names"))
+    end if
     !  Attributos para cada variable
-    call check( nf90_def_var(ncid, "XLONG", NF90_REAL,(/id_dim(3),id_dim(4),id_dim(1)/),id_varlong) )
-    ! Assign  attributes
-    call check( nf90_put_att(ncid, id_varlong, "FieldType", 104 ) )
-    call check( nf90_put_att(ncid, id_varlong, "MemoryOrder", "XYZ") )
-    call check( nf90_put_att(ncid, id_varlong, "description", "LONGITUDE, WEST IS NEGATIVE") )
-    call check( nf90_put_att(ncid, id_varlong, "units", "degree_east"))
-    call check( nf90_put_att(ncid, id_varlong, "axis", "X") )
-    call check( nf90_def_var(ncid, "XLAT", NF90_REAL,(/id_dim(3),id_dim(4),id_dim(1)/),id_varlat ) )
-    ! Assign  attributes
-    call check( nf90_put_att(ncid, id_varlat, "FieldType", 104 ) )
-    call check( nf90_put_att(ncid, id_varlat, "MemoryOrder", "XYZ") )
-    call check( nf90_put_att(ncid, id_varlat, "description", "LATITUDE, SOUTH IS NEGATIVE") )
-    call check( nf90_put_att(ncid, id_varlat, "units", "degree_north"))
-    call check( nf90_put_att(ncid, id_varlat, "axis", "Y") )
+    if (model.eq.1)then
+    call check( nf90_def_var(ncid, "lon", NF90_REAL,(/id_dim(3),id_dim(4)/),id_varlong) )
+    call check( nf90_def_var(ncid, "lat", NF90_REAL,(/id_dim(3),id_dim(4)/),id_varlat) )
+    call check( nf90_put_att(ncid, id_varlong, "long_name", "Longitude"))
+    call check( nf90_put_att(ncid, id_varlong, "units", "degrees_east"))
+    call check( nf90_put_att(ncid, id_varlat, "long_name", "Latitude"))
+    call check( nf90_put_att(ncid, id_varlat, "units", "degrees_north"))
+    else
+      call check( nf90_def_var(ncid, "XLONG", NF90_REAL,(/id_dim(3),id_dim(4),id_dim(1)/),id_varlong) )
+      ! Assign  attributes
+      call check( nf90_put_att(ncid, id_varlong, "FieldType", 104 ) )
+      call check( nf90_put_att(ncid, id_varlong, "MemoryOrder", "XYZ") )
+      call check( nf90_put_att(ncid, id_varlong, "description", "LONGITUDE, WEST IS NEGATIVE") )
+      call check( nf90_put_att(ncid, id_varlong, "units", "degree_east"))
+      call check( nf90_put_att(ncid, id_varlong, "axis", "X") )
+      call check( nf90_def_var(ncid, "XLAT", NF90_REAL,(/id_dim(3),id_dim(4),id_dim(1)/),id_varlat ) )
+      ! Assign  attributes
+      call check( nf90_put_att(ncid, id_varlat, "FieldType", 104 ) )
+      call check( nf90_put_att(ncid, id_varlat, "MemoryOrder", "XYZ") )
+      call check( nf90_put_att(ncid, id_varlat, "description", "LATITUDE, SOUTH IS NEGATIVE") )
+      call check( nf90_put_att(ncid, id_varlat, "units", "degree_north"))
+      call check( nf90_put_att(ncid, id_varlat, "axis", "Y") )
+    end if
     !print *," Pob"
     call check( nf90_def_var(ncid,"POB",NF90_REAL,(/id_dim(3),id_dim(4),id_dim(1)/) ,id_varpop ) )
     ! Assign  attributes
@@ -779,10 +956,18 @@ print *,"Inicializa archivo de salida ",FILE_NAME(1:40)
     call check( nf90_put_att(ncid, id_utmz, "units", "None"))
     !print *,"Especies",ncid
     do i=1,radm
-    if(i.lt.ipm-1 ) then
-    call crea_attr(ncid,4,dimids4,ename(i),cname(i),"mol km^-2 hr^-1",id_var(i))
-    else
-    call crea_attr(ncid,4,dimids4,ename(i),cname(i),"ug m-2 s-1",id_var(i))
+    if(i.lt.L_PM25-1 ) then !for gases
+      if(model.eq.1) then
+       call crea_attr(ncid,4,dimids4,ename(i),cname(i),"molecule cm-2 s-1",id_var(i))
+     else
+       call crea_attr(ncid,4,dimids4,ename(i),cname(i),"mol km^-2 hr^-1",id_var(i))
+     end if
+    else                  !for particles
+      if(model.eq.1) then
+        call crea_attr(ncid,4,dimids4,ename(i),cname(i),"molecule cm-2 s-1",id_var(i))
+      else
+        call crea_attr(ncid,4,dimids4,ename(i),cname(i),"ug m-2 s-1",id_var(i))
+      end if
     end if
     end do
 !
@@ -792,6 +977,7 @@ print *,"Inicializa archivo de salida ",FILE_NAME(1:40)
     call check( nf90_put_var(ncid, id_utmx,utmxd,start=(/1,1/)) )
     call check( nf90_put_var(ncid, id_utmy,utmyd,start=(/1,1/)) )
     call check( nf90_put_var(ncid, id_utmz,utmzd,start=(/1,1/)) )
+    if(model.eq.1) call check( nf90_put_var(ncid,id_specV,ename,start=(/1,1/)) )
     !
     print *,"sale setup file"
 end subroutine setup_file
@@ -814,13 +1000,13 @@ subroutine guarda_variables
     if(periodo.eq.2) allocate(efs(nx,ny,zlev,nh/2))
     eft=0.
     do i=1,nf
-        if(i.eq.icn .or. i.eq.imt) cycle
-        if(i.eq.jcn ) then
-            call lee_emis(ii=  i,borra=.true.)
-            call lee_emis(ii=icn,borra=.false.)
-        else if(i.eq.jmt) then
-            call lee_emis(ii=  i,borra=.true.)
-            call lee_emis(ii=imt,borra=.false.)
+        if(i.eq.L_CN_i .or. i.eq.L_CH4_i) cycle
+        if(i.eq.L_CN_S ) then
+            call lee_emis(ii=  i   ,borra=.true. )
+            call lee_emis(ii=L_CN_i,borra=.false.)
+        else if(i.eq.L_CH4_S) then
+            call lee_emis(ii=  i    ,borra=.true. )
+            call lee_emis(ii=L_CH4_i,borra=.false.)
         else
             call lee_emis(ii=  i,borra=.true.)
         end if
@@ -839,11 +1025,12 @@ end subroutine guarda_variables
 !>   @date  07/13/2020
 !>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-!>   @param  iyear year number for identify leap year
-!>   @param  imes month number for identify number of days
+!>   @param  iyear year number for identifying leap year
+!>   @param  imes month number for identifying number of days
 !>   @param  iday day number
-integer function juliano(iyear,imes,iday)
+ function juliano(iyear,imes,iday) result(jdia)
     implicit none
+    integer :: jdia
     integer,intent(in) :: iyear
     integer,intent(in) :: imes
     integer,intent(in) :: iday
@@ -851,10 +1038,10 @@ integer function juliano(iyear,imes,iday)
     integer i
 
     if (mod(iyear,4)==0.and.mod(iyear,100)/=0) month(2)=29 !Bisiesto
-    juliano=iday
+    jdia=iday
     if (imes.gt.1) then
         do i=1,imes-1
-            juliano=juliano+month(i)
+            jdia=jdia+month(i)
         end do
     end if
     return
@@ -871,8 +1058,9 @@ end function
 !>   @version  2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param  num number of the month
-character(len=3)function mes(num)
-    character*2 num
+   function mes(num)
+    character(len=3) :: mes
+    character(len=2),intent(in) :: num
     select case (num)
     case('01');mes='Jan'
     case('02');mes='Feb'
@@ -993,19 +1181,19 @@ end subroutine lee_localiza
 subroutine lee_emis(ii,borra)
     implicit none
     integer,INTENT(in):: ii
-    integer :: i,ih,is,j,k,levl,levld,iun
+    integer :: i,ih,is,j,k,levl,levld
+    integer :: iun
     real ::rdum, constant
     real,dimension(nh)::edum
     character (len=15)::ruta
     character(len=13) cdum,crdum
     logical,INTENT(in) ::borra
-    if (borra) eft =0
-    !print *,fnameA(ii),fnameM(ii),fnameP(ii),ii
+    if (borra) eft =0.
 !$omp parallel sections num_threads (3) private(i,j,ih,k,idcf,constant,is,iun,edum,ruta)
 !$omp section
-    if (ii.le.5 .or. (ii.ge.ipm-2 .and. ii.le.ipm).or.ii.eq.icn .or. ii .eq.imt)then
+    if (ii.le.5 .or. (ii.ge.L_PM25-2 .and. ii.le.L_PM25).or.ii.eq.L_CN_i .or. ii .eq.L_CH4_i)then
         ruta="../04_temis/"
-    else if( ii.gt. ipm) then; ruta="../09_pm25spec/"
+    else if( ii.gt. L_PM25) then; ruta="../09_pm25spec/"
     else;     ruta="../08_spec/"; end if
     open(newunit=iun,file=trim(ruta)//fnameA(ii),status='OLD',action='READ')
     read(iun,*)cdum
@@ -1015,12 +1203,13 @@ subroutine lee_emis(ii,borra)
     else
         read(iun,*)j,current_date
     end if
-    if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
-    if(ii.eq.imt) is=jmt
+    if(ii.ge.L_PM25-1) then; is=L_PM25 ;else ;is=ii;end if
+    if(ii.eq.L_CH4_i) is=L_CH4_S
+    if(model.eq.1.and.ii.eq.1) SUPF1=SUPF1*6.022e23/1e10/3.6e3 !mol h-1 km-2 -> molec s-1 cm-2
     constant=scala(ii)*SUPF1/WTM(is)
     write(6,'(i4,x,A,A,2ES11.1)') ii,ruta//fnameA(ii),current_date(1:13),constant
     do
-        if(ii.eq.ipm) then
+        if(ii.eq.L_PM25) then
             read(iun,*,END=100) idcf,rdum,(edum(ih),ih=1,nh)
         else
             read(iun,*,END=100) idcf,(edum(ih),ih=1,nh)
@@ -1041,9 +1230,9 @@ subroutine lee_emis(ii,borra)
     end do
 100 close(iun)
 !$omp section
-    if (ii.le.5 .or. (ii.ge.ipm-2 .and. ii.le.ipm).or.ii.eq.icn .or. ii .eq.imt)then
+    if (ii.le.5 .or. (ii.ge.L_PM25-2 .and. ii.le.L_PM25).or.ii.eq.L_CN_i .or. ii .eq.L_CH4_i)then
         ruta="../06_temisM/"
-    else if( ii.gt. ipm) then; ruta="../09_pm25spec/"
+    else if( ii.gt. L_PM25) then; ruta="../09_pm25spec/"
     else;     ruta="../08_spec/"; end if
     open(newunit=iun,file=trim(ruta)//fnameM(ii),status='OLD',action='READ')
     read(iun,*)cdum
@@ -1053,12 +1242,12 @@ subroutine lee_emis(ii,borra)
     else
         read(iun,*)j,current_date
     end if
-    if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
-    if(ii.eq.imt) is=jmt
+    if(ii.ge.L_PM25-1) then; is=L_PM25 ;else ;is=ii;end if
+    if(ii.eq.L_CH4_i) is=L_CH4_S
     write(6,'(i4,x,A,A,f7.1)') ii,ruta//fnameM(ii),current_date(1:13)
     constant=scalm(ii)*SUPF1/WTM(is)
     do
-        if(ii.eq.ipm) then !for PM2.5
+        if(ii.eq.L_PM25) then !for PM2.5
             read(iun,*,END=200) idcf,crdum,(edum(ih),ih=1,nh)
         else
             read(iun,*,END=200) idcf,(edum(ih),ih=1,nh)
@@ -1081,9 +1270,9 @@ subroutine lee_emis(ii,borra)
 !
 !  For point sources
 !$omp section
-    if (ii.le.5 .or. (ii.ge.ipm-2 .and. ii.le.ipm).or.ii.eq.icn .or. ii .eq.imt)then
+    if (ii.le.5 .or. (ii.ge.L_PM25-2 .and. ii.le.L_PM25).or.ii.eq.L_CN_i .or. ii .eq.L_CH4_i)then
         ruta="../07_puntual/"
-    else if( ii.gt. ipm) then; ruta="../09_pm25spec/"
+    else if( ii.gt. L_PM25) then; ruta="../09_pm25spec/"
     else;     ruta="../08_spec/"; end if
     open(newunit=iun,file=trim(ruta)//fnameP(ii),status='OLD',action='READ')
     read(iun,*)cdum
@@ -1093,13 +1282,13 @@ subroutine lee_emis(ii,borra)
     else
         read(iun,*)j,current_date
     end if
-    if(ii.ge.ipm-1) then; is=ipm ;else ;is=ii;end if
-    if(ii.eq.imt) is=jmt
+    if(ii.ge.L_PM25-1) then; is=L_PM25 ;else ;is=ii;end if
+    if(ii.eq.L_CH4_i) is=L_CH4_S
     write(6,'(i4,x,A,A,f7.1)') ii,ruta//fnameP(ii),current_date(1:13)
     constant=scalp(ii)*SUPF1/WTM(is)
     rdum=SUPF1/WTM(is)
     do
-        if(ii.eq.ipm) then   !for PM2.5
+        if(ii.eq.L_PM25) then   !for PM2.5
             read(iun,*,END=300) crdum,idcf,levl,(edum(ih),ih=1,nh),levld
         !print *,idcf,rdum,levl,(edum(ih),ih=1,nh)
         else
@@ -1157,8 +1346,13 @@ subroutine escribe_var(ikk)
     character(len=19):: iTime
     character(len=19),dimension(1,1)::Times
 
-    FILE_NAME='wrfchemi_d01_'//trim(mecha(1:5))//'_'&
-    &//trim(zona(1:8))//'_'//current_date(1:19)
+    if (model.eq.1) then
+        FILE_NAME='AEMISSIONS.'//trim(mecha(1:5))//'_'&
+        &//trim(zona(1:8))//'_'//current_date(1:19)
+    else
+        FILE_NAME='wrfchemi_d01_'//trim(mecha(1:5))//'_'&
+        &//trim(zona(1:8))//'_'//current_date(1:19)
+    end if
    iTime=current_date
     if(periodo.eq.1) then
         iit= 1
@@ -1167,8 +1361,13 @@ subroutine escribe_var(ikk)
         iit=1
         eit=12
         write(iTime(12:13),'(I2.2)') 12
-        FILE_NAME2='wrfchemi_d01_'//trim(mecha(1:5))//'_'//&
-        &trim(zona(1:8))//'_'//iTime
+        if (model.eq.1) then
+            FILE_NAME2='AEMISSIONS.'//trim(mecha(1:5))//'_'//&
+            &trim(zona(1:8))//'_'//iTime
+        else
+            FILE_NAME2='wrfchemi_d01_'//trim(mecha(1:5))//'_'//&
+            &trim(zona(1:8))//'_'//iTime
+        end if
     end if
     if(ikk.eq.1) then
       call setup_file(FILE_NAME,0,ncid)
@@ -1202,7 +1401,7 @@ subroutine escribe_var(ikk)
         endif
       it=0
     end if   ! for ikk == 1
-    if( ikk.lt.ipm-1) then !for gases
+    if( ikk.lt.L_PM25-1) then !for gases
         if(periodo.eq.1) then
 call check( nf90_put_var(ncid, id_var(isp(ikk)),eft,start=(/1,1,1,1/),count=(/nx,ny,zlev,24/)))
         else
@@ -1217,17 +1416,17 @@ call check( nf90_put_var(ncid2,id_var(isp(ikk)),efs,start=(/1,1,1,1/),count=(/nx
     else
 !
     if(periodo.eq.1) then
-     call check( nf90_put_var(ncid, id_var(isp(ikk)),eft*0.8,start=(/1,1,1,1/)) )
-     call check( nf90_put_var(ncid, id_var(isp(ikk+5)),eft*0.2,start=(/1,1,1,1/)) )
+     call check( nf90_put_var(ncid, id_var(isp(ikk)),eft*0.2,start=(/1,1,1,1/)) )
+     call check( nf90_put_var(ncid, id_var(isp(ikk+5)),eft*0.8,start=(/1,1,1,1/)) )
     else
       call copy_val_12to23
 !$omp parallel sections num_threads (2)
 !$omp section
-      call check( nf90_put_var(ncid ,id_var(isp(ikk)),eft*0.8,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
-      call check( nf90_put_var(ncid ,id_var(isp(ikk+5)),eft*0.2,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
+      call check( nf90_put_var(ncid ,id_var(isp(ikk)),eft*0.2,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
+      call check( nf90_put_var(ncid ,id_var(isp(ikk+5)),eft*0.8,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
 !$omp section
-      call check( nf90_put_var(ncid2,id_var(isp(ikk)),efs*0.8,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
-      call check( nf90_put_var(ncid2,id_var(isp(ikk+5)),efs*0.2,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
+      call check( nf90_put_var(ncid2,id_var(isp(ikk)),efs*0.2,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
+      call check( nf90_put_var(ncid2,id_var(isp(ikk+5)),efs*0.8,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
 !$omp end parallel sections
     end if !periodo
     end if

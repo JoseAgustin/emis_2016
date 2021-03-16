@@ -2,11 +2,11 @@
 !   Definicion de variables para calculo del Inventario
 !
 &region_nml
-zona ="tijuana"
+zona ="ecaim3"
 !
-! bajio     cdjuarez     colima
-! ecaim     guadalajara  mexicali
-! mexico    monterrey    queretaro   tijuana
+! bajio bajio3 cdjuarez   colima    ecacor  ecaim ecaim3
+! guadalajara  jalisco    mexicali  mexico  mexico9
+! monterrey    monterrey3 queretaro tijuana
 /
 &fecha_nml
 ! Se indica el dia y el mes a calcular
@@ -16,9 +16,9 @@ zona ="tijuana"
 ! anio a modelar validos: 2014 a 2020
 ! Si se quiere un archvio de 24 hr periodo=1
 !    o dos archivos de 12 hr peridodo=2
-idia=10
-month=4
-anio=2020
+idia=9
+month=5
+anio=2016
 periodo=1
 /
 !Horario de verano
@@ -30,8 +30,9 @@ lsummer = .true.
 /
 ! Quimica a utilizar
 ! Los mecanismos a usar:
-!  cbm04 cbm05 mozart racm2 radm2 saprc99
-!
+!  cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07
+!  IF saprc07  model= 0 WRF 1 CHIMERE
 &chem_nml
-mecha='radm2'
+mecha='saprc07'
+model=1
 /

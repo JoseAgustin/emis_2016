@@ -2,7 +2,7 @@
 #: Title       : emis_2016.sh
 #: Date        : 26/07/2017
 #: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
-#: Version     : 1.0  26/04/2020 Actualizacion para IE del 2016
+#: Version     : 1.1  26/04/2020 Actualizacion para IE del 2016
 #: Description : Realiza la secuencia de pasos para generar diferentes fechas
 #                del inventario de emisiones.
 #: Options     : None
@@ -17,17 +17,20 @@
 ProcessDir=$PWD
 echo "Directorio actual "$ProcessDir
 # Selecciona area de modelacion
-#  bajio     cdjuarez     colima      
-#  ecaim    guadalajara  mexicali
-#  mexico    monterrey    queretaro   tijuana
+# bajio bajio3 cdjuarez   colima    ecacor  ecaim ecaim3
+# guadalajara  jalisco    mexicali  mexico  mexico9
+# monterrey    monterrey3 queretaro tijuana
 #
-dominio=ecaim
+dominio=ecaim3
 HacerArea=1
 #
 # Selecciona mecanismo
-# Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 sapcr99
+# Los mecanismos a usar:
+# cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07
 #
-MECHA=radm2
+MECHA=saprc07
+# Si saprc07 AQM_SELECT = 0 WRF 1 CHIMERE
+AQM_SELECT=1
 #  Build the namelist_emis.nml file
 # Cambiar aqui la fecha
 mes=5
@@ -41,7 +44,7 @@ nyear=2016
 #
 #   Si se desea un archivo de 24 hrs  nfile=1
 #              dos archivos de 12 hrs nfile=2
-nfile=2
+nfile=1
 #  Revisa que exista el dominio
 cd 01_datos
 existe=0
@@ -64,9 +67,9 @@ cat << End_Of_File > namelist_emis.nml
 &region_nml
 zona ="$dominio"
 !
-! bajio     cdjuarez     colima
-! ecaim     guadalajara  mexicali
-! mexico    monterrey    queretaro   tijuana
+! bajio bajio3 cdjuarez   colima    ecacor  ecaim ecaim3
+! guadalajara  jalisco    mexicali  mexico  mexico9
+! monterrey    monterrey3 queretaro tijuana
 /
 &fecha_nml
 ! Se indica el dia y el mes a calcular
@@ -90,10 +93,11 @@ lsummer = .true.
 /
 ! Quimica a utilizar
 ! Los mecanismos a usar:
-!  cbm04 cbm05 mozart racm2 radm2 saprc99
-!
+!  cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07
+!  if saprc07  model= 0 WRF 1 CHIMERE
 &chem_nml
 mecha='$MECHA'
+model=$AQM_SELECT
 /
 End_Of_File
 
@@ -131,9 +135,9 @@ cat << End_Of_File > namelist_emis.nml
 &region_nml
 zona ="$dominio"
 !
-! bajio     cdjuarez     colima
-! ecaim     guadalajara  mexicali
-! mexico    monterrey    queretaro   tijuana
+! bajio bajio3 cdjuarez   colima    ecacor  ecaim ecaim3
+! guadalajara  jalisco    mexicali  mexico  mexico9
+! monterrey    monterrey3 queretaro tijuana
 /
 &fecha_nml
 ! Se indica el dia y el mes a calcular
@@ -157,10 +161,11 @@ lsummer = .true.
 /
 ! Quimica a utilizar
 ! Los mecanismos a usar:
-!  cbm04 cbm05 mozart racm2 radm2 saprc99
-!
+!  cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07
+!  IF saprc07  model= 0 WRF 1 CHIMERE
 &chem_nml
 mecha='$MECHA'
+model=$AQM_SELECT
 /
 End_Of_File
 

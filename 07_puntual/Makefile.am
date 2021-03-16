@@ -5,6 +5,9 @@ bin_PROGRAMS = Puntual.exe
 #
 # Compiler flags
 # Parallel version
+if WITH_GFOR 
+AM_FCFLAGS =-DPGI
+endif
 if WITH_OMPI
   AM_FCFLAGS = $(OPENMP_FCFLAGS)
 endif

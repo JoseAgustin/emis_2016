@@ -1,4 +1,4 @@
-27-jul-2020
+10-mar-2021
 
 # Emissions conversion system
 
@@ -35,7 +35,7 @@ a subdirectory `time` with temporal distribution files.
 - `12_cmaq` CBMV mechanism for CMAQ model
 - `inventario` output subdirectory
 
-
+---
 ## Sistema de conversión de emisiones
 
 [1.](#desc)  **Descripción del proceso de conversión de emisiones**
@@ -65,6 +65,8 @@ a subdirectory `time` with temporal distribution files.
 [Annex 1.](#anexo1) **Tamaño de salidas**
 
 <a name="desc"></a>
+
+---
 ###  Descripción del proceso de conversión de emisiones
 
 La conversión de inventario de emisiones a un inventario útil para modelación se realiza en diferentes pasos que se muestran en la ilustración 1 cada uno de estos pasos es un subdirectorio dentro del directorio principal.
@@ -79,14 +81,20 @@ _Figura 1 Esquema general de la conversión de emisiones para modelación de cal
 En este directorio se encuentra los subdirectorios de cada una de las áreas del inventario, y de datos de empleados para la distribución temporal. Las áreas que considera son las siguientes:
 
 1. bajio – área correspondiente al estado de Guanajuato 1x1 km
-2. cdjuarez – la ciudad fronteriza de Chihuahua 1x1 km
-3. colima – es todo el estado de Colima 1x1 km
-4. ecaim – Centro de México . 1x1 km
-5. guadalajara – Zona Metropolitana de Guadalajara 1x1 km
-6. mexicali – Ciudad fronteriza de BC 1x1 km
-7. mexico – Toda la república mexicana 3x3 km
-8. monterrey - Zona metropolitana de Monterrey 1x1 km
-9. tijuana – Zona metropolitana de Tijuana 1x1 km
+2. bajio3 – área correspondiente al estado de Guanajuato 3x3 km
+3. cdjuarez – la ciudad fronteriza de Chihuahua 1x1 km
+4. colima – es todo el estado de Colima 1x1 km
+5. ecaim – Centro de México . 1x1 km
+6. ecaim3 - Centro de México 3x3 km
+7. guadalajara – Zona Metropolitana de Guadalajara 1x1 km
+8. jalisco -    Estado de Jalisco 3x3 km
+9. mexicali – Ciudad fronteriza de BC 1x1 km
+10. mexico – Toda la república mexicana 3x3 km
+11. mexico9 – Toda la república mexicana 9x9 km 
+12. monterrey - Zona metropolitana de Monterrey 1x1 km
+13. monterrey3 - Zona metropolitana de Monterrey y Saltillo  3x3 km
+14. queretaro - estado de Queretaro a 3x3 km
+15. tijuana – Zona metropolitana de Tijuana 1x1 km
 
 Cada uno de estos subdirectorios contiene los archivos para la distribución espacial de las emisiones en la malla que considera el área de estudio correspondiente, los archivos que contiene se describen a continuación:
 
@@ -188,7 +196,8 @@ En este directorio se realiza la especiación química de los VOC para luego agr
 - profile\_cbm05.csv – Mecanimso químico Carbon Bond V
 - profile\_mozart.csv – Mecanismo MOZART (Model for OZone And Related chemical Tracers
 - profile\_racm2.csv – Mecanismo Regional Atmospheric Chemistry Mechanism (RACM)
-- profile\_saprc99.csv -Mecanismo Statewide Air Pollution Research Center (SAPRC)
+- profile\_saprc99.csv -Mecanismo Statewide Air Pollution Research Center (SAPRC 1999)
+- profile\_saprc07.csv -Mecanismo Statewide Air Pollution Research Center (SAPRC 2007)
 - profile\_radm2.csv – Mecanismo Regional Acid Deposition Model, ver 2. (RADM2)
 
 Para la realización de esto se emplean tres programas, uno para cada tipo de fuente así:
@@ -264,64 +273,62 @@ En este se crea el archivo de salida en formato netcdf con las emisiones generad
       wrfchemi_d01_radm2_mexicali_2016-04-30_00:00:00
 
 <a name="script"></a>
+
+---
+
 ## Proceso de ejecución
 
 En el directorio principal emis\_2016 se edita el script emis\_2016.sh
 
-  1. Selección del área se asigna a la variable dominio el área de interés
+  1. Selección del área a la variable dominio se le asigna el nombre del área de interés
 
          # Selecciona area de modelacion
-         # bajio cdjuarez colima
-         # ecaim guadalajara mexicali
-         # mexico monterrey queretaro tijuana
+         # bajio bajio3 cdjuarez   colima    ecacor  ecaim ecaim3
+         # guadalajara  jalisco    mexicali  mexico  mexico9
+         # monterrey    monterrey3 queretaro tijuana
          #
          dominio= **ecaim**
 
-  2. Se indica si se desea calcular la distribución espacial.
+  2. Se indica si se desea calcular la distribución espacial.  `HacerArea=0` si es la __primera vez__ que se corre el área . y `HacerArea=0`  misma área diferente fecha.
 
          HacerArea=1
 
-Si es la primera vez que se corre el área este debe ser 1
+  3. Se selecciona el mecanismo, asignado el valor en MECHA en el caso de __saprc07__  se puede asignar  la variable  `model = 0` para  WRF  y  ` =1` para CHIMERE
 
-Si sólo se requiere calcular otra fecha debe puede ser 0
-
-  3. Se selecciona el mecanismo asignado el valor en MECHA
-
-          # Los mecanismos a usar cbm05 mozart racm2 radm2 sapcr99
+          # Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07
           #
           MECHA=radm2
-
+          model =0
   4. Se selecciona el mes asignado el valor en la variable mes
 
           # Cambiar aqui la fecha
           mes=5
           dia=9
           dia2=9
-
-  - Se selecciona el día inicial (dia) y final (dia2)
-  -  Se selecciona el año en la variable nyear
-
+          
+Se selecciona el día inicial  __dia__ y final __dia2__. Se selecciona el año en la variable __nyear__.
+  
           # Aqui cambiar el año a modelar
           #
           nyear=2016
           #
-
   5. Se selecciona si se quiere un archivo o dos archivos por día en la variable: `nfile`
 
           # Si se desea un archivo de 24 hrs nfile=1
           # dos archivos de 12 hrs nfile=2
           nfile=2
 
-  1. Si para el periodo es durante el horario de verano y no se desea que se realice el cambio de horario se cambia la variable `lsummer` de `.true.` a `.false.` en las **dos** partes donde aparece.
+  1. Si para el periodo es durante el horario de verano y no se desea que se realice el cambio de horario se cambia la variable `lsummer` de `.true.` a `.false.` en las **dos** partes donde aparece. Línea 91 y 159.
   2. Se ejecuta el script bash emis\_2016.sh
 
 <a name="anexo1"></a>
+
 ## Tamaño de salidas
 
 La siguiente tabla muestra el tamaño de las salidas para cada área considerando sólo un día del año.
 
 | **Área** | **Tamaño** |
-| --- | --- |
+| --- |  --:|
 | Bajío | 1.6 GB |
 | Cd Juárez | 51 MB |
 | Colima | 333 MB |
@@ -333,3 +340,11 @@ La siguiente tabla muestra el tamaño de las salidas para cada área considerand
 | Tijuana | 42 MB |
 
 [1]: La superficie de _bosque_ representa **todo** tipo de vegetación en la celda que no es agrícola.
+
+### CHIMERE
+El sistema puede generar las salidas en el formato para el modelo [CHIMERE] [2]  cambios son:
+1. los nombres de las variables 
+2. las unidades en molecules s-1 cm-2
+3. El nombre del archivo de salida inicia con:  __AEMISSIONS.saprc...__
+
+[2]: https://www.lmd.polytechnique.fr/chimere/2020_getcode.php  

@@ -722,8 +722,8 @@ subroutine store
     FILE_NAME='wrfchemi.d01.'//trim(mecha(1:5))//'.'//trim(zona)//'.'//iTime
 	 end if
 	  ! Open NETCDF emissions file	
-       call check( nf90_create(path =FILE_NAME,cmode = NF90_CLOBBER, ncid = ncid) )
-!        call check( nf90_create(path =FILE_NAME,cmode = NF90_NETCDF4,ncid = ncid) )
+!       call check( nf90_create(path =FILE_NAME,cmode = NF90_CLOBBER, ncid = ncid) )
+        call check( nf90_create(path =FILE_NAME,cmode = NF90_NETCDF4,ncid = ncid) )
 !     Define dimensiones
 		  dim(1)=1
 		  dim(2)=19

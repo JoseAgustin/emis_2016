@@ -1,1 +1,0 @@
-../08_spec/CBM05_ETOH_P.txt
