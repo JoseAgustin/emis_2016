@@ -41,9 +41,9 @@ integer :: anio     ! anio de las emisiones 2016
 !> If =1  one file with 24 hr , =2  two files of 12hrs each one
 integer ::periodo! =1 uno 24 hr, =2 dos de 12hrs c/u
 !> start day for summer time period for years 2014 to 2020
-integer,dimension(2014:2020) :: inicia   ! dia inicio horario verano
+integer,dimension(2014:2021) :: inicia   ! dia inicio horario verano
 !> end day for summer time period for years 2014 to 2020
-integer,dimension(2014:2020) :: termina ;!> Days per month
+integer,dimension(2014:2021) :: termina ;!> Days per month
 integer,dimension(12) :: daym ! days in a month
 !> Fraction of weeks per days in the month
 real :: fweek
@@ -75,9 +75,9 @@ character (len=19) :: current_date
     ! number of day in a month
     !          jan feb mar apr may jun jul aug sep oct nov dec
     data daym /31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
-!              2014 2015 2016 2017 2018 2019 2020
-    data inicia  /6,  5,  3,   2,   1,   7,   5/
-    data termina /26,25, 30,  29,  28,  27,  25/
+!              2014 2015 2016 2017 2018 2019 2020 2021
+    data inicia  /6,  5,  3,   2,   1,   7,   5,  4/
+    data termina /26,25, 30,  29,  28,  27,  25, 31/
 common /dat/ nl,nx,ny,daytype,fweek,cvar,current_date
 common /nlm_vars/lsummer,zona,month,idia,anio,periodo,inicia,termina
 end module point_vars_mod

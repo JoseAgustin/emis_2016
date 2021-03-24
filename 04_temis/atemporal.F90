@@ -42,9 +42,9 @@ integer, allocatable ::idcel3(:) ;!> state municipality IDs emiss and time zone
 integer, allocatable :: idsm(:,:); !> Days per month
 integer,dimension(12) :: daym ! days in a month
 !> start day for summer time period for years 2014 to 2020
-integer,dimension(2014:2020) :: inicia ! dia inicial del horario de verano
+integer,dimension(2014:2021) :: inicia ! dia inicial del horario de verano
 !> end day for summer time period for years 2014 to 2020
-integer,dimension(2014:2020) :: termina  ! dia fin del horario de verano
+integer,dimension(2014:2021) :: termina  ! dia fin del horario de verano
 !> Fraction of weeks per days in the month
 real ::fweek
 !>Area emisions from files cel,ssc,file
@@ -90,9 +90,9 @@ character(len=14),dimension(nf) :: casn
 ! number of day in a month
 !          jan feb mar apr may jun jul aug sep oct nov dec
    data daym /31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
-  !              2014 2015 2016 2017 2018 2019 2020
-   data inicia  /6,  5,  3,   2,   1,   7,   5/
-   data termina /26,25, 30,  29,  28,  27,  25/
+  !              2014 2015 2016 2017 2018 2019 2020 2021
+   data inicia  /6,  5,  3,   2,   1,   7,   5,  4/
+   data termina /26,25, 30,  29,  28,  27,  25,  31/
 common /vars/ fweek,nscc,nm,lh,daytype,mes,dia,current_date
 common /nlm_vars/lsummer,month,idia,anio,periodo,inicia,termina
 end module area_temporal_mod
