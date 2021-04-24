@@ -15,8 +15,7 @@
 !>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 module area_temporal_mod
-!> month of emissions output
-integer :: month   ;!> type day (1=Mon, 2= Tue, ... 7=Sun)
+!> type day (1=Mon, 2= Tue, ... 7=Sun)
 integer :: daytype ;!> number of emission files
 integer,parameter :: nf=10    ;!> max number of scc descriptors in input files
 integer,parameter :: nnscc=59 ;!> number of day in year
@@ -28,23 +27,12 @@ integer :: nm
 !> Number of lines in Time zone file
 integer :: lh ; !> if is dayligth time saving period
 integer :: iverano  ! si es en periodo de verano
-!> Day for temporal emissions computations
-integer :: idia     ! dia para el calculo de emisiones
-!> Year for temporal emissions computations
-integer :: anio     ! anio de las emisiones 2016
-!> If =1  one file with 24 hr , =2  two files of 12hrs each one
-integer ::periodo
 !> number of scc codes per file
 integer,dimension(nf) :: nscc ; !> GRIDID in emissions
 integer, allocatable :: idcel(:) ;!> GRIDID not duplictes
 integer, allocatable ::idcel2(:) ;!> GRIDID fir identification of not duplicate
 integer, allocatable ::idcel3(:) ;!> state municipality IDs emiss and time zone
-integer, allocatable :: idsm(:,:); !> Days per month
-integer,dimension(12) :: daym ! days in a month
-!> start day for summer time period for years 2014 to 2020
-integer,dimension(2014:2021) :: inicia ! dia inicial del horario de verano
-!> end day for summer time period for years 2014 to 2020
-integer,dimension(2014:2021) :: termina  ! dia fin del horario de verano
+integer, allocatable :: idsm(:,:)
 !> Fraction of weeks per days in the month
 real ::fweek
 !>Area emisions from files cel,ssc,file
@@ -74,8 +62,7 @@ character(len=10),dimension(nnscc) ::iscc
 character(len=3),dimension(juliano):: cdia
 !> Initial date of the emissions period
 character (len=19) :: current_date
-!> during summer period  consider timasvaing .true. or not .false.
-logical :: lsummer          ; !> Input file name
+ !> Input file name
 character(len=14),dimension(nf) ::efile ; !> output file name
 character(len=14),dimension(nf) :: casn
 
@@ -87,14 +74,7 @@ character(len=14),dimension(nf) :: casn
 &           'TACO__2016.csv','TAPM102016.csv','TACO2_2016.csv',&
 &           'TACN__2016.csv','TACH4_2016.csv','TAPM2_2016.csv',&
 &           'TAVOC_2016.csv'/
-! number of day in a month
-!          jan feb mar apr may jun jul aug sep oct nov dec
-   data daym /31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
-  !              2014 2015 2016 2017 2018 2019 2020 2021
-   data inicia  /6,  5,  3,   2,   1,   7,   5,  4/
-   data termina /26,25, 30,  29,  28,  27,  25,  31/
 common /vars/ fweek,nscc,nm,lh,daytype,mes,dia,current_date
-common /nlm_vars/lsummer,month,idia,anio,periodo,inicia,termina
 end module area_temporal_mod
 !
 !  Progran  atemporal.F90
@@ -105,9 +85,10 @@ end module area_temporal_mod
 !>   @version 2.2
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program area_temporal
+   use master
    use area_temporal_mod
 
-   call lee_namelist_time
+   call lee_namelist
 
    call area_spatial_reading
 
@@ -752,92 +733,5 @@ subroutine maxline(entero)
       !print '(I6)',entero
     end do
 end subroutine maxline
-!  _  ____   _____ ___    _   _  _  ___
-! | |/ /\ \ / / __| _ \  /_\ | \| |/ _ \
-! | ' <  \ V /| _||   / / _ \| .` | (_) |
-! |_|\_\  \_/ |___|_|_\/_/ \_\_|\_|\___/
-!
-!>  @brief Identifies if it is summert time period and if it is considered or not
-!> return 1 if the date is within daysaving time.
-!>   @author  Jose Agustin Garcia Reynoso
-!>   @date 07/12/2020
-!>   @version 2.2
-!>   @copyright Universidad Nacional Autonoma de Mexico 2020
-!> @param ida day in the month
-!> @param mes month of the year
-integer function kverano(ida,mes)
-    implicit none
-    integer, intent(in):: ida,mes
 
-    if (mes.lt.4  .or. mes .gt.10)then
-        kverano = 0
-        return
-    end if
-    if (mes.gt.4 .and. mes .lt.10) then
-        kverano = 1
-        write(6, 233) inicia(anio),termina(anio)
-        return
-    end if
-    if (mes.eq.4 .and. ida .ge. inicia(anio)) then !para 2016
-      kverano = 1
-      write(6, 233) inicia(anio),termina(anio)
-      return
-    elseif (mes.eq.10 .and. ida .le. termina(anio)) then
-      kverano = 1
-      write(6, 233) inicia(anio),termina(anio)
-      return
-     else
-      kverano =0
-      return
-    end if
-233 format("******  HORARIO de VERANO *******",/,3x,"Abril ",I2,x,"a Octubre ",I2)
-end function
-!  _                                          _ _     _      _   _
-! | | ___  ___     _ __   __ _ _ __ ___   ___| (_)___| |_   | |_(_)_ __ ___   ___
-! | |/ _ \/ _ \   | '_ \ / _` | '_ ` _ \ / _ \ | / __| __|  | __| | '_ ` _ \ / _ \
-! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_   | |_| | | | | | |  __/
-! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|___\__|_|_| |_| |_|\___|
-!            |_____|                                    |_____|
-!>  @brief Reads global namelist input file for setting up the temporal settings.
-!>
-!>  reads variables idia,month,anio and periodo used for time specification
-!>   @author  Jose Agustin Garcia Reynoso
-!>   @date 07/12/2020
-!>   @version 2.2
-!>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine lee_namelist_time
-    NAMELIST /fecha_nml/ idia,month,anio,periodo
-    NAMELIST /verano_nml/ lsummer
-    integer unit_nml
-    logical existe
-    unit_nml = 9
-    existe = .FALSE.
-    write(6,*)' >>>> Reading file - ../namelist_emis.nml'
-    inquire ( FILE = '../namelist_emis.nml' , EXIST = existe )
-
-    if ( existe ) then
-    !  Opening the file.
-        open ( FILE   = '../namelist_emis.nml' ,      &
-        UNIT   =  unit_nml        ,      &
-        STATUS = 'OLD'            ,      &
-        FORM   = 'FORMATTED'      ,      &
-        ACTION = 'READ'           ,      &
-        ACCESS = 'SEQUENTIAL'     )
-        !  Reading the file
-        READ (unit_nml , NML = fecha_nml )
-        READ (unit_nml , NML = verano_nml )
-        !WRITE (6    , NML = verano_nml )
-        close(unit_nml)
-    else
-        stop '***** No namelist_emis.nml in .. directory'
-    end if
-    if (month.lt.1 .or. month.gt.12) then
-        print '(A,I3)','Error in month (from 1 to 12) month= ',month
-        stop
-    end if
-    if (idia.gt.daym(month))then
-        print '(A,I2,A,I2)','Error in day value: ',idia,' larger than days in month ',daym(month)
-        Stop
-    end if
-end subroutine lee_namelist_time
 end program area_temporal

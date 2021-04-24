@@ -1,4 +1,4 @@
-!>  @brief does AREA emissions VOC speciation and aggregation.
+!>  @brief does AREA emissions VOC speciation and aggregation
 !>
 !>  splits VOC in chemical species and agregates those chemical species  into classes
 !>  for a specific mechanism selected in namelist_emis.nml
@@ -6,16 +6,17 @@
 !>   @date  2020/06/20
 !>   @version  2.1
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-program area_speciation
+program point_speciation
    use voc_split
+   use master
 
     call lee_namelist
 
-    call lee_voc(1)
+    call lee_voc(3)
 
-    call voc_agregation(1)
+    call voc_agregation(3)
 
-    call guarda_voc(1)
+    call guarda_voc(3)
 
-end program area_speciation
+end program point_speciation
 

@@ -8,7 +8,7 @@
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program mobile_speciation
    use voc_split
-
+   use master
     call lee_namelist
 
     call lee_voc(2)

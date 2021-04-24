@@ -35,10 +35,8 @@ real,allocatable ::rlc(:)
 real,allocatable :: rlm(:)
 !>  Municipality total street area array in output file
 real,allocatable ::sum(:)
-!> Geographical area selected in namelist_emis.csv
-character(len=12):: zona
 
-common /vars1/ nm,zona
+common /vars1/ nm
 
 end module street_vars
 !> @brief This program identifies the different streets in the cell and adds them together.
@@ -49,8 +47,9 @@ end module street_vars
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program suma_vialidades
 use street_vars
+use master
 
-    call lee_namelist_zona
+    call lee_namelist
 
     call street_areas_read
 
@@ -134,7 +133,7 @@ integer i,j
 open(unit=11,file='salida2.csv',action='write')
     write(11, *)"GRID, CVE_ENT_MUN, frac, suma"
     do i=1,size(grid2)
-#ifndef PGI
+#ifdef PGI
      write(11, '(I8,",",I6,2(",",ES14.7))') grid2(i),icve3(i),rc(i),sum(i)
 #else
      write(11, '(I8,",",I6,2(",",E))') grid2(i),icve3(i),rc(i),sum(i)
@@ -195,37 +194,5 @@ subroutine count
     print *,'Number of different grids',j
     deallocate(xl)
 end subroutine count
-!> @brief Reads zona variable from global namelist input file.
-!>
-!> for selecting the dommain used in the spatial allocation
-!> and for gathering grid values from  VIALIDADES.csv file.
-!>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version 2.2
-!>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine lee_namelist_zona
-    NAMELIST /region_nml/ zona
-    integer unit_nml
-    logical existe
-    unit_nml = 9
-    existe = .FALSE.
-    write(6,*)' >>>> Reading file - namelist_emis.nml'
-    inquire ( FILE = '../namelist_emis.nml' , EXIST = existe )
 
-    if ( existe ) then
-    !  Opening the file.
-        open ( FILE   = '../namelist_emis.nml' ,      &
-        UNIT   =  unit_nml        ,      &
-        STATUS = 'OLD'            ,      &
-        FORM   = 'FORMATTED'      ,      &
-        ACTION = 'READ'           ,      &
-        ACCESS = 'SEQUENTIAL'     )
-        !  Reading the file
-        READ (unit_nml , NML = region_nml )
-        !WRITE (6    , NML = region_nml )
-        close(unit_nml)
-    else
-        stop '***** No namelist_emis.nml in .. directory'
-    end if
-end subroutine lee_namelist_zona
 end program suma_vialidades

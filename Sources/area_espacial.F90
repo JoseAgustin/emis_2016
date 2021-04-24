@@ -8,7 +8,7 @@
 !> GRIDCODE is based on a grid covering the hole country in 1x1 km or 3x3 km or 9x9 km grid cels
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  07/12/2020
-!>   @version  2.2
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !	Created by Agustin on 14/08/12.
 !	Copyright 2012 CCA-UNAM. All rights reserved.
@@ -74,8 +74,7 @@ module area_spatial_mod
     character(len=10),dimension(nf,nnscc) ::scc; !>  National emission file name, array per pollutant
     character(len=14),dimension(nf) :: efile;    !>   Output emission file name
     character(len=14),dimension(nf) :: ofile
-!> Geographical area selected in namelist_emis.csv
-    character(len=12):: zona
+
 !   Emissions Inventory files
     data efile /'INH3_2016.csv','INOx_2016.csv','ISO2_2016.csv',&
 &           'IVOC_2016.csv','ICO__2016.csv','IPM10_2016.csv',&
@@ -96,12 +95,13 @@ end module area_spatial_mod
 !> the grid depends on the selected zona in namelist_emis.nml
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  07/12/2020
-!>   @version  2.2
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program area_espacial
+    use master
     use area_spatial_mod
 
-       call lee_namelist_zona
+       call lee_namelist
 
        call area_emiss_reading
 
@@ -115,7 +115,7 @@ contains
 !> buses terminals to spatially allocate area emissions.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  07/12/2020
-!>   @version  2.2
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !   __ _ _ __ ___  __ _
 !  / _` | '__/ _ \/ _` |
@@ -192,7 +192,7 @@ end subroutine area_emiss_reading
 !> buses terminals to distribute area emissions.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  07/12/2020
-!>   @version  2.2
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !   __ _ _ __ ___  __ _
 !  / _` | '__/ _ \/ _` |
@@ -397,7 +397,7 @@ end subroutine area_spatial_locating
 !>	@brief Stores pollutan emissions, columns contains SCC and rows GRIDID.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  07/12/2020
-!>   @version  2.2
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !   __ _ _ __ ___  __ _
 !  / _` | '__/ _ \/ _` |
@@ -521,7 +521,7 @@ end subroutine area_spatial_storing
 !>	@brief Counts the number of lines per surrogate file.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  07/12/2020
-!>   @version  2.2
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !> @param archivo input file for line counting
 !                        _            _ _
@@ -549,7 +549,7 @@ end function
 !>	@brief Reads area fraction data from the surrogate file.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  07/12/2020
-!>   @version  2.2
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param archivo file to be read
 !>   @param grid GRIDCODE ID for the surrogate fraction
@@ -585,43 +585,4 @@ subroutine lee_file(archivo,grid,id,frac,frac2,frac3)
     end if
     close(iun)
 end subroutine
-!>	@brief Reads zona variable from global namelist input file
-!>
-!> for selecting the dommain used in the spatial allocation.
-!>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version  2.2
-!>   @copyright Universidad Nacional Autonoma de Mexico 2020
-!  _                                          _ _     _
-! | | ___  ___     _ __   __ _ _ __ ___   ___| (_)___| |_     _______  _ __   __ _
-! | |/ _ \/ _ \   | '_ \ / _` | '_ ` _ \ / _ \ | / __| __|   |_  / _ \| '_ \ / _` |
-! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_     / / (_) | | | | (_| |
-! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|___/___\___/|_| |_|\__,_|
-!            |_____|                                    |_____|
-subroutine lee_namelist_zona
-    NAMELIST /region_nml/ zona
-    integer unit_nml
-    logical existe
-    unit_nml = 9
-    existe = .FALSE.
-    write(6,*)' >>>> Reading file - namelist_emis.nml'
-    inquire ( FILE = '../namelist_emis.nml' , EXIST = existe )
-
-    if ( existe ) then
-    !  Opening the file.
-    open ( FILE   = '../namelist_emis.nml' ,      &
-    UNIT   =  unit_nml        ,      &
-    STATUS = 'OLD'            ,      &
-    FORM   = 'FORMATTED'      ,      &
-    ACTION = 'READ'           ,      &
-    ACCESS = 'SEQUENTIAL'     )
-    !  Reading the file
-    READ (unit_nml , NML = region_nml )
-    !WRITE (6    , NML = region_nml )
-    close(unit_nml)
-    else
-    stop '***** No namelist_emis.nml in .. directory'
-    end if
-
-end subroutine lee_namelist_zona
 end program area_espacial

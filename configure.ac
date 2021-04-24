@@ -6,12 +6,14 @@
 #
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.69])
+AC_PREREQ([2.71])
 AC_INIT([DIETE], [2.7], [agustin@atmosfera.unam.mx])
 # Define our M4 macro directory
 AC_CONFIG_AUX_DIR([autoconf])
-AM_INIT_AUTOMAKE([1.11 foreign])
-
+AM_INIT_AUTOMAKE([1.11 foreign subdir-objects])
+# Initialize the test suite.
+AC_CONFIG_TESTDIR([Sources/testsuite])
+AM_MISSING_PROG([AUTOM4TE], [autom4te])
 
 # Set default prefix (where directory bin is created)
 # This is the default top directory of the installation
@@ -133,16 +135,7 @@ AC_ARG_WITH([r4],
 AM_CONDITIONAL([WITH_R4], [test $with_r4 = yes])
 #
 
-AC_CONFIG_FILES([02_aemis/Makefile
-                 03_movilspatial/Makefile
-                 04_temis/Makefile
-                 05_semisM/Makefile
-                 06_temisM/Makefile
-                 07_puntual/Makefile
-                 08_spec/Makefile
-                 09_pm25spec/Makefile
-                 10_storage/Makefile
-                 Makefile])
+AC_CONFIG_FILES([Makefile Sources/Makefile Sources/testsuite/Makefile ])
 AC_OUTPUT
 
 # Write configuration on the screen

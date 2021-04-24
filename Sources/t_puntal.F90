@@ -18,8 +18,7 @@ integer, parameter:: nh=24 !number of hours
 integer,parameter:: ipm=2  ! PM2.5
 !>  column for VOC in emissions input file puntual.csv
 integer,parameter:: ivoc=6  ! VOC position in puntual.csv
-!> month of emissions output
-integer :: month ;!> type day (1=Mon, 2= Tue, ... 7=Sun)
+!> type day (1=Mon, 2= Tue, ... 7=Sun)
 integer :: daytype ! tipo de dia 1 lun a 7 dom
 !> layers where emissions are reach day and night
 integer,allocatable :: capa(:,:); !> **i** index in grid to allocate a point emission
@@ -34,17 +33,6 @@ integer :: nl ;!> Number of longitudes (columns) in localiza file
 integer :: nx ;!> Number of latitudes (rows( in localiza file
 integer :: ny ;!> if is dayligth time saving period
 integer :: iverano
-!> Day for temporal emissions computations
-integer :: idia     ! dia para el calculo de emisiones
-!> Year for temporal emissions computations
-integer :: anio     ! anio de las emisiones 2016
-!> If =1  one file with 24 hr , =2  two files of 12hrs each one
-integer ::periodo! =1 uno 24 hr, =2 dos de 12hrs c/u
-!> start day for summer time period for years 2014 to 2020
-integer,dimension(2014:2021) :: inicia   ! dia inicio horario verano
-!> end day for summer time period for years 2014 to 2020
-integer,dimension(2014:2021) :: termina ;!> Days per month
-integer,dimension(12) :: daym ! days in a month
 !> Fraction of weeks per days in the month
 real :: fweek
 !> Latitude point source
@@ -62,24 +50,13 @@ real,allocatable :: hCST(:,:) ;!> Time zone MST
 real,allocatable :: hMST(:,:) ;!> Time zone PST
 real,allocatable :: hPST(:,:) ;!> Time zone EST
 real,allocatable :: hEST(:,:)
-!> during summer period  consider timasvaing .true. or not .false.
-logical :: lsummer
 !> Source clasification code array
 character(len=10),allocatable::iscc(:)
-!> geographical area selected
-character(len=12):: zona
 !> Pollutant name
 character (len=7) :: cvar(nsp)
 !> Initial date of the emissions period
 character (len=19) :: current_date
-    ! number of day in a month
-    !          jan feb mar apr may jun jul aug sep oct nov dec
-    data daym /31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
-!              2014 2015 2016 2017 2018 2019 2020 2021
-    data inicia  /6,  5,  3,   2,   1,   7,   5,  4/
-    data termina /26,25, 30,  29,  28,  27,  25, 31/
 common /dat/ nl,nx,ny,daytype,fweek,cvar,current_date
-common /nlm_vars/lsummer,zona,month,idia,anio,periodo,inicia,termina
 end module point_vars_mod
 !              _       _      _                                       _
 !  _ __   ___ (_)_ __ | |_   | |_ ___ _ __ ___  _ __   ___  _ __ __ _| |
@@ -100,8 +77,9 @@ program point_temporal
     use omp_lib
 #endif
 use point_vars_mod
+use master
 
-    call lee_namelist_zona_time
+    call lee_namelist
 
     call point_emis_reading
 
@@ -571,94 +549,4 @@ end subroutine point_emissions_storage
    end do
    RETURN
    end subroutine localiza
-!  _
-! | | ____   _____ _ __ __ _ _ __   ___
-! | |/ /\ \ / / _ \ '__/ _` | '_ \ / _ \
-! |   <  \ V /  __/ | | (_| | | | | (_) |
-! |_|\_\  \_/ \___|_|  \__,_|_| |_|\___/
-!
-!>  @brief Identifies if it is summer time period and if it will be considered or not
-!>
-!> based on the day and month of the selected period
-!>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version 2.2
-!>   @copyright Universidad Nacional Autonoma de Mexico 2020
-!>   @param ida day of the month
-!>   @param mes month
-integer function kverano(ida,mes)
-    implicit none
-    integer, intent(in):: ida,mes
-    if (mes.lt.4  .or. mes .gt.10)then
-      kverano = 0
-      return
-    end if
-    if (mes.gt.4 .and. mes .lt.10) then
-      kverano = 1
-      write(6, 233) inicia(anio),termina(anio)
-      return
-    end if
-    if (mes.eq.4 .and. ida .ge. inicia(anio)) then
-      kverano = 1
-      write(6, 233) inicia(anio),termina(anio)
-      return
-      elseif (mes.eq.10 .and. ida .le.termina(anio)) then
-        kverano = 1
-        write(6, 233) inicia(anio),termina(anio)
-        return
-      else
-        kverano =0
-        return
-    end if
-233 format("******  HORARIO de VERANO *******",/,3x,"Abril ",I2,x,"a Octubre ",I2)
-end function
-!  _                               _ _    _                       _   _
-! | |___ ___   _ _  __ _ _ __  ___| (_)__| |_   ______ _ _  __ _ | |_(_)_ __  ___
-! | / -_) -_) | ' \/ _` | '  \/ -_) | (_-<  _| |_ / _ \ ' \/ _` ||  _| | '  \/ -_)
-! |_\___\___|_|_||_\__,_|_|_|_\___|_|_/__/\__|_/__\___/_||_\__,_|_\__|_|_|_|_\___|
-!          |___|                            |___|              |___|
-!>  @brief Reads global namelist input file for the temporal settings.
-!>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version 2.2
-!>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine lee_namelist_zona_time
-    implicit none
-    NAMELIST /region_nml/ zona
-    NAMELIST /fecha_nml/ idia,month,anio,periodo
-    NAMELIST /verano_nml/ lsummer,inicia,termina
-    integer unit_nml
-    logical existe
-    unit_nml = 9
-    existe = .FALSE.
-    write(6,*)' >>>> Reading file - ../namelist_emis.nml'
-    inquire ( FILE = '../namelist_emis.nml' , EXIST = existe )
-
-    if ( existe ) then
-    !  Opening the file.
-    open ( FILE   = '../namelist_emis.nml' ,      &
-    UNIT   =  unit_nml        ,      &
-    STATUS = 'OLD'            ,      &
-    FORM   = 'FORMATTED'      ,      &
-    ACTION = 'READ'           ,      &
-    ACCESS = 'SEQUENTIAL'     )
-    !  Reading the file
-    READ (unit_nml , NML = region_nml )
-    READ (unit_nml , NML = fecha_nml )
-    READ (unit_nml , NML = verano_nml )
-    !WRITE (6    , NML = verano_nml )
-    close(unit_nml)
-    else
-    stop '***** No namelist_emis.nml in .. directory'
-    end if
-    if (month.lt.1 .or. month.gt.12) then
-    print '(A,I3)','Error in month (from 1 to 12) month= ',month
-    stop
-    end if
-    if (idia.gt.daym(month))then
-    print '(A,I2,A,I2)','Error in day value: ',idia,' larger than days in month ',daym(month)
-    stop
-    end if
-    close(10)
-    end subroutine lee_namelist_zona_time
 end program point_temporal

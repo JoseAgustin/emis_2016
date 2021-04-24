@@ -17,7 +17,7 @@
 !   9/Sep/2014  se actualiza salida para varios municipios
 !   2/Ago/2012  se incluye en la salida la clave del municipio
 !
-module add_street_highway_mod ; !> GRIDCODE number in Highway file
+module add_street_highway ; !> GRIDCODE number in Highway file
 integer :: nm      ; !> GRIDCODE number in Streets file
 integer :: nm2     ; !> GRIDCODE number in combined Highway and street file
 integer :: nm3
@@ -48,7 +48,7 @@ real,allocatable :: fv3(:)
 
 common /dims/ nm,nm2,nm3
 
-end module add_street_highway_mod
+end module add_street_highway
 !>  @brief Combines Street and Higway by adding the fractional areas
 !> for each grid and stores in one file.
 !>
@@ -75,7 +75,7 @@ end module add_street_highway_mod
 ! |  _| | | (_| | (__| |_| | (_) | | | \__ \
 ! |_| |_|  \__,_|\___|\__|_|\___/|_| |_|___/
 program adds_street_highway_fractions
-use add_street_highway_mod
+use add_street_highway
 
     call highway_street_fractions_read
 

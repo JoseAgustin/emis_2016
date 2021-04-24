@@ -30,42 +30,6 @@ module voc_split
   character (len=19) ::cprof
   common /date/ model,lfa,current_date,cdia,cprof,mecha
 contains
-!  _                                          _ _     _
-! | | ___  ___     _ __   __ _ _ __ ___   ___| (_)___| |_
-! | |/ _ \/ _ \   | '_ \ / _` | '_ ` _ \ / _ \ | / __| __|
-! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_
-! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|
-!            |_____|
-!>  @brief Reads global namelist input file for chemical settings.
-!>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
-!>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine lee_namelist
-    NAMELIST /chem_nml/ mecha,model
-    integer unit_nml
-    logical existe
-    unit_nml = 9
-    existe = .FALSE.
-    write(6,*)' >>>> Reading file - ../namelist_emis.nml'
-    inquire ( FILE = '../namelist_emis.nml' , EXIST = existe )
-
-    if ( existe ) then
-    !  Opening the file.
-        open ( FILE   = '../namelist_emis.nml' ,      &
-        UNIT   =  unit_nml        ,      &
-        STATUS = 'OLD'            ,      &
-        FORM   = 'FORMATTED'      ,      &
-        ACTION = 'READ'           ,      &
-        ACCESS = 'SEQUENTIAL'     )
-        !  Reading the file
-        READ (unit_nml , NML = chem_nml )
-        !WRITE (6    , NML = chem_nml )
-        close(unit_nml)
-    else
-        stop '***** No namelist_emis.nml in .. directory'
-    end if
-end subroutine lee_namelist
 !  _
 ! | | ___  ___
 ! | |/ _ \/ _ \

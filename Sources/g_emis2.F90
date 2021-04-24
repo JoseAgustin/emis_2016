@@ -15,8 +15,8 @@
 !>
 !> Creates netcdf file by adding AREA, MOBILE and POINT emissions in a specific grid.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/20
-!>   @version  2.2
+!>   @date  04/23/2021
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 module emissions_save_vars_mod
 !> number hours day
@@ -29,12 +29,7 @@ integer :: L_PM25   ;!> Position of BC in variables array from INEM
 integer :: L_CN_i   ;!> Position of BC in variables array from Speciation file
 integer :: L_CN_S   ;!> Position of CH4 in variables array from INEM
 integer :: L_CH4_i   ;!> Position of CH4 in variables array from Speciation file
-integer :: L_CH4_S   ;!> day in emissions output file
-integer :: idia  ;!> month in emissions output file
-integer :: month ;!> year in emissions output file
-integer :: anio  ;!> model ID for output 0=WRF 1=CHIMERE 2=CMAQ
-integer :: model ;!> =1 uno 24 hr, =2 dos de 12hrs c/u
-integer ::periodo;!> number of cell in the grid
+integer :: L_CH4_S   ;!> number of cell in the grid
 integer ::ncel   ;!>  number of lines in files
 integer ::nl     ;!> longitude values in grid
 integer :: nx    ;!> latitude values in grid
@@ -84,18 +79,13 @@ character(len=18),dimension(:),allocatable:: fnameM
 character(len=18),dimension(:),allocatable:: fnameP
 !> current date in ourput file
 character (len=19) :: current_date
-!> Photochemical mechanism selected in namelist_emis.nml
-character (len=19) ::  mecha
 !> Title in netcdf file
 character (len=40) :: titulo
-!> geogrphical area selected in namelist_emis.nml
-character(len=12):: zona
 common /quimicos/ nf,ns,radm,L_PM25,L_CN_i,L_CN_S,L_CH4_i,L_CH4_S
-common /domain/ ncel,nl,nx,ny,CDIM,SUPF1,zona
+common /domain/ ncel,nl,nx,ny,CDIM,SUPF1
 common /fileout/id_varlong,id_varlat,id_varpop,&
 id_unlimit,id_utmx,id_utmy,id_utmz,ncid,ncid2
-common /date/ current_date,cday,mecha,titulo
-common /nlm_vars/model,month,idia,anio,periodo
+common /date/ current_date,cday,titulo
 end module emissions_save_vars_mod
 !                 _         _
 !   ___ _ __ ___ (_)___ ___(_) ___  _ __  ___     ___  __ ___   _____     _ __   ___
@@ -105,14 +95,15 @@ end module emissions_save_vars_mod
 !                                           |_____|                 |_____|
 !>  @brief Stores emissions from Area, mobile and point emissions
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  04/23/2021
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program emissions_save_nc
 #ifdef _OPENMP
     use omp_lib
 #endif
     use emissions_save_vars_mod
+    use master
     use netcdf
 
     call lee_namelist
@@ -124,48 +115,6 @@ program emissions_save_nc
     call free_memory
 
 contains
-!  _                                          _ _     _
-! | | ___  ___     _ __   __ _ _ __ ___   ___| (_)___| |_
-! | |/ _ \/ _ \   | '_ \ / _` | '_ ` _ \ / _ \ | / __| __|
-! | |  __/  __/   | | | | (_| | | | | | |  __/ | \__ \ |_
-! |_|\___|\___|___|_| |_|\__,_|_| |_| |_|\___|_|_|___/\__|
-!            |_____|
-!>  @brief Reads global namelist input file
-!>
-!>   for setting up geographical, temporal and chemical mechamism settings
-!>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
-!>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine lee_namelist
-implicit none
-  NAMELIST /region_nml/ zona
-  NAMELIST /fecha_nml/ idia,month,anio,periodo
-  NAMELIST /chem_nml/ mecha,model
-  integer:: unit_nml=9
-  logical existe
-  existe = .FALSE.
-  write(6,*)' >>>> Reading file - ../namelist_emis.nml'
-  inquire ( FILE = '../namelist_emis.nml' , EXIST = existe )
-  if ( existe ) then
-  !  Opening the file.
-    open ( FILE   = '../namelist_emis.nml' ,      &
-    UNIT   =  unit_nml        ,      &
-    STATUS = 'OLD'            ,      &
-    FORM   = 'FORMATTED'      ,      &
-    ACTION = 'READ'           ,      &
-    ACCESS = 'SEQUENTIAL'     )
-    !  Reading the file
-    READ (unit_nml , NML = region_nml )
-    READ (unit_nml , NML = fecha_nml)
-    READ (unit_nml , NML = chem_nml )
-    close(unit_nml)
-   ! WRITE (6    , NML = chem_nml )
-    if (trim(mecha).ne."saprc07") model=0
-  else
-    stop '***** No namelist_emis.nml in .. directory'
-  end if
-end subroutine lee_namelist
 !  _                                          _ _     _                           _
 ! | | ___  ___     _ __   __ _ _ __ ___   ___| (_)___| |_     _ __ ___   ___  ___| |__   __ _
 ! | |/ _ \/ _ \   | '_ \ / _` | '_ ` _ \ / _ \ | / __| __|   | '_ ` _ \ / _ \/ __| '_ \ / _` |
@@ -176,8 +125,8 @@ end subroutine lee_namelist
 !>
 !>   for setting up the scaling factor for each category in the chemical mechamism
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  04/23/2021
+!>   @version  2.3
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>  @param mecanismo name of the photochemical mechanism to be use
 subroutine lee_namelist_mecha(mecanismo)
@@ -220,8 +169,8 @@ end subroutine lee_namelist_mecha
 !>   for setting up molecular weigths, categories names, descriptions and
 !>   files to read depending of the mechamism
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  04/23/2021
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine setup_mecha
     IMPLICIT NONE
@@ -795,8 +744,8 @@ end subroutine setup_mecha
 !>  @brief sets attributes and dimensions for netcdf output file
 !>
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  04/23/2021
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param FILE_NAME emissions file name
 !>   @param istart For name file specification 00 or 12
@@ -989,8 +938,8 @@ end subroutine setup_file
 !  |___/                           |_____|
 !>  @brief Stores emissions categories in netcdf file
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  04/23/2021
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine guarda_variables
     IMPLICIT NONE
@@ -1022,8 +971,8 @@ end subroutine guarda_variables
 ! |__/
 !>   @brief Obtains Julian day from year, month and day input
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  04/23/2020
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param  iyear year number for identifying leap year
 !>   @param  imes month number for identifying number of days
@@ -1054,8 +1003,8 @@ end function
 !
 !>  @brief Returns the month in characters from month number
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  04/23/2021
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param  num number of the month
    function mes(num)
@@ -1082,15 +1031,7 @@ end function
     end select
     return
 end function
-!>  @brief Verifies no error in netcdf function call
-!>   @param status NetCDF functions return a non-zero status codes on error.
-subroutine check(status)
-    integer, intent ( in) :: status
-    if(status /= nf90_noerr) then
-        print *, trim(nf90_strerror(status))
-        stop 2
-    end if
-end subroutine check
+
 !                              _   _
 !   ___ _ __ ___  __ _     __ _| |_| |_ _ __
 !  / __| '__/ _ \/ _` |   / _` | __| __| '__|
@@ -1099,8 +1040,8 @@ end subroutine check
 !                    |_____|
 !>  @brief Creates attributes for each variable in the netcdf file
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  04/23/2021
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param ncid netcdf file ID
 !>   @param idm number of items in dimids array
@@ -1138,8 +1079,8 @@ end subroutine crea_attr
 !            |_____|
 !>  @brief Reada the lon,lat and utm coordinates for the output grid
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  04/23/2020
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine lee_localiza
     implicit NONE
@@ -1173,8 +1114,8 @@ end subroutine lee_localiza
 !            |_____|
 !>   @brief Reads emissions categories
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  04/23/2021
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !> @param ii pm2.5 index
 !> @param borra boolean variable to keep or not the previous values
@@ -1333,8 +1274,8 @@ end subroutine lee_emis
 !                                 |_____|
 !>  @brief Stores variables categories in netcdf file
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  04/23/2020
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !> @param ikk emissions array index
 subroutine escribe_var(ikk)
@@ -1442,8 +1383,8 @@ end subroutine escribe_var
 !                 |_____|                                   |___/
 !>   @brief Release memory from allocated variables
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  04/23/2020
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine free_memory
     print *,"Libera Memoria"
@@ -1470,7 +1411,7 @@ end subroutine free_memory
 !>  @brief Copy in a new array emissions values from hour 12 to 23 for parallel storage
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  07/13/20
-!>   @version  2.2
+!>   @version  2.7
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine copy_val_12to23
 IMPLICIT NONE

@@ -86,12 +86,20 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = emiss.exe$(EXEEXT)
+bin_PROGRAMS = ASpatial.exe$(EXEEXT) carr.exe$(EXEEXT) \
+	vial.exe$(EXEEXT) agrega.exe$(EXEEXT) Atemporal.exe$(EXEEXT) \
+	MSpatial.exe$(EXEEXT) Mtemporal.exe$(EXEEXT) \
+	Puntual.exe$(EXEEXT) spa.exe$(EXEEXT) spm.exe$(EXEEXT) \
+	spp.exe$(EXEEXT) spm25a.exe$(EXEEXT) spm25m.exe$(EXEEXT) \
+	spm25p.exe$(EXEEXT) emiss.exe$(EXEEXT)
+@WITH_GFOR_TRUE@am__append_1 = -DPGI
+
 # Parallel version
-@WITH_OMPI_TRUE@am__append_1 = $(OPENMP_FCFLAGS)
-subdir = 10_storage
+@WITH_OMPI_TRUE@am__append_2 = $(OPENMP_FCFLAGS)
+subdir = Sources
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/autoconf/ax_f08_newunit.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
@@ -100,9 +108,56 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_emiss_exe_OBJECTS = g_emis2.$(OBJEXT)
+am_ASpatial_exe_OBJECTS = master_mod.$(OBJEXT) area_espacial.$(OBJEXT)
+ASpatial_exe_OBJECTS = $(am_ASpatial_exe_OBJECTS)
+ASpatial_exe_LDADD = $(LDADD)
+am_Atemporal_exe_OBJECTS = master_mod.$(OBJEXT) atemporal.$(OBJEXT)
+Atemporal_exe_OBJECTS = $(am_Atemporal_exe_OBJECTS)
+Atemporal_exe_LDADD = $(LDADD)
+am_MSpatial_exe_OBJECTS = movil_spatial.$(OBJEXT)
+MSpatial_exe_OBJECTS = $(am_MSpatial_exe_OBJECTS)
+MSpatial_exe_LDADD = $(LDADD)
+am_Mtemporal_exe_OBJECTS = check.$(OBJEXT) master_mod.$(OBJEXT) \
+	movil_temp.$(OBJEXT)
+Mtemporal_exe_OBJECTS = $(am_Mtemporal_exe_OBJECTS)
+Mtemporal_exe_LDADD = $(LDADD)
+am_Puntual_exe_OBJECTS = master_mod.$(OBJEXT) t_puntal.$(OBJEXT)
+Puntual_exe_OBJECTS = $(am_Puntual_exe_OBJECTS)
+Puntual_exe_LDADD = $(LDADD)
+am_agrega_exe_OBJECTS = agrega.$(OBJEXT)
+agrega_exe_OBJECTS = $(am_agrega_exe_OBJECTS)
+agrega_exe_LDADD = $(LDADD)
+am_carr_exe_OBJECTS = master_mod.$(OBJEXT) suma_carretera.$(OBJEXT)
+carr_exe_OBJECTS = $(am_carr_exe_OBJECTS)
+carr_exe_LDADD = $(LDADD)
+am_emiss_exe_OBJECTS = check.$(OBJEXT) master_mod.$(OBJEXT) \
+	g_emis2.$(OBJEXT)
 emiss_exe_OBJECTS = $(am_emiss_exe_OBJECTS)
 emiss_exe_LDADD = $(LDADD)
+am_spa_exe_OBJECTS = agg_mod.$(OBJEXT) master_mod.$(OBJEXT) \
+	agg_a.$(OBJEXT)
+spa_exe_OBJECTS = $(am_spa_exe_OBJECTS)
+spa_exe_LDADD = $(LDADD)
+am_spm_exe_OBJECTS = agg_mod.$(OBJEXT) master_mod.$(OBJEXT) \
+	agg_m.$(OBJEXT)
+spm_exe_OBJECTS = $(am_spm_exe_OBJECTS)
+spm_exe_LDADD = $(LDADD)
+am_spm25a_exe_OBJECTS = e_pm25_mod.$(OBJEXT) pm25_speci_a.$(OBJEXT)
+spm25a_exe_OBJECTS = $(am_spm25a_exe_OBJECTS)
+spm25a_exe_LDADD = $(LDADD)
+am_spm25m_exe_OBJECTS = e_pm25_mod.$(OBJEXT) pm25_speci_m.$(OBJEXT)
+spm25m_exe_OBJECTS = $(am_spm25m_exe_OBJECTS)
+spm25m_exe_LDADD = $(LDADD)
+am_spm25p_exe_OBJECTS = e_pm25_mod.$(OBJEXT) pm25_speci_p.$(OBJEXT)
+spm25p_exe_OBJECTS = $(am_spm25p_exe_OBJECTS)
+spm25p_exe_LDADD = $(LDADD)
+am_spp_exe_OBJECTS = agg_mod.$(OBJEXT) master_mod.$(OBJEXT) \
+	agg_p.$(OBJEXT)
+spp_exe_OBJECTS = $(am_spp_exe_OBJECTS)
+spp_exe_LDADD = $(LDADD)
+am_vial_exe_OBJECTS = master_mod.$(OBJEXT) suma_vialidades.$(OBJEXT)
+vial_exe_OBJECTS = $(am_vial_exe_OBJECTS)
+vial_exe_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -129,8 +184,18 @@ AM_V_FCLD = $(am__v_FCLD_@AM_V@)
 am__v_FCLD_ = $(am__v_FCLD_@AM_DEFAULT_V@)
 am__v_FCLD_0 = @echo "  FCLD    " $@;
 am__v_FCLD_1 = 
-SOURCES = $(emiss_exe_SOURCES)
-DIST_SOURCES = $(emiss_exe_SOURCES)
+SOURCES = $(ASpatial_exe_SOURCES) $(Atemporal_exe_SOURCES) \
+	$(MSpatial_exe_SOURCES) $(Mtemporal_exe_SOURCES) \
+	$(Puntual_exe_SOURCES) $(agrega_exe_SOURCES) \
+	$(carr_exe_SOURCES) $(emiss_exe_SOURCES) $(spa_exe_SOURCES) \
+	$(spm_exe_SOURCES) $(spm25a_exe_SOURCES) $(spm25m_exe_SOURCES) \
+	$(spm25p_exe_SOURCES) $(spp_exe_SOURCES) $(vial_exe_SOURCES)
+DIST_SOURCES = $(ASpatial_exe_SOURCES) $(Atemporal_exe_SOURCES) \
+	$(MSpatial_exe_SOURCES) $(Mtemporal_exe_SOURCES) \
+	$(Puntual_exe_SOURCES) $(agrega_exe_SOURCES) \
+	$(carr_exe_SOURCES) $(emiss_exe_SOURCES) $(spa_exe_SOURCES) \
+	$(spm_exe_SOURCES) $(spm25a_exe_SOURCES) $(spm25m_exe_SOURCES) \
+	$(spm25p_exe_SOURCES) $(spp_exe_SOURCES) $(vial_exe_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -162,6 +227,7 @@ AMTAR = @AMTAR@
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
+AUTOM4TE = @AUTOM4TE@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CC = @CC@
@@ -176,6 +242,7 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EXEEXT = @EXEEXT@
+
 # Compiler flags
 FC = $(NC_FC)
 FCFLAGS = @FCFLAGS@
@@ -246,6 +313,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -254,11 +322,33 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+AM_FCFLAGS = $(NC_INC) $(NC_LIB) $(am__append_1) $(am__append_2)
 
 # Additional files to be cleaned with 'make clean'
 CLEANFILES = *.o *.mod *~
-AM_FCFLAGS = $(NC_INC) $(NC_LIB) $(am__append_1)
-emiss_exe_SOURCES = g_emis2.F90
+
+# Area emissions spatial distribution and temporal
+ASpatial_exe_SOURCES = master_mod.F90 area_espacial.F90
+Atemporal_exe_SOURCES = master_mod.F90 atemporal.F90
+# Mobile  spatial allocation
+carr_exe_SOURCES = master_mod.F90 suma_carretera.F90
+vial_exe_SOURCES = master_mod.F90 suma_vialidades.F90
+agrega_exe_SOURCES = agrega.F90
+#
+MSpatial_exe_SOURCES = movil_spatial.F90
+Mtemporal_exe_SOURCES = check.F90 master_mod.F90 movil_temp.F90
+# Point emissions temporal
+Puntual_exe_SOURCES = master_mod.F90 t_puntal.F90
+# Gas Chemical speciation
+spa_exe_SOURCES = agg_mod.F90 master_mod.F90 agg_a.F90
+spm_exe_SOURCES = agg_mod.F90 master_mod.F90 agg_m.F90
+spp_exe_SOURCES = agg_mod.F90 master_mod.F90 agg_p.F90
+# Particle speciation
+spm25a_exe_SOURCES = e_pm25_mod.F90 pm25_speci_a.F90
+spm25m_exe_SOURCES = e_pm25_mod.F90 pm25_speci_m.F90
+spm25p_exe_SOURCES = e_pm25_mod.F90 pm25_speci_p.F90
+# Storage
+emiss_exe_SOURCES = check.F90 master_mod.F90 g_emis2.F90
 all: all-am
 
 .SUFFIXES:
@@ -272,9 +362,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign 10_storage/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign Sources/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign 10_storage/Makefile
+	  $(AUTOMAKE) --foreign Sources/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
@@ -335,9 +425,65 @@ uninstall-binPROGRAMS:
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
 
+ASpatial.exe$(EXEEXT): $(ASpatial_exe_OBJECTS) $(ASpatial_exe_DEPENDENCIES) $(EXTRA_ASpatial_exe_DEPENDENCIES) 
+	@rm -f ASpatial.exe$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(ASpatial_exe_OBJECTS) $(ASpatial_exe_LDADD) $(LIBS)
+
+Atemporal.exe$(EXEEXT): $(Atemporal_exe_OBJECTS) $(Atemporal_exe_DEPENDENCIES) $(EXTRA_Atemporal_exe_DEPENDENCIES) 
+	@rm -f Atemporal.exe$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(Atemporal_exe_OBJECTS) $(Atemporal_exe_LDADD) $(LIBS)
+
+MSpatial.exe$(EXEEXT): $(MSpatial_exe_OBJECTS) $(MSpatial_exe_DEPENDENCIES) $(EXTRA_MSpatial_exe_DEPENDENCIES) 
+	@rm -f MSpatial.exe$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(MSpatial_exe_OBJECTS) $(MSpatial_exe_LDADD) $(LIBS)
+
+Mtemporal.exe$(EXEEXT): $(Mtemporal_exe_OBJECTS) $(Mtemporal_exe_DEPENDENCIES) $(EXTRA_Mtemporal_exe_DEPENDENCIES) 
+	@rm -f Mtemporal.exe$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(Mtemporal_exe_OBJECTS) $(Mtemporal_exe_LDADD) $(LIBS)
+
+Puntual.exe$(EXEEXT): $(Puntual_exe_OBJECTS) $(Puntual_exe_DEPENDENCIES) $(EXTRA_Puntual_exe_DEPENDENCIES) 
+	@rm -f Puntual.exe$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(Puntual_exe_OBJECTS) $(Puntual_exe_LDADD) $(LIBS)
+
+agrega.exe$(EXEEXT): $(agrega_exe_OBJECTS) $(agrega_exe_DEPENDENCIES) $(EXTRA_agrega_exe_DEPENDENCIES) 
+	@rm -f agrega.exe$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(agrega_exe_OBJECTS) $(agrega_exe_LDADD) $(LIBS)
+
+carr.exe$(EXEEXT): $(carr_exe_OBJECTS) $(carr_exe_DEPENDENCIES) $(EXTRA_carr_exe_DEPENDENCIES) 
+	@rm -f carr.exe$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(carr_exe_OBJECTS) $(carr_exe_LDADD) $(LIBS)
+
 emiss.exe$(EXEEXT): $(emiss_exe_OBJECTS) $(emiss_exe_DEPENDENCIES) $(EXTRA_emiss_exe_DEPENDENCIES) 
 	@rm -f emiss.exe$(EXEEXT)
 	$(AM_V_FCLD)$(FCLINK) $(emiss_exe_OBJECTS) $(emiss_exe_LDADD) $(LIBS)
+
+spa.exe$(EXEEXT): $(spa_exe_OBJECTS) $(spa_exe_DEPENDENCIES) $(EXTRA_spa_exe_DEPENDENCIES) 
+	@rm -f spa.exe$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(spa_exe_OBJECTS) $(spa_exe_LDADD) $(LIBS)
+
+spm.exe$(EXEEXT): $(spm_exe_OBJECTS) $(spm_exe_DEPENDENCIES) $(EXTRA_spm_exe_DEPENDENCIES) 
+	@rm -f spm.exe$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(spm_exe_OBJECTS) $(spm_exe_LDADD) $(LIBS)
+
+spm25a.exe$(EXEEXT): $(spm25a_exe_OBJECTS) $(spm25a_exe_DEPENDENCIES) $(EXTRA_spm25a_exe_DEPENDENCIES) 
+	@rm -f spm25a.exe$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(spm25a_exe_OBJECTS) $(spm25a_exe_LDADD) $(LIBS)
+
+spm25m.exe$(EXEEXT): $(spm25m_exe_OBJECTS) $(spm25m_exe_DEPENDENCIES) $(EXTRA_spm25m_exe_DEPENDENCIES) 
+	@rm -f spm25m.exe$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(spm25m_exe_OBJECTS) $(spm25m_exe_LDADD) $(LIBS)
+
+spm25p.exe$(EXEEXT): $(spm25p_exe_OBJECTS) $(spm25p_exe_DEPENDENCIES) $(EXTRA_spm25p_exe_DEPENDENCIES) 
+	@rm -f spm25p.exe$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(spm25p_exe_OBJECTS) $(spm25p_exe_LDADD) $(LIBS)
+
+spp.exe$(EXEEXT): $(spp_exe_OBJECTS) $(spp_exe_DEPENDENCIES) $(EXTRA_spp_exe_DEPENDENCIES) 
+	@rm -f spp.exe$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(spp_exe_OBJECTS) $(spp_exe_LDADD) $(LIBS)
+
+vial.exe$(EXEEXT): $(vial_exe_OBJECTS) $(vial_exe_DEPENDENCIES) $(EXTRA_vial_exe_DEPENDENCIES) 
+	@rm -f vial.exe$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(vial_exe_OBJECTS) $(vial_exe_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
