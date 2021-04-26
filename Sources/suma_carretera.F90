@@ -15,8 +15,8 @@
 !   9/Abr/2020  usa namelist global
 !> @brief for suma_carretera.F90 program. For aggregation Highway fractions in cells.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !> @param grid
 !> @param grid2  GRIDCODEs  in higway output file (salida2.csv)

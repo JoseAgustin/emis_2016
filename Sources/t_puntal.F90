@@ -6,8 +6,8 @@
 !
 !>  @brief for t_puntal.F90 program. Emissions allocation in grid and hourly.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 module point_vars_mod
 !>   number of pollutants
@@ -69,8 +69,8 @@ end module point_vars_mod
 !>
 !>  using EPA temporal profiles based on SCC
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program point_temporal
 #ifdef _OPENMP
@@ -101,8 +101,8 @@ contains
 !                    |_____|                            |___/
 !>  @brief Reads emissions file and temporal profiles
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine point_emis_reading
 implicit none
@@ -125,7 +125,7 @@ implicit none
 !
 !   Days in year
 !
-    write(canio,'("../01_datos/time/anio",I4,".csv")')anio
+    write(canio,'("../time/anio",I4,".csv")')anio
     print *," READING FILE: ",canio
 
     open (newunit=m,file=canio,status='OLD',action='read')
@@ -145,7 +145,7 @@ implicit none
     close(m)
 	if(daytype.eq.0) STOP 'Error in daytype=0'
 !$omp section
-	open(newunit=iun,file='puntual.csv',status='old',action='read')
+	open(newunit=iun,file="../emis/punt/"//'puntual.csv',status='old',action='read')
 	i=0
 	read (iun,*) cdum
 	do
@@ -181,7 +181,7 @@ implicit none
 !
 !	temporal_01.txt
 !
-   cdum="../01_datos/"//trim(zona)//"/"//"localiza.csv"
+   cdum="../"//trim(zona)//"/"//"localiza.csv"
 	write(6,*)' >>>> Reading file - ',cdum,' ----'
 	open (newunit=iun,file=cdum,status='old',action='read')
 	read (iun,*) cdum  !Header
@@ -213,7 +213,7 @@ implicit none
 !  Reading and findig monthly, week and houry code profiles
     inquire(15,opened=fil1)
     if(.not.fil1) then
-        canio="../01_datos/time/"//"temporal_01.txt"
+        canio="../time/"//"temporal_01.txt"
         open(unit=15,file=canio,status='OLD',action='read')
 	else
         rewind(15)
@@ -241,7 +241,7 @@ implicit none
 !  Reading and findig monthly  profile
     inquire(16,opened=fil1)
     if(.not.fil1) then
-        canio="../01_datos/time/"//"temporal_mon.txt"
+        canio="../time/"//"temporal_mon.txt"
         open(unit=16,file=canio,status='OLD',action='read')
     else
 	  rewind(16)
@@ -263,7 +263,7 @@ implicit none
 !  Reading and findig weekely  profile
     inquire(17,opened=fil1)
     if(.not.fil1) then
-      canio="../01_datos/time/"//"temporal_week.txt"
+      canio="../time/"//"temporal_week.txt"
 	  open(unit=17,file=canio,status='OLD',action='read')
 	else
 	  rewind(17)
@@ -293,7 +293,7 @@ implicit none
 !  Reading and findig houlry  profile
     inquire(18,opened=fil1)
     if(.not.fil1) then
-      canio="../01_datos/time/"//nfile !"temporal_wkday.txt"
+      canio="../time/"//nfile !"temporal_wkday.txt"
 	  open(unit=18,file=canio,status='OLD',action='read')
 	else
 	  rewind(18)
@@ -345,7 +345,7 @@ implicit none
     if(daytype.eq.1) then
         inquire(19,opened=fil2)
         if(.not.fil2) then
-            canio="../01_datos/time/"//nfilep
+            canio="../time/"//nfilep
             open(unit=19,file=canio,status='OLD',action='read')
         else
             rewind(19)
@@ -416,8 +416,8 @@ end subroutine point_emis_reading
 !                   |_| |_____|
 !>  @brief Distributes point emissions from anual to hourly fluxes
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine point_temp_distribution
 	implicit none
@@ -447,8 +447,8 @@ end subroutine point_temp_distribution
 !                                |___|                  |___/
 !>  @brief Stores houry emission by pollutant
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine point_emissions_storage
 	implicit none
@@ -511,8 +511,8 @@ end subroutine point_emissions_storage
 !>  @brief Identifies the i,j index in the grid for the spatial
 !>   allocation of point source emissions
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>  @param xlat two dimensional array with latitudes
 !>  @param xlon two dimensional array with longitudes

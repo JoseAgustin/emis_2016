@@ -8,8 +8,8 @@
 !>
 !> Currently uses EPA temporal profiles
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/25/2020
-!>   @version  2.5
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 module movil_temporal_mod
 !> type day (1=Mon, 2= Tue, ... 7=Sun)
@@ -95,8 +95,8 @@ end module movil_temporal_mod
 !
 !>  @brief Make temporal distribution of mobile emissions using profiles based on SCC.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/25/2020
-!>   @version  2.5
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program movil_temporal
    use master
@@ -123,8 +123,8 @@ program movil_temporal
 contains
 !>  @brief Deallocates allocated arrays.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/25/2020
-!>   @version  2.5
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine libera_memoria
 
@@ -152,8 +152,8 @@ end subroutine libera_memoria
 !    |_|                    |___|                       |___/
 !>  @brief Reads emissions and temporal profiles based on SCC.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/25/2020
-!>   @version  2.5
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine mobile_spatial_reading
   implicit none
@@ -176,7 +176,7 @@ subroutine mobile_spatial_reading
 !
 !   Days in 2016 year
 !
-    write(canio,'("../01_datos/time/anio",I4,".csv")')anio
+    write(canio,'("../time/anio",I4,".csv")')anio
     print *," READING FILE: ",canio
     open (unit=10,file=canio,status='OLD',action='read')
     daytype=0
@@ -194,7 +194,7 @@ subroutine mobile_spatial_reading
 	if(daytype.eq.0) STOP 'Error in daytype = 0'
 !
 	do k=1,nf  ! per pollutant
-	open (unit=10,file="../05_semisM/"//efile(k),status='OLD',action='read')
+	open (unit=10,file="../"//efile(k),status='OLD',action='read')
 	read (10,'(A)') cdum
 	read (10,*) nscc(k),(iscc(i),i=1,nscc(k))
 	!print '(5(I10,x))',(iscc(i),i=1,nscc(k))
@@ -222,7 +222,7 @@ subroutine mobile_spatial_reading
 !  Reading and findig monthly, week and houry code profiles
     inquire(15,opened=fil1)
     if(.not.fil1) then
-      canio="../01_datos/time/temporal_01.txt"
+      canio="../time/temporal_01.txt"
 	  open(unit=15,file=canio,status='OLD',action='read')
 	else
 	  rewind(15)
@@ -246,7 +246,7 @@ subroutine mobile_spatial_reading
 !  Reading and findig monthly  profile
     inquire(16,opened=fil1)
     if(.not.fil1) then
-        canio="../01_datos/time/"//"temporal_mon.txt"
+        canio="../time/"//"temporal_mon.txt"
         open(unit=16,file=canio,status='OLD',action='read')
     else
         rewind(16)
@@ -266,7 +266,7 @@ subroutine mobile_spatial_reading
 !  REading and findig weekely  profile
     inquire(17,opened=fil1)
     if(.not.fil1) then
-        canio="../01_datos/time/"//"temporal_week.txt"
+        canio="../time/"//"temporal_week.txt"
         open(unit=17,file=canio,status='OLD',action='read')
 	else
         rewind(17)
@@ -294,7 +294,7 @@ subroutine mobile_spatial_reading
 !  REading and findig houlry  profile
     inquire(18,opened=fil1)
     if(.not.fil1) then
-        canio="../01_datos/time/"//nfile !"temporal_wkday.txt"
+        canio="../time/"//nfile !"temporal_wkday.txt"
         open(unit=18,file=canio,status='OLD',action='read')
 	else
 	  rewind(18)
@@ -348,7 +348,7 @@ subroutine mobile_spatial_reading
      if(daytype.eq.1 .or. daytype.ge.6) then !lunes, Sabado y Domingo
         inquire(19,opened=fil2)
         if(.not.fil2) then
-            canio="../01_datos/time/"//nfilep
+            canio="../time/"//nfilep
             open(unit=19,file=canio,status='OLD',action='read')
         else
             rewind(19)
@@ -448,8 +448,8 @@ end subroutine mobile_spatial_reading
 !
 !>  @brief Computes the hourly emissions based on SCC temporal profiles from annual to hourly.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/25/2020
-!>   @version  2.5
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine mobile_temporal_distribution
 	implicit none
@@ -555,8 +555,8 @@ logical,allocatable:: lsi(:)
 !>  these contain temporal profiles TP for different pollutants (5) and vehicle type (8)
 !>  these profiles are for week days, saturday (saba) and sunday (domi)
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/26/2020
-!>   @version  1.0
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine lee_movil_temp
 use netcdf
@@ -575,7 +575,7 @@ ename=(/'TP_CO        ','TP_NO        ','TP_VOC       ',&
 FILE_NAME=(/'temporal_week.nc','temporal_saba.nc','temporal_domi.nc'/)
 do id=1,iday
   write(6,180) FILE_NAME(id)
-  call check( nf90_open('../01_datos/time/'//FILE_NAME(id), NF90_NOWRITE, ncid) )
+  call check( nf90_open('../time/'//FILE_NAME(id), NF90_NOWRITE, ncid) )
   call check( nf90_inq_varid(ncid, "SCC", varid) )
   call check( nf90_get_var(ncid, varid, cscc) )
   do is=1,ispc
@@ -626,15 +626,15 @@ end subroutine lee_movil_temp
 !            |_____|
 !>  @brief Reada the lon,lat and utm coordinates for the output grid
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/25/2020
-!>   @version  1.0
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine lee_localiza
     implicit NONE
     character(len=39) :: flocaliza,cdum,titulo
     integer i,j,k,idum,ncel
     integer :: nx,ny
-    flocaliza='../01_datos/'//trim(zona)//'/'//'localiza.csv'
+    flocaliza='../'//trim(zona)//'/'//'localiza.csv'
     write(6,*)' >>>> Reading file -',flocaliza,' ---------'
     open (unit=10,file=flocaliza,status='old',action='read')
     read (10,*) cdum  !Header
@@ -654,8 +654,8 @@ end subroutine lee_localiza
 !  \__,_|_.__/|_|\___\__,_|_|
 !> @brief obtains the _i_,_j_ index for localization in emissions mesh the temporal profiles
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/24/2020
-!>   @version  2.5
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine ubicar 
 implicit none
@@ -714,8 +714,8 @@ end subroutine ubicar
 !>  @brief Develops a 24 hour profile for CST with or witput daylight savingd day
 !>   @param status NetCDF functions return a non-zero status codes on error.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/25/2020
-!>   @version  1.0
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine crea_perfil
 implicit none
@@ -754,8 +754,8 @@ return
 end subroutine crea_perfil
 !>  @brief Maps corresponding SCC from TP file to movil emissions SCC
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/25/2020
-!>   @version  1.0
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine map_scc
   implicit none
@@ -784,8 +784,8 @@ end subroutine map_scc
 !               |_|                 |___|                    |___/
 !>  @brief Saves mobile emission with the temporal profile in hourly basis.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/25/2020
-!>   @version  2.5
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine mobile_temporal_storing
 #ifdef _OPENMP
@@ -859,8 +859,8 @@ end subroutine mobile_temporal_storing
 !>
 !> Currently uses EPA temporal profiles
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/25/2020
-!>   @version  2.5
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !> @param perfili mobile temporal profile to be update
 !> @param idia day of the week 1 to 7 to be used to update the profile

@@ -305,7 +305,7 @@ top_srcdir = @top_srcdir@
 # This file is processed by automake (produces file Makefile.in)
 #
 ACLOCAL_AMFLAGS = -I autoconf
-CLEANFILES = *.o *.mod *~
+CLEANFILES = *.o *.mod *~ bin/*exe
 TESTSUITE = $(srcdir)/Sources/testsuite
 SUBDIRS = Sources  Sources/testsuite
 

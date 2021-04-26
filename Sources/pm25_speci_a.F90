@@ -21,8 +21,8 @@
 !>
 !>  OTHER PMFINE, generally crustal
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/11/2020
-!>   @version  2.2
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program pm25_speciation
 #ifdef _OPENMP

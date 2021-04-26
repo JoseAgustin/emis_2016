@@ -1,7 +1,7 @@
 !> @brief for agrega.f90 progam in mobile spatial allocation.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version 3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !   Programa agrega.f90
 !
@@ -58,8 +58,8 @@ end module add_street_highway
 !>
 !>   gri_movil.csv  combined Highway and street fractional areas
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version 3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !            _     _
 !   __ _  __| | __| |___
@@ -86,8 +86,8 @@ use add_street_highway
 contains
 !> @brief Reads street and Highway fractional area files.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version 3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 ! _     _       _                                _                 _
 !| |__ (_) __ _| |____      ____ _ _   _     ___| |_ _ __ ___  ___| |_
@@ -151,8 +151,8 @@ contains
 !> Identifies the all the GRICODEs for Highways and Streets
 !> adds the fractianal area for each  Highways and Streets
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version 3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !  _     _       _                                _                 _
 ! | |__ (_) __ _| |____      ____ _ _   _     ___| |_ _ __ ___  ___| |_
@@ -226,8 +226,8 @@ contains
 !
 !> @brief Stores GRIDCODE total fractional areas in gri_movil.csv
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version 3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !     _             _                _        _        _
 ! ___| |_ ___  _ __(_)_ __   __ _   | |_ ___ | |_ __ _| |

@@ -7,8 +7,8 @@
 !>
 !> GRIDCODE is based on a grid covering the hole country in 1x1 km or 3x3 km or 9x9 km grid cels
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version  2.7
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !	Created by Agustin on 14/08/12.
 !	Copyright 2012 CCA-UNAM. All rights reserved.
@@ -94,8 +94,8 @@ end module area_spatial_mod
 !>
 !> the grid depends on the selected zona in namelist_emis.nml
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version  2.7
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program area_espacial
     use master
@@ -114,8 +114,8 @@ contains
 !> land cover, roads, trains, airports, seaports and
 !> buses terminals to spatially allocate area emissions.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version  2.7
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !   __ _ _ __ ___  __ _
 !  / _` | '__/ _ \/ _` |
@@ -130,7 +130,7 @@ subroutine area_emiss_reading
 implicit none
     integer i,j,k,iun
     character(len=38):: cdum,fname
-    cdum="../01_datos/"//trim(zona)//"/"
+    cdum=trim(zona)//"/"
 !$omp parallel sections num_threads (4) private(fname,nl)
 !$omp section
     fname=trim(cdum)//'gri_pob.csv'
@@ -174,7 +174,7 @@ implicit none
       call lee_file(fname, griv,idv,fv)
 !$omp end parallel sections
     do k=1,nf
-        open (newunit=iun,file=efile(k),status='OLD',action='read')
+        open (newunit=iun,file='emis/area/'//efile(k),status='OLD',action='read')
         read (iun,'(A)') cdum
         read (iun,'(A)') cdum
         print *,zona,"  ",efile(k)
@@ -191,8 +191,8 @@ end subroutine area_emiss_reading
 !> land cover, roads, trains, airports, seaports and
 !> buses terminals to distribute area emissions.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version  2.7
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !   __ _ _ __ ___  __ _
 !  / _` | '__/ _ \/ _` |
@@ -396,8 +396,8 @@ subroutine area_spatial_locating
 end subroutine area_spatial_locating
 !>	@brief Stores pollutan emissions, columns contains SCC and rows GRIDID.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version  2.7
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !   __ _ _ __ ___  __ _
 !  / _` | '__/ _ \/ _` |
@@ -520,8 +520,8 @@ subroutine area_spatial_storing
 end subroutine area_spatial_storing
 !>	@brief Counts the number of lines per surrogate file.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version  2.7
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !> @param archivo input file for line counting
 !                        _            _ _
@@ -548,8 +548,8 @@ integer function cuenta_linea(archivo)
 end function
 !>	@brief Reads area fraction data from the surrogate file.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version  2.7
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param archivo file to be read
 !>   @param grid GRIDCODE ID for the surrogate fraction

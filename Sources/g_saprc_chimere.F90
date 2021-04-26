@@ -1,13 +1,13 @@
-!
-!	g_saprc_chimere.f90
-!	
-!
-!  Creado por Jose Agustin Garcia Reynoso el 19/10/19.
-!
-!
+!>  @brief For program g_saprc_chimere.F90.
+!>
+!> Creates netcdf file by adding AREA, MOBILE and POINT emissions in a specific grid.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  04/23/2021
+!>   @version  3.0
+!>   @copyright Universidad Nacional Autonoma de Mexico 2021
 !  Proposito:
 !            Guarda los datos del inventario para el
-!            mecanismo SAPRC99 en formato netcdf y con NAMELIST
+!            mecanismo SAPRC2007 en formato netcdf y con NAMELIST
 !            para formato de CHIMERE
 !
 ! ifort -O2 -axAVX -lnetcdff -L$NETCDF/lib -I$NETCDF/include g_saprc_chimere.f90 -o saprc_ch.exe

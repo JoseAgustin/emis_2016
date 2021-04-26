@@ -1,4 +1,3 @@
-!  ifort -O3 -axAVX -o MSpatial.exe movil_spatial.F90
 !
 !  Creado por Jose Agustin Garcia Reynoso el 1/11/2017
 !
@@ -8,14 +7,15 @@
 !          Program that reads MOVES2015 and spatial allocation
 !
 !   Usa emiss_2015,csv, fracc_2008.csv, salida.csv, gri_movil.csv
+!  ifort -O3 -axAVX -o MSpatial.exe movil_spatial.F90
 !
 !  Cambios
 !       Se incluye Carbono Negro
 !       18/11/2017  Se incluyen GSO4, OTHER, POA
 !> @brief For movil_spatial.F90 program. Mobile emissions spatial distribution
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  04/23/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 module mobile_spatial_mod
 !> Number of lines in emissions file
@@ -49,8 +49,8 @@ end module mobile_spatial_mod
 !> Allocates the municipatily emission in to a grid
 !> the grid is obtained from specific geographical area selected by _zona_ variable in namelist_emis.nml
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  04/26/2021
+!>   @version  3.0
 program movil_spatial
 use mobile_spatial_mod
 
@@ -74,8 +74,8 @@ contains
 !     |_|                      |_____|                         |___/
 !> @brief Stores mobile sources emissions in a grid per pollutant file
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  04/23/2021
+!>   @version  3.0
 subroutine mobile_spatial_storing
     integer i,j,k,iun
 	character(len=15) ::name
@@ -110,8 +110,8 @@ end subroutine mobile_spatial_storing
 !     |_|                      |_____|                             |___/
 !> @brief Allocates municipality sources emissions in a grid
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  04/23/2021
+!>   @version  3.0
 subroutine mobile_spatial_locating
 implicit none
   integer i,j,ii,l,k
@@ -154,8 +154,8 @@ end subroutine mobile_spatial_locating
 !                         |_____|                            |___/
 !> @brief Reads mobile emission file from MOVES emiss_2016.csv
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  04/23/2021
+!>   @version  3.0
 subroutine mobile_emiss_reading
 	implicit none
 	integer:: i,j,iedo
@@ -164,7 +164,7 @@ subroutine mobile_emiss_reading
 	character(len=10):: cdum
     character(len=33):: fname='emiss_2016.csv'
 	print *,'Starts reading emissions file in Mg/yr ',fname
-	open(10,file=fname,status='old',action='read')
+	open(10,file="emis/movil/"//fname,status='old',action='read')
 	read(10,*) cdum,cdum,(pol(i),i=1,npol) !read header
 	i=0
 	do
@@ -231,8 +231,8 @@ end subroutine mobile_emiss_reading
 !  \___\___/ \__,_|_| |_|\__|
 !> @brief Counting the number of different GRDICODE cells
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.2
+!>   @date  04/26/2021
+!>   @version  3.0
 subroutine count
     integer i,j
     logical,allocatable::mask(:)

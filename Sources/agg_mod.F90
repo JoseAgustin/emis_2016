@@ -1,7 +1,7 @@
 !>  @brief For programs agg_a.F90 agg_m.F90 and agg_p.F90. VOC emisions speciation
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version  2.2
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 module voc_split
   !>number of hours in a day
@@ -23,12 +23,11 @@ module voc_split
   real,allocatable :: fclass(:,:,:);!> SCC from emissions file
   character (len=10), allocatable:: iscc(:) ;!> !> Mechanism class name used for a file name
   character(len=4),allocatable::cname(:) ;!> Type of day (lun, mar, mie, ..., dom)
-  character(len=3) ::cdia        ;!> Selected photochemical mecanism
-  character(len=7) ::mecha        ;!> Current date
+  character(len=3) ::cdia        ;!> Current date
   character (len=19) :: current_date
   !> Photochemical mecanism in profile_MECHA.csv file
   character (len=19) ::cprof
-  common /date/ model,lfa,current_date,cdia,cprof,mecha
+  common /date/ model,lfa,current_date,cdia,cprof
 contains
 !  _
 ! | | ___  ___
@@ -37,11 +36,12 @@ contains
 ! |_|\___|\___|
 !>  @brief Reads area emissions and SCC profiles
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param isource type of emissions source 1=area 2=mobile 3=point
 subroutine lee_voc(isource)
+  use master
   implicit none
   integer,intent(IN) :: isource
   integer :: i,j,id,idum,l
@@ -53,11 +53,11 @@ subroutine lee_voc(isource)
   print *,"Inicia lectura"
   SELECT CASE (isource)
   CASE(1)
-    fname='../04_temis/TAVOC_2016.csv'
+    fname='TAVOC_2016.csv'
   CASE(2)
-    fname='../06_temisM/TMCOV_2016.csv'
+    fname='TMCOV_2016.csv'
   CASE(3)
-    fname='../07_puntual/T_ANNVOC.csv'
+    fname='T_ANNVOC.csv'
   CASE DEFAULT
     STOP "Error not identifcable type source "
   END SELECT
@@ -89,7 +89,7 @@ subroutine lee_voc(isource)
   end if
   close(10)
 ! READING  and finding profiles
-  open(unit=15,file='scc-profiles.txt',status='old',action='read')
+  open(unit=15,file='../chem/scc-profiles.txt',status='old',action='read')
   do
     read(15,*,END=200) isccf,cdum,j
 !dir$ loop count min(512)
@@ -104,7 +104,8 @@ subroutine lee_voc(isource)
   call count(isource)  ! counts the number of different profiles
   print *,'  Finish count'
 ! READING  and findign speciation for profiles
-  open(unit=16,file='profile_'//trim(mecha)//'.csv',status='old',action='read')
+print *,'  Speciation for Mechanism: ',trim(cprof),"->",mecha
+  open(unit=16,file='../chem/profile_'//trim(mecha)//'.csv',status='old',action='read')
   read(16,*)cdum,cprof
   read(16,*) nclass
   print *,'  Speciation for Mechanism: ',trim(cprof),"->",mecha
@@ -154,8 +155,8 @@ end subroutine lee_voc
 
 !>  @brief agreggates VOC species in photechemical mechanism classes
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param isource type of emissions source 1=area 2=mobile 3=point
 subroutine voc_agregation(isource)
@@ -218,8 +219,8 @@ end subroutine voc_agregation
 !  |___/
 !>  @brief Stores mechanism classes
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param isource type of emissions source 1=area 2=mobile 3=point
 subroutine guarda_voc(isource)
@@ -276,8 +277,8 @@ end subroutine guarda_voc
 !
 !>  @brief Counts the number of differnt profiles
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param isource type of emissions source 1=area 2=mobile 3=point
 subroutine count(isource)
@@ -314,7 +315,7 @@ subroutine count(isource)
   print *,'   Number different profiles',j !,prof2
 !
   if(isource.eq.1) then
-    open(newunit=iun,file='../04_temis/index.csv',status='old')
+    open(newunit=iun,file='index.csv',status='old')
     read(iun,*)j
     allocate(grid2(j))
     do i=1,j

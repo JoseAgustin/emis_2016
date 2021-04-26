@@ -14,7 +14,7 @@ echo "Directorio actual "$ProcessDir
 # bajio3      ecaim3      jalisco     mexico9     queretaro
 
 variables_set () {
-dominio=mexico
+dominio=$1
 HacerArea=1
 #
 # Selecciona mecanismo

@@ -7,7 +7,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.71])
-AC_INIT([DIETE], [2.7], [agustin@atmosfera.unam.mx])
+AC_INIT([DIETE], [3.0], [agustin@atmosfera.unam.mx])
 # Define our M4 macro directory
 AC_CONFIG_AUX_DIR([autoconf])
 AM_INIT_AUTOMAKE([1.11 foreign subdir-objects])

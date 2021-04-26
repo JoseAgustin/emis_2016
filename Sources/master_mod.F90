@@ -2,8 +2,8 @@
 !>
 !>   contains variables, subroutines and functions used in many programs
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.7
+!>   @date  04/23/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2021
 
 module master
@@ -42,8 +42,8 @@ contains
 !>
 !>   for setting up geographical, temporal and chemical mechamism settings
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/13/2020
-!>   @version  2.7
+!>   @date  04/23/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2021
 subroutine lee_namelist
 implicit none
@@ -54,11 +54,11 @@ implicit none
   integer:: unit_nml=9
   logical existe
   existe = .FALSE.
-  write(6,*)' >>>> Reading file - ../namelist_emis.nml'
-  inquire ( FILE = '../namelist_emis.nml' , EXIST = existe )
+  write(6,*)' >>>> Reading file - ./namelist_emis.nml'
+  inquire ( FILE = './namelist_emis.nml' , EXIST = existe )
   if ( existe ) then
   !  Opening the file.
-    open ( FILE   = '../namelist_emis.nml' ,      &
+    open ( FILE   = './namelist_emis.nml' ,      &
     UNIT   =  unit_nml        ,      &
     STATUS = 'OLD'            ,      &
     FORM   = 'FORMATTED'      ,      &
@@ -97,8 +97,8 @@ end subroutine lee_namelist
 !>  @brief Identifies if it is summert time period and if it is considered  or not.
 !>   Returns 1 if the date is within daysaving time period
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/25/2020
-!>   @version  2.5
+!>   @date  04/23/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param ida  day in the month
 !>   @param mes  month of the year

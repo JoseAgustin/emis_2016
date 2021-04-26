@@ -3,7 +3,7 @@
 #
 ACLOCAL_AMFLAGS = -I autoconf
 
-CLEANFILES = *.o *.mod *~
+CLEANFILES = *.o *.mod *~ bin/*exe
 
 TESTSUITE = $(srcdir)/Sources/testsuite
 

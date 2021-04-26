@@ -11,8 +11,8 @@
 !>
 !> Currently uses EPA temporal profiles
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date 07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version 3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 module area_temporal_mod
 !> type day (1=Mon, 2= Tue, ... 7=Sun)
@@ -81,8 +81,8 @@ end module area_temporal_mod
 !
 !>  @brief Make the area emissions temporal distribution using profiles based on SCC.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date 07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version 3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program area_temporal
    use master
@@ -109,8 +109,8 @@ contains
 !     |_|                      |_____|                            |___/
 !>  @brief Reads spatial area emissions and temporal profiles based on SCC.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date 07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version 3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine area_spatial_reading
 	implicit none
@@ -134,7 +134,7 @@ subroutine area_spatial_reading
 !
 !   Days in 2016 year
 !
-    write(canio,'("../01_datos/time/anio",I4,".csv")')anio
+    write(canio,'("../time/anio",I4,".csv")')anio
     print *," READING FILE: ",canio
     open (unit=10,file=canio,status='OLD',action='read')
     daytype=0
@@ -155,7 +155,7 @@ subroutine area_spatial_reading
    call maxline(nmax)
 
 	do k=1,nf
-	open (newunit=iun,file="../02_aemis/"//efile(k),status='OLD',action='read')
+	open (newunit=iun,file="../"//efile(k),status='OLD',action='read')
 	read (iun,'(A)') cdum
 	read (iun,*) nscc(k),cdum,(iscc(i),i=1,nscc(k))
 	!print '(5(I10,x))',(iscc(i),i=1,nscc(k))
@@ -192,7 +192,7 @@ subroutine area_spatial_reading
 !  Reading and findig monthly, week and houry code profiles
     inquire(15,opened=fil1)
     if(.not.fil1) then
-      canio="../01_datos/time/"//"temporal_01.txt"
+      canio="../time/"//"temporal_01.txt"
 	  open(unit=15,file=canio,status='OLD',action='read')
 	else
 	  rewind(15)
@@ -218,7 +218,7 @@ subroutine area_spatial_reading
 !  Reading and findig monthly profile
     inquire(16,opened=fil1)
     if(.not.fil1) then
-       canio="../01_datos/time/"//"temporal_mon.txt"
+       canio="../time/"//"temporal_mon.txt"
 	  open(unit=16,file=canio,status='OLD',action='read')
 	else
 	  rewind(16)
@@ -241,7 +241,7 @@ subroutine area_spatial_reading
 !  Reading and findig weekely  profile
     inquire(17,opened=fil1)
     if(.not.fil1) then
-      canio="../01_datos/time/"//"temporal_week.txt"
+      canio="../time/"//"temporal_week.txt"
 	  open(unit=17,file=canio,status='OLD',action='read')
 	else
 	  rewind(17)
@@ -271,7 +271,7 @@ subroutine area_spatial_reading
     inquire(18,opened=fil1)
 
     if(.not.fil1) then
-        canio="../01_datos/time/"//nfile !"temporal_wkday.txt"
+        canio="../time/"//nfile !"temporal_wkday.txt"
         open(unit=18,file=canio,status='OLD',action='read')
 	else
 	  rewind(18)
@@ -325,7 +325,7 @@ print *,'   Done ',nfile,daytype,maxval(hCST)!,maxval(hPST),maxval(hMST)
  if(daytype.eq.1 .or. daytype.ge.6) then !lunes, Sabado y Domingo
         inquire(19,opened=fil2)
         if(.not.fil2) then
-            canio="../01_datos/time/"//nfilep
+            canio="../time/"//nfilep
             open(unit=19,file=canio,status='OLD',action='read')
         else
             rewind(19)
@@ -420,8 +420,8 @@ end subroutine area_spatial_reading
 !                   |_| |_____|
 !>  @brief Computes the hourly emissions based on SCC temporal profiles from annual to hourly.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date 07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version 3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine area_temp_distribution
 	implicit none
@@ -511,8 +511,8 @@ print *,"   Temporal distribution for VOCs"!,size(idcel2)
 !                   |_|                    |_____|                         |___/
 !>  @brief Saves area emission with the temporal profile in hourly basis.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date 07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version 3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine area_temporal_storing
   implicit none
@@ -587,8 +587,8 @@ end subroutine area_temporal_storing
 !  |___/                |_____|
 !>  @brief Counts the number of different cells in file and stores in index.csv file.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date 07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version 3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine area_grids_count
   integer i,j
@@ -632,8 +632,8 @@ end subroutine area_grids_count
 !                     |_____|
 !>  @brief Identifies the time zone by state ID.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date 07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version 3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine huso_horario
     integer ::i,k,iedo
@@ -711,8 +711,8 @@ end subroutine hpsort
 !
 !>  @brief Obtains the number of lines in *efile* file.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date 07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version 3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine maxline(entero)
     implicit none
@@ -721,7 +721,7 @@ subroutine maxline(entero)
     character(len=14):: cdum
     entero=-1
     do k=1,nf
-      open(unit=14,file="../02_aemis/"//efile(k),status='OLD')
+      open(unit=14,file="../"//efile(k),status='OLD')
        inum=0
       do
         read(14,*,end=100) cdum

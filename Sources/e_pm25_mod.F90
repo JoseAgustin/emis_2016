@@ -1,7 +1,7 @@
 !>  @brief For programs pm25_speci_a.F90, pm25_speci_m.F90 and pm25_speci_p.F90. PM2.5  emisions speciation
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 module PM25_speciation_mod ;!>number of hours in a day
 integer :: nh     ;!> number the clasess in profiles_spc.txt
@@ -34,8 +34,8 @@ contains
 !  \___\__,_|_|\___|\__,_|_|\___/|___/
 !>  @brief Split PM2.5 emissions in categories clasess
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine calculos
 implicit none
@@ -72,8 +72,8 @@ end subroutine calculos
 !  |___/
 !>  @brief Stores PM2.5 emissions in files by categories clasess
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param isource type of emissions source 1=area 2=mobile 3=point
 subroutine guarda(isource)
@@ -136,8 +136,8 @@ end subroutine guarda
 !  \___\___/ \__,_|_| |_|\__|
 !>  @brief Identifies the different PM2.5 profiles and cells
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine count
   integer i,j,nn
@@ -206,8 +206,8 @@ end subroutine count
 ! |_|\___|\___|
 !>  @brief Reads emissions PM2.5 and speciation profiles based on SCC
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  2020/06/20
-!>   @version  2.1
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param isource type of emissions source 1=area 2=mobile 3=point
 subroutine lee(isource)
@@ -222,11 +222,11 @@ subroutine lee(isource)
   logical ::lfil
   SELECT CASE (isource)
   CASE(1)
-  fname='../04_temis/TAPM2_2016.csv'
+  fname='TAPM2_2016.csv'
   CASE(2)
-  fname='../06_temisM/TMPM2_2016.csv'
+  fname='TMPM2_2016.csv'
   CASE(3)
-  fname='../07_puntual/T_ANNPM25.csv'
+  fname='T_ANNPM25.csv'
   CASE DEFAULT
         STOP "Error not identificable type source "
   END SELECT
@@ -260,7 +260,7 @@ subroutine lee(isource)
 ! READING  and findign profiles
   fname='scc-profile_pm25.csv'
   print *, 'Reading : ',trim(fname)
-  open(unit=15,file=fname,status='old',action='read')
+  open(unit=15,file="../chem/"//fname,status='old',action='read')
   read (15,*) cdum !header
   do
     read(15,*,END=200) isccf,cdum,j
@@ -281,7 +281,7 @@ subroutine lee(isource)
 ! READING  and finding speciation for profiles
   fname='pm25_profiles.csv'
   print *, 'Reading : ',trim(fname)
-  open(unit=16,file=fname,status='old',action='read')
+  open(unit=16,file="../chem/"//fname,status='old',action='read')
   read(16,*)cdum
   read(16,*) nclass
   if(nclass.gt.30) stop "Change size in fagg dimension"

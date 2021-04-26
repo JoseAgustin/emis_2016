@@ -11,8 +11,8 @@
 !
 !> @brief for suma_vialidades.F90 program. For aggregatin street fractions in cells.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 module street_vars
 !> Number of lines in file
@@ -42,8 +42,8 @@ end module street_vars
 !> @brief This program identifies the different streets in the cell and adds them together.
 !> Obtains the street area fraction in the cell with respect to the municipality street area
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program suma_vialidades
 use street_vars
@@ -59,8 +59,8 @@ use master
 contains
 !> @brief Reads street area file (VIALIDADES.csv)
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine street_areas_read
 implicit none
@@ -91,8 +91,8 @@ end subroutine street_areas_read
 !> @brief Identifyes the duplicate GRIDCODES, add street areas and obtains
 !> the fractional area from the total area in the municipality.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine street_fraction_calculation
 use street_vars
@@ -123,8 +123,8 @@ end subroutine street_fraction_calculation
 !> @brief Stores the Street fractional area and total area for each grid code
 !>  and municipality.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine street_fraction_saving
 use street_vars
@@ -143,8 +143,8 @@ close (11)
 end subroutine street_fraction_saving
 !> @brief Identifies the different municipalities in the VIALIDADES.csv file.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  07/12/2020
-!>   @version 2.2
+!>   @date  04/26/2021
+!>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine count
     use street_vars
