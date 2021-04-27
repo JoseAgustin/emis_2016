@@ -1,8 +1,8 @@
-10-mar-2021
+26-abr-2021
 
 # Emissions conversion system
 
-National Emissions inventory is converted for air quality modeling from municipalities to a regular grid.
+National Emissions Inventory 2016 is converted in order to be used in air quality modeling. The data has a spatial resolution at municipality level and annual emissions and it is set  into a regular grid.
 
 It can process all the country or a preselected area from:
 
@@ -22,19 +22,28 @@ It can process all the country or a preselected area from:
 ## Directories description
 
 - `01_datos` Information for each area containing the grid, surrogates for area emissions
-a subdirectory `time` with temporal distribution files.
-- `02_aemis` process area municipality emissions into the grid. Spatial distribution.
-- `03_movilspatial` Streets and highway distribution in the grid.
-- `04_temis` Area emissions temporal distribution.
-- `05_semisM` Mobile emission spatial distribution. (considers local temporal profiles for CDMX)
-- `06_temisM` Mobile emissions temporal distribution.
-- `07_puntual` point source temporal distribution.
-- `08_spec` Chemical speciation distribution.
-- `09_pm25spec` PM2.5 speciation (BC, SO4, NO3, Other)
-- `10_storage` read outputs from 04, 06, 07 ,08 and 09 and generates a netcdf file
+a subdirectories
+    - `chem` with chemical profiles for gases and particles, scaling factor file for each mechanism.
+    - `emis` with area, mobile and point emissions at municipality level.
+    - `time` with temporal distribution files,
+- `Sources` source codes for processing the EI2016
+    - Area emissions: `area_espacial.F90`, `atemporal.F90`, `agg_a.F90`, `pm25_speci_a.F90`
+    - Mobile emissions: `agrega.F90, suma_carretera.F90 suma_vialidades.F90, movil_spatial.F90, movil_temp.F90, agg_m.F90` and` pm25_speci_m.F90`
+    - Point emissions: `t_puntal.F90, agg_p.F90, pm25_speci_p.F90`
+    - Storging the data in a netcdf:  `g_emis2.F90`
+    - Modules for gas speciation, pm speciation and globa: `agg_mod.F90, e_pm25_mod.F90,  master_mod.F90`
 - `12_cmaq` CBMV mechanism for CMAQ model
+- `testsuite` code for testing subroutines and functions.
 - `inventario` output subdirectory
 
+--
+## Instalation 
+1. run `configure`
+2. then `make`
+2. and `make install`
+
+## Running
+1. Use the `emis_2016.sh` script for running
 ---
 ## Sistema de conversión de emisiones
 
@@ -42,23 +51,29 @@ a subdirectory `time` with temporal distribution files.
 
  [A.](#dir-datos) **Directorio  01\_datos**
 
-[B.](#area) **Directorio  02\_emis**
+[B.](#time) **Subdirectorio  01\_datos/time**
 
-[C.](#mobile) **Directorio 03\_movilspatial**
+[C.](#area) **Directorio emis/area**
 
-[D.](#areatime) **Directorio 04\_temis**
+[D.](#mobile) **Directorio  emis/movil**
 
-[E.](#mobilegrid) **Directorio 05\_semisM**
+[E.](#fijas) **Directorio emis/punt**
 
-[F.](#mobiltime) **Directorio 06\_temisM**
+[F.](#areatime) **Directorio tmp<area>**
 
-[G.](#fijas) **Directorio 07\_puntual**
+[G.](#mobilegrid) **Directorio tmp<area> moviles**
 
-[H.](#especies) **Directorio 08\_spec**
+[H.](#tmparea) **Directorio tmp<area>/dia<dia>**
 
-[I.](#pm25) **Directorio 09\_pm25spec**
+[I.](#arealtime) **Emisiones de área ditribucion temporal**
 
-[J.](#guarda) **Directorio 10\_storage**
+[J.](#mobiltime) **Emisiones moviles ditribucion temporal**
+
+[K.](#especies) **Especiacion gases**
+
+[L.](#pm25) **Especiacion  partículas**
+
+[M.](#guarda) **Directorio Inventario/[area]**
 
 [2.](#script) **Proceso de ejecución**
 
@@ -121,6 +136,8 @@ Cada archivo posee las siguientes columnas:
 2. CVENTMUN – El identificador de municipio, los dos primeros dígitos es el estado y los tres sigueintes el número de municipio
 3. Fa – La fracción de área correspondiente a la categoria que representa el archivo.
 
+<a name="time"></a>
+### Subdirectorio time 
 En el directorio time contiene los siguientes archivos:
 
   1. anio2016.csv – contiene la fecha y el tipo de día (lun a dom) para cada día del año 2016
@@ -134,11 +151,10 @@ Cada archivo posee un encabezado la primera columna corresponde al SCC (para el 
 
 La información de este directorio es utilizada para el proceso de distribución espacial y temporal.
 
+los directorios adicionales contienen el inventario de emisiones de fuentes de área distribuido por contaminante, que son:
+
 <a name="area"></a>
-### Directorio 02\_emis 
-
-En este directorio se realiza la distribución espacial de las emisiones, contiene el programa para la distribución espacial y los archivos que contienen el inventario de emisiones de fuentes de área distribuido por contaminante, que son:
-
+### Directorio emis/area
 - IBC\_\_2016.csv – emisiones de carbono negro
 - ICO\_\_2016.csv – emisiones de monóxido de carbono
 - ICO2\_2016.csv – emisiones de dióxido de carbono
@@ -152,46 +168,62 @@ En este directorio se realiza la distribución espacial de las emisiones, contie
 
 Cada uno de estos archivos contiene por reglón el identificador de municipio CVENTMUN y el código de clasificación de emisiones SCC en cada columna. Asi se tienen 2459 reglones correspondientes a cada municipio del país.
 
-Una vez que se ha realizado el proceso de distribución espacial se generan los archivos con las emisiones distribuidas en la región, que son los siguientes
+
+
+<a name="mobile"></a>
+### Directorio  emis/movil
+
+En este directorio se agrupan las fracciones de superficie de área de carreteras y de vialidades en un solo archivos (salida3.csv) que se empela para la distribución de emisiones vehiculares.
+
+<a name="fijas"></a>
+### Directorio emis/punt
+
+Contiene las emisiones de fuentes fijas , en el archivo de emisiones `Puntual2016.csv` 
+
+Correspondientes a cada contaminante y para el caso de PM2.5 y VOC se incluye una columna con el código SCC que se emplea para la especiación química.
+
+<a name="areatime"></a>
+### Directorio tmp<area>
+<area> es el área a donde se requiere la emisión (p.e. para tijuana, seria `tmptijuana`)
+En este se generan todos los archivos necesarios del inventario distribuido espacial:
+
+Para las emisiones de área una vez que se ha realizado el proceso de distribución espacial se generan los archivos con las emisiones distribuidas en la región, que son los siguientes:
 
     ACH4_2016.csv ACO__2016.csv ANH3_2016.csv APM10_2016.csv ASO2_2016.csv
     ACN__2016.csv ACO2_2016.csv ANOx_2016.csv APM25_2016.csv AVOC_2016.csv
 
-<a name="mobile"></a>
-### Directorio 03\_movilspatial
+<a name="mobilegrid"></a>
+La distribución espacial de las emisiones de fuentes móviles, emplea el archivo de distribución de vialdiades (salida3.csv)  y el de emisiones emiss\_2016.csv donde la primer columna es el identificador de municipio CVENMUN, la segunda el código de emisión SCC y las subsecuentes son los compuestos emitidos: VOC, CO, NO, NO2, NH3, PM10, PM2.5, CN, CO2, SO2 y CH4. Una vez ejecutado el programa MSpatial.exe se obtienen los archivos con la distribución espacial de las emisiones: 
 
-En este directorio se agrupan las fracciones de superficie de área de carreteras y de vialidades en un solo archivos (salida3.csv) que se empela para la distribución de emisiones vehiculares.
+    M\_CH4.csv, M\_CN.csv, M\_CO2.csv, M\_CO.csv, M\_NH3.csv, M\_NO2.csv
+    M\_NO.csv, M\_PM10.csv, M\_PM25.csv, M\_SO2.csv, M\_VOC.csv
+    
+<a name="tmparea"></a>
+### Directorio tmp<area>/dia<dia>
+<dia> corresponde al día del mes (p.e. si dia=27  entonces el directorio sería `dia27`)
 
-<a name="areatime"></a>
-### Directorio 04\_temis
+En este directorio se encuentran los archivos con la distribución temporal de las emisiones de fuentes de área, mediante el programa en fortran Atemporal.exe que emplea los archivos generados en tmp<area> y los que contienen los perfiles temporales, los archivos de salida que genera son:
 
-En este directorio se realiza la distribución temporal de las emisiones de fuentes de área, mediante el programa en fortran Atemporal.exe que emplea los archivos generados en 02\_aemis y los que contienen los perfiles temporales, los archivos de salida que genera son: TACH4\_2016.csv TACO\_\_2016.csv TANH3\_2016.csv TAPM102016.csv TASO2\_2016.csv TACN\_\_2016.csv TACO2\_2016.csv TANOx\_2016.csv TAPM2\_2016.csv y TAVOC\_2016.csv
+<a name="arealtime"></a>
+#### Emisiones de área
+     TACH4\_2016.csv TACO\_\_2016.csv TANH3\_2016.csv TAPM102016.csv 
+     TASO2\_2016.csv TACN\_\_2016.csv TACO2\_2016.csv TANOx\_2016.csv
+     TAPM2\_2016.csv y TAVOC\_2016.csv
 
 Correspondientes a cada contaminante y para el caso de PM2.5 y VOC se incluye una columna con el código SCC que se emplea para la especiación química.
 
-<a name="mobilegrid"></a>
-### Directorio 05\_semisM
-
-En este directorio se realiza la distribución espacial de las emisiones de fuentes móviles, emplea el archivo de distribución de vialdiades (salida3.csv) de 03\_movilspatial y el de emisiones emiss\_2016.csv donde la primer columna es el identificador de municipio CVENMUN, la segunda el código de emisión SCC y las subsecuentes son los compuestos emitidos: VOC, CO, NO, NO2, NH3, PM10, PM2.5, CN, CO2, SO2 y CH4. Una vez ejecutado el programa MSpatial.exe se obtienen los archivos con la distribución espacial de las emisiones: M\_CH4.csv, M\_CN.csv, M\_CO2.csv, M\_CO.csv, M\_NH3.csv, M\_NO2.csv, M\_NO.csv, M\_PM10.csv, M\_PM25.csv, M\_SO2.csv, M\_VOC.csv.
-
 <a name="mobiltime"></a>
-### Directorio 06\_temisM
-
-Aquí se realiza la distribución temporal de las emisiones de fuentes móviles mediante el programa `Mtemporal.exe`, que emplea como entrada los archivos del directorio `05\_semisM` y los archvios que contienen los perfiles temporales (`01\_datos/time`), los archivos de salida que genera son: `TMCH4\_2016.csv, TMCO\_\_2016.csv, TMCOV\_2016.csv, TMNO\_\_2016.csv, TMPM102016.csv, TMSO2\_2016.csv, TMCN\_\_2016.csv, TMCO2\_2016.csv, TMNH3\_2016.csv, TMNO2\_2016.csv` y `TMPM2\_2016.csv.`
+#### Emisiones de fuentes móviles
+Los archivos que corresponden a la distribución temporal de las emisiones de fuentes móviles mediante el programa `Mtemporal.exe`, que emplea como entrada los archivos del directorio `tmp<area>` y los archvios que contienen los perfiles temporales (`01\_datos/time`), los archivos de salida que genera son: 
+`TMCH4\_2016.csv, TMCO\_\_2016.csv, TMCOV\_2016.csv, TMNO\_\_2016.csv, TMPM102016.csv, TMSO2\_2016.csv, TMCN\_\_2016.csv, TMCO2\_2016.csv, TMNH3\_2016.csv, TMNO2\_2016.csv` y `TMPM2\_2016.csv.`
 
 Correspondientes a cada contaminante y para el caso de PM2.5 y COV se incluye una columna con el código SCC que se emplea para la especiación química.
 
-<a name="fijas"></a>
-### Directorio 07\_puntual
-
-En este directorio se realiza la distribución temporal de las emisiones de fuentes fijas mediante el programa `Puntual.exe`, emplea el archivo de emisiones `Puntual2016.csv` y los archvios que contienen los perfiles temporales (`01\_datos/time`), los archivos de salida que genera son: `T\_ANNCH4.csv, T\_ANNCO2.csv, T\_ANNNH3.csv, T\_ANNPM10.csv, T\_ANNSO2.csv, T\_ANNCN.csv, T\_ANNCO.csv, T\_ANNNOX.csv, T\_ANNPM25.csv` y` T\_ANNVOC.csv`.
-
-Correspondientes a cada contaminante y para el caso de PM2.5 y VOC se incluye una columna con el código SCC que se emplea para la especiación química.
-
 <a name="especies"></a>
-### Directorio 08\_spec
+#### Especiación de emisiones
 
-En este directorio se realiza la especiación química de los VOC para luego agruparlos en el mecanismo químico solicitado. Emplea como entradas los archivos de emisiones de VOC de los directorios `04\_temis, 06\_temisM y 07\_puntual`. Los perfiles de especiacion con base al código SCC del archivo `scc-profiles.txt` y el del mecanismo químico que puede ser alguno de los siguientes:
+
+En este directorio tambien contiene la especiación química de los VOC para luego agruparlos en el mecanismo químico solicitado. Emplea como entradas los archivos de emisiones de VOC del directorio ` tmp<area>`. Los perfiles de especiacion con base al código SCC del archivo `scc-profiles.txt` y el del mecanismo químico que puede ser alguno de los siguientes:
 
 - profile\_cbm05.csv – Mecanimso químico Carbon Bond V
 - profile\_mozart.csv – Mecanismo MOZART (Model for OZone And Related chemical Tracers
@@ -236,9 +268,9 @@ Fuentes puntuales:
     RADM-2_TOL_P.txt
 
 <a name="pm25"></a>
-### Directorio 09\_pm25spec
+### Especiacion de PM25
 
-En este directorio se realiza la especiación de PM2.5 emplea los archivos de emisiones de PM2.5 generados despues de la distribución espacial y localizados en los directorios 04\_temis, 06\_temisM y 07\_puntual. Los perfiles de especiacion con base al código SCC del archivo scc-profile\_pm25.csv y del especiación pm25\_profiles.csv. Se emplean tres programas, uno para cada tipo de fuente asi:
+Este directorio contiene los archivos con la especiación de PM2.5 emplea los archivos de emisiones de PM2.5 generados despues de la distribución espacial. Los perfiles de especiacion con base al código SCC del archivo scc-profile\_pm25.csv y del especiación pm25\_profiles.csv. Se emplean tres programas, uno para cada tipo de fuente asi:
 
 - spm25a.exe es para emisiones de área
 - spm25m.exe para emisiones de fuentes móviles
@@ -265,17 +297,17 @@ Y fuentes fijas:
 `GSO4_P.txt OTHE_P.txt PEC_P.txt PNO3_P.txt POA_P.txt`
 
 <a name="guarda"></a>
-### Directorio 10\_storage
+### Directorio inventario/[area]
 
-En este se crea el archivo de salida en formato netcdf con las emisiones generadas en los directorios `04_temis`, 06_temisM , `07_puntual`, `08_spec` y `09_pm25spec`. Se ejecuta el programa `emiss.exe` que tiene como salida el archivo correspondiente al área y mecanismos seleccionados así tenemos como ejemplos para Cd Juárez y Mexicali con el mecanismo RADM2 y para abril 30 del 2016:
+En este se crea el archivo de salida en formato netcdf con los archivos generados en los procesos anteriores. Se ejecuta el programa `emiss.exe` que tiene como salida el archivo correspondiente al área y mecanismos seleccionados así tenemos como ejemplos para Cd Juárez y Mexicali con el mecanismo RADM2 y para abril 30 del 2016:
 
       wrfchemi_d01_radm2_cdjuarez_2016-04-30_00:00:00
       wrfchemi_d01_radm2_mexicali_2016-04-30_00:00:00
 
-<a name="script"></a>
+
 
 ---
-
+<a name="script"></a>
 ## Proceso de ejecución
 
 En el directorio principal emis\_2016 se edita el script emis\_2016.sh
@@ -287,7 +319,7 @@ En el directorio principal emis\_2016 se edita el script emis\_2016.sh
          # guadalajara  jalisco    mexicali  mexico  mexico9
          # monterrey    monterrey3 queretaro tijuana
          #
-         dominio= **ecaim**
+         dominio= 'ecaim'
 
   2. Se indica si se desea calcular la distribución espacial.  `HacerArea=0` si es la __primera vez__ que se corre el área . y `HacerArea=0`  misma área diferente fecha.
 
@@ -318,9 +350,9 @@ Se selecciona el día inicial  __dia__ y final __dia2__. Se selecciona el año e
           # dos archivos de 12 hrs nfile=2
           nfile=2
 
-  1. Si para el periodo es durante el horario de verano y no se desea que se realice el cambio de horario se cambia la variable `lsummer` de `.true.` a `.false.` en las **dos** partes donde aparece. Línea 91 y 159.
+  1. Si para el periodo es durante el horario de verano y no se desea que se realice el cambio de horario se cambia la variable `lsummer` de `.true.` a `.false.` en el scrip `functions.sh`  en donde aparece linea 53.
   2. Se ejecuta el script bash emis\_2016.sh
-
+  3. Los resultados se encuetran en el directorio `inventario/[area]`
 <a name="anexo1"></a>
 
 ## Tamaño de salidas
