@@ -59,11 +59,11 @@ a subdirectories
 
 [E.](#fijas) **Directorio emis/punt**
 
-[F.](#areatime) **Directorio tmp<area>**
+[F.](#areatime) **Directorio tmp[area]**
 
-[G.](#mobilegrid) **Directorio tmp<area> moviles**
+[G.](#mobilegrid) **Directorio tmp[area] moviles**
 
-[H.](#tmparea) **Directorio tmp<area>/dia<dia>**
+[H.](#tmparea) **Directorio tmp[area]/dia[dia]**
 
 [I.](#arealtime) **Emisiones de área ditribucion temporal**
 
@@ -183,8 +183,8 @@ Contiene las emisiones de fuentes fijas , en el archivo de emisiones `Puntual201
 Correspondientes a cada contaminante y para el caso de PM2.5 y VOC se incluye una columna con el código SCC que se emplea para la especiación química.
 
 <a name="areatime"></a>
-### Directorio tmp<area>
-<area> es el área a donde se requiere la emisión (p.e. para tijuana, seria `tmptijuana`)
+### Directorio tmp[area]
+[area] es el área a donde se requiere la emisión (p.e. para tijuana, seria `tmptijuana`)
 En este se generan todos los archivos necesarios del inventario distribuido espacial:
 
 Para las emisiones de área una vez que se ha realizado el proceso de distribución espacial se generan los archivos con las emisiones distribuidas en la región, que son los siguientes:
@@ -199,10 +199,10 @@ La distribución espacial de las emisiones de fuentes móviles, emplea el archiv
     M\_NO.csv, M\_PM10.csv, M\_PM25.csv, M\_SO2.csv, M\_VOC.csv
     
 <a name="tmparea"></a>
-### Directorio tmp<area>/dia<dia>
+### Directorio tmp[area]/dia[dia]
 <dia> corresponde al día del mes (p.e. si dia=27  entonces el directorio sería `dia27`)
 
-En este directorio se encuentran los archivos con la distribución temporal de las emisiones de fuentes de área, mediante el programa en fortran Atemporal.exe que emplea los archivos generados en tmp<area> y los que contienen los perfiles temporales, los archivos de salida que genera son:
+En este directorio se encuentran los archivos con la distribución temporal de las emisiones de fuentes de área, mediante el programa en fortran Atemporal.exe que emplea los archivos generados en tmp[area] y los que contienen los perfiles temporales, los archivos de salida que genera son:
 
 <a name="arealtime"></a>
 #### Emisiones de área
@@ -214,7 +214,7 @@ Correspondientes a cada contaminante y para el caso de PM2.5 y VOC se incluye un
 
 <a name="mobiltime"></a>
 #### Emisiones de fuentes móviles
-Los archivos que corresponden a la distribución temporal de las emisiones de fuentes móviles mediante el programa `Mtemporal.exe`, que emplea como entrada los archivos del directorio `tmp<area>` y los archvios que contienen los perfiles temporales (`01\_datos/time`), los archivos de salida que genera son: 
+Los archivos que corresponden a la distribución temporal de las emisiones de fuentes móviles mediante el programa `Mtemporal.exe`, que emplea como entrada los archivos del directorio `tmp[area]` y los archvios que contienen los perfiles temporales (`01\_datos/time`), los archivos de salida que genera son: 
 `TMCH4\_2016.csv, TMCO\_\_2016.csv, TMCOV\_2016.csv, TMNO\_\_2016.csv, TMPM102016.csv, TMSO2\_2016.csv, TMCN\_\_2016.csv, TMCO2\_2016.csv, TMNH3\_2016.csv, TMNO2\_2016.csv` y `TMPM2\_2016.csv.`
 
 Correspondientes a cada contaminante y para el caso de PM2.5 y COV se incluye una columna con el código SCC que se emplea para la especiación química.
@@ -223,7 +223,7 @@ Correspondientes a cada contaminante y para el caso de PM2.5 y COV se incluye un
 #### Especiación de emisiones
 
 
-En este directorio tambien contiene la especiación química de los VOC para luego agruparlos en el mecanismo químico solicitado. Emplea como entradas los archivos de emisiones de VOC del directorio ` tmp<area>`. Los perfiles de especiacion con base al código SCC del archivo `scc-profiles.txt` y el del mecanismo químico que puede ser alguno de los siguientes:
+En este directorio tambien contiene la especiación química de los VOC para luego agruparlos en el mecanismo químico solicitado. Emplea como entradas los archivos de emisiones de VOC del directorio ` tmp[area]`. Los perfiles de especiacion con base al código SCC del archivo `scc-profiles.txt` y el del mecanismo químico que puede ser alguno de los siguientes:
 
 - profile\_cbm05.csv – Mecanimso químico Carbon Bond V
 - profile\_mozart.csv – Mecanismo MOZART (Model for OZone And Related chemical Tracers
