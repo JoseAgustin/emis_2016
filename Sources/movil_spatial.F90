@@ -184,7 +184,7 @@ subroutine mobile_emiss_reading
 	print *,'End reading file ',fname
 	close(10)
 !
-    fname='../03_movilspatial/gri_movil.csv'
+    fname='./gri_movil.csv'
     print *,'Starts reading spatial file Streets and Higways fraction: ',fname(20:33)
 
 	open(10,file=fname,status='old',action='read')

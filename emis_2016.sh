@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#: Title       : corre_2016.sh
+#: Title       : emis_2016.sh
 #: Date        : 25/04/2021
 #: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
 #: Version     : 1.0  26/04/2021 Actualizacion para IE del 2016
@@ -16,9 +16,9 @@
 #   guadalajara  jalisco    mexicali  mexico  mexico9
 #   monterrey    monterrey3 queretaro tijuana
 #
-dominio=ecaim3
+dominio=tijuana
 # To set spatial distribution = 1 else =0
-HacerArea=1
+HacerArea=0
 #
 # Mechanism selcetion
 # avalable:
@@ -26,12 +26,12 @@ HacerArea=1
 #
 MECHA=radm2
 # Si saprc07 AQM_SELECT = 0 WRF 1 CHIMERE
-AQM_SELECT=0
+AQM_SELECT=1
 #  Build the namelist_emis.nml file
 # Cambiar aqui la fecha
 mes=5
-dia=9
-dia2=11
+dia=11
+dia2=12
 #
 #    Aqui cambiar el año a modelar
 #
@@ -39,7 +39,7 @@ nyear=2016
 #
 #   Si se desea un archivo de 24 hrs  nfile=1
 #              dos archivos de 12 hrs nfile=2
-nfile=1
+nfile=2
 
 #####  END OF USER MODIFICATIONS  #####
 source functions.sh
@@ -52,7 +52,7 @@ hace_namelist $dia $dia
 
 hace_area &
 
-hace_movil &
+hace_movil
 
 wait
 
@@ -75,19 +75,18 @@ emis_area &
 emis_fijas &
 
 emis_movil &
+
 wait
 
 ln -fs ../chem/namelist.* .
 ../bin/emiss.exe  > ../${MECHA}.log
-if [ -d ../../inventario/${dominio} ]
+if [ ! -d ../../inventario/${dominio} ]
   then
-    mv wrfchemi_d01_* ../../inventario/${dominio}
-  else
     mkdir -p ../../inventario/${dominio}
-    mv wrfchemi_d01_* ../../inventario/${dominio}
 fi
+    mv *00\:00 ../../inventario/${dominio}
 
 cd ..
-echo "DONE  Guarda "$MECHA
+echo "DONE  Guarda "$MECHA $dia
  let dia=dia+1
 done

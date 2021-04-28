@@ -85,8 +85,12 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-TESTS = test1$(EXEEXT)
-check_PROGRAMS = test1$(EXEEXT)
+@WITH_GFOR_TRUE@am__append_1 = -DPGI
+
+# Parallel version
+@WITH_OMPI_TRUE@am__append_2 = $(OPENMP_FCFLAGS)
+TESTS = test1$(EXEEXT) test2$(EXEEXT) test3$(EXEEXT)
+check_PROGRAMS = test1$(EXEEXT) test2$(EXEEXT) test3$(EXEEXT)
 subdir = Sources/testsuite
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/autoconf/ax_f08_newunit.m4 \
@@ -98,9 +102,18 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__dirstamp = $(am__leading_dot)dirstamp
-am_test1_OBJECTS = ../check.$(OBJEXT) t_check.$(OBJEXT)
+am_test1_OBJECTS = $(top_builddir)/Sources/check.$(OBJEXT) \
+	t_check.$(OBJEXT)
 test1_OBJECTS = $(am_test1_OBJECTS)
 test1_LDADD = $(LDADD)
+am_test2_OBJECTS = $(top_builddir)/Sources/master_mod.$(OBJEXT) \
+	t_leenm.$(OBJEXT)
+test2_OBJECTS = $(am_test2_OBJECTS)
+test2_LDADD = $(LDADD)
+am_test3_OBJECTS = $(top_builddir)/Sources/master_mod.$(OBJEXT) \
+	t_kverano.$(OBJEXT)
+test3_OBJECTS = $(am_test3_OBJECTS)
+test3_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -127,8 +140,8 @@ AM_V_FCLD = $(am__v_FCLD_@AM_V@)
 am__v_FCLD_ = $(am__v_FCLD_@AM_DEFAULT_V@)
 am__v_FCLD_0 = @echo "  FCLD    " $@;
 am__v_FCLD_1 = 
-SOURCES = $(test1_SOURCES)
-DIST_SOURCES = $(test1_SOURCES)
+SOURCES = $(test1_SOURCES) $(test2_SOURCES) $(test3_SOURCES)
+DIST_SOURCES = $(test1_SOURCES) $(test2_SOURCES) $(test3_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -366,7 +379,7 @@ AMTAR = @AMTAR@
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
-AUTOM4TE = $(SHELL) $(top_srcdir)/autotools/missing --run autom4te
+AUTOM4TE = $(SHELL) $(top_srcdir)/autoconf/missing --run autom4te
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CC = @CC@
@@ -385,7 +398,7 @@ EXEEXT = @EXEEXT@
 #
 # This file is processed by automake (produces file Makefile.in)
 #
-# Compiler flags -I$(top_srcdir)
+# Compiler flags
 FC = $(NC_FC)
 FCFLAGS = $(AM_FCFLAGS)
 INSTALL = @INSTALL@
@@ -464,12 +477,15 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_FCFLAGS = $(NC_INC) -I$(top_srcdir) $(NC_LIB)
-test1_SOURCES = ../check.F90 t_check.F90
+AM_FCFLAGS = $(NC_INC) -I$(top_srcdir)/Sources $(NC_LIB) \
+	$(am__append_1) $(am__append_2)
+test1_SOURCES = $(top_srcdir)/Sources/check.F90 t_check.F90
+test2_SOURCES = $(top_srcdir)/Sources/master_mod.F90 t_leenm.F90
+test3_SOURCES = $(top_srcdir)/Sources/master_mod.F90 t_kverano.F90
 
 #  Additional files to be cleaned with 'make clean'
-CLEANFILES = *.o *.mod 
-TESTSUITE = $(srcdir)/testsuite $(srcdir)/package.m4 
+CLEANFILES = *.o *.mod package.m4 testsuite
+TESTSUITE = ./testsuite
 AUTOTEST = $(AUTOM4TE) --language=autotest
 EXTRA_DIST = testsuite.at package.m4 $(TESTSUITE) atlocal.in
 all: all-am
@@ -508,21 +524,34 @@ $(am__aclocal_m4_deps):
 
 clean-checkPROGRAMS:
 	-test -z "$(check_PROGRAMS)" || rm -f $(check_PROGRAMS)
-../$(am__dirstamp):
-	@$(MKDIR_P) ..
-	@: > ../$(am__dirstamp)
-../$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) ../$(DEPDIR)
-	@: > ../$(DEPDIR)/$(am__dirstamp)
-../check.$(OBJEXT): ../$(am__dirstamp) ../$(DEPDIR)/$(am__dirstamp)
+$(top_builddir)/Sources/$(am__dirstamp):
+	@$(MKDIR_P) $(top_builddir)/Sources
+	@: > $(top_builddir)/Sources/$(am__dirstamp)
+$(top_builddir)/Sources/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(top_builddir)/Sources/$(DEPDIR)
+	@: > $(top_builddir)/Sources/$(DEPDIR)/$(am__dirstamp)
+$(top_builddir)/Sources/check.$(OBJEXT):  \
+	$(top_builddir)/Sources/$(am__dirstamp) \
+	$(top_builddir)/Sources/$(DEPDIR)/$(am__dirstamp)
 
 test1$(EXEEXT): $(test1_OBJECTS) $(test1_DEPENDENCIES) $(EXTRA_test1_DEPENDENCIES) 
 	@rm -f test1$(EXEEXT)
 	$(AM_V_FCLD)$(FCLINK) $(test1_OBJECTS) $(test1_LDADD) $(LIBS)
+$(top_builddir)/Sources/master_mod.$(OBJEXT):  \
+	$(top_builddir)/Sources/$(am__dirstamp) \
+	$(top_builddir)/Sources/$(DEPDIR)/$(am__dirstamp)
+
+test2$(EXEEXT): $(test2_OBJECTS) $(test2_DEPENDENCIES) $(EXTRA_test2_DEPENDENCIES) 
+	@rm -f test2$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(test2_OBJECTS) $(test2_LDADD) $(LIBS)
+
+test3$(EXEEXT): $(test3_OBJECTS) $(test3_DEPENDENCIES) $(EXTRA_test3_DEPENDENCIES) 
+	@rm -f test3$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(test3_OBJECTS) $(test3_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f ../*.$(OBJEXT)
+	-rm -f $(top_builddir)/Sources/*.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
@@ -733,6 +762,20 @@ test1.log: test1$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test2.log: test2$(EXEEXT)
+	@p='test2$(EXEEXT)'; \
+	b='test2'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test3.log: test3$(EXEEXT)
+	@p='test3$(EXEEXT)'; \
+	b='test3'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 .test.log:
 	@p='$<'; \
 	$(am__set_b); \
@@ -817,8 +860,8 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-	-rm -f ../$(DEPDIR)/$(am__dirstamp)
-	-rm -f ../$(am__dirstamp)
+	-test -z "$(top_builddir)/Sources/$(DEPDIR)/$(am__dirstamp)" || rm -f $(top_builddir)/Sources/$(DEPDIR)/$(am__dirstamp)
+	-test -z "$(top_builddir)/Sources/$(am__dirstamp)" || rm -f $(top_builddir)/Sources/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -929,7 +972,7 @@ $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 	echo '  [@PACKAGE_URL@])'; \
 	}>'$(srcdir)/package.m4'
 
-check-local:	atconfig atlocal $(TESTSUITE)
+check-local:  atconfig  $(TESTSUITE)
 	$(SHELL) '$(TESTSUITE)' $(TESTSUITEFLAGS)
 
 installcheck-local: atconfig atlocal $(TESTSUITE)
@@ -937,7 +980,7 @@ installcheck-local: atconfig atlocal $(TESTSUITE)
 	$(TESTSUITEFLAGS)
 
 maintainer-clean-local:
-	rm -rf aclocal.m4 configure Makefile.in autotools m4
+	rm -rf aclocal.m4 configure Makefile.in autoconf m4
 
 clean-local:
 	test ! -f '$(TESTSUITE)' || \

@@ -70,10 +70,10 @@ implicit none
     READ (unit_nml , NML = verano_nml )
     READ (unit_nml , NML = chem_nml )
     close(unit_nml)
-    WRITE (6    , NML = region_nml )
-    WRITE (6    , NML = fecha_nml )
-    WRITE (6    , NML = verano_nml )
-    WRITE (6    , NML = chem_nml )
+    !WRITE (6    , NML = region_nml )
+    !WRITE (6    , NML = fecha_nml )
+    !WRITE (6    , NML = verano_nml )
+    !WRITE (6    , NML = chem_nml )
     if (trim(mecha).ne."saprc07") model=0
   else
     stop '***** No namelist_emis.nml in .. directory'
@@ -86,7 +86,11 @@ implicit none
     print '(A,I2,A,I2)','Error in day value: ',idia,' larger than days in month ',daym(month)
     stop
   end if
-  close(10)
+if (anio.gt.2021 .or. anio.lt.2014 )then
+  print '(A,I2,A,I2)','Error in anio value: ',anio,' not between 2014 to 2021 ',daym(month)
+  stop
+end if
+
 end subroutine lee_namelist
 !  _
 ! | | ____   _____ _ __ __ _ _ __   ___
@@ -94,7 +98,7 @@ end subroutine lee_namelist
 ! |   <  \ V /  __/ | | (_| | | | | (_) |
 ! |_|\_\  \_/ \___|_|  \__,_|_| |_|\___/
 !
-!>  @brief Identifies if it is summert time period and if it is considered  or not.
+!>  @brief Identifies if it is summer time period and if it is considered  or not.
 !>   Returns 1 if the date is within daysaving time period
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  04/23/2021
@@ -113,16 +117,23 @@ end subroutine lee_namelist
     end if
     if (mes.gt.4 .and. mes .lt.10) then
       kverano = 1
+#ifndef PGI
       write(6, 233) inicia(anio),termina(anio)
+#endif
       return
     end if
     if (mes.eq.4 .and. ida .ge. inicia(anio)) then
       kverano = 1
+#ifndef PGI
       write(6, 233) inicia(anio),termina(anio)
+#endif
+
       return
       elseif (mes.eq.10 .and. ida .le. termina(anio)) then
         kverano = 1
+#ifndef PGI
         write(6, 233) inicia(anio),termina(anio)
+#endif
         return
       else
         kverano =0

@@ -192,7 +192,7 @@ subroutine area_spatial_reading
 !  Reading and findig monthly, week and houry code profiles
     inquire(15,opened=fil1)
     if(.not.fil1) then
-      canio="../time/"//"temporal_01.txt"
+      canio="../time/temporal_01.txt"
 	  open(unit=15,file=canio,status='OLD',action='read')
 	else
 	  rewind(15)
@@ -218,7 +218,7 @@ subroutine area_spatial_reading
 !  Reading and findig monthly profile
     inquire(16,opened=fil1)
     if(.not.fil1) then
-       canio="../time/"//"temporal_mon.txt"
+       canio="../time/temporal_mon.txt"
 	  open(unit=16,file=canio,status='OLD',action='read')
 	else
 	  rewind(16)
@@ -241,7 +241,7 @@ subroutine area_spatial_reading
 !  Reading and findig weekely  profile
     inquire(17,opened=fil1)
     if(.not.fil1) then
-      canio="../time/"//"temporal_week.txt"
+      canio="../time/temporal_week.txt"
 	  open(unit=17,file=canio,status='OLD',action='read')
 	else
 	  rewind(17)
