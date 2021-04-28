@@ -6,10 +6,10 @@
 module voc_split
   !>number of hours in a day
   integer,parameter :: nh=24        ;!> max number species in profile 0 (292)
-  integer,parameter :: nspecies=292 ;!> max number chemical species
+  integer,parameter :: nspecies=292 ;!> max number chemical categories in mechanis
   integer,parameter :: ncat=40      ;!>number the clasess in profiles_spc.txt
   integer :: nclass    ;!> line number in area file TCOV_2016.txt
-  integer :: lfa       ;!> model type 0 WRF 1 CHIMERE
+  integer :: lines_in_file       ;!> model type 0 WRF 1 CHIMERE
   integer :: model     ;!> Emission layer from point source
   integer,allocatable :: capa(:,:) ;!> mission layer from point source to be written
   integer,allocatable :: layer(:,:) ;!> grid id from emissions file
@@ -27,7 +27,7 @@ module voc_split
   character (len=19) :: current_date
   !> Photochemical mecanism in profile_MECHA.csv file
   character (len=19) ::cprof
-  common /date/ model,lfa,current_date,cdia,cprof
+  common /date/ model,lines_in_file,current_date,cdia,cprof
 contains
 !  _
 ! | | ___  ___
@@ -49,7 +49,6 @@ subroutine lee_voc(isource)
   character(len=10)::isccf ! SCC prom profile file
   character(len=10)::cdum
   character(len=27):: fname
-  logical :: lfil
   print *,"Inicia lectura"
   SELECT CASE (isource)
   CASE(1)
@@ -64,26 +63,26 @@ subroutine lee_voc(isource)
     print *,fname
   open (unit=10,file=fname,status='old',action='read')
   read(10,*) cdum                   ! header 1
-  read(10,*) lfa,current_date,cdia  ! header 2
+  read(10,*) lines_in_file,current_date,cdia  ! header 2
   i=0
   do
     read(10,*,end=100) cdum
     i=i+1
   end do
 100 continue
-  print *,'  Number of rows in ',fname,i
-  lfa=i
-  allocate(grid(lfa),iscc(lfa),ea(lfa,nh),profile(lfa))
-  if(isource.eq.3) allocate(capa(lfa,2))
+  write(6,*)'  Number of rows in ',fname,i
+  lines_in_file=i
+  allocate(grid(lines_in_file),iscc(lines_in_file),ea(lines_in_file,nh),profile(lines_in_file))
+  if(isource.eq.3) allocate(capa(lines_in_file,2))
   rewind(10)
   read (10,*) cdum  ! header 1
   read (10,*) cdum  ! header 2
   if(isource.eq.3)then
-  do i=1,lfa
+  do i=1,lines_in_file
        read (10,*)iscc(i),grid(i),capa(i,1),(ea(i,j),j=1,nh),capa(i,2)
   end do
   else
-    do i=1,lfa
+    do i=1,lines_in_file
       read (10,*)grid(i),iscc(i),(ea(i,j),j=1,nh)
     end do
   end if
@@ -93,23 +92,23 @@ subroutine lee_voc(isource)
   do
     read(15,*,END=200) isccf,cdum,j
 !dir$ loop count min(512)
-    do i=1,lfa
+    do i=1,lines_in_file
      if (isccf.eq.iscc(i)) profile(i)=j
     end do
   end do
 200 continue
   close(15)
-  !print '(15I5)',(profile(i),i=1,lfa)
+  !print '(15I5)',(profile(i),i=1,lines_in_file)
   print *,'  Start count'
   call count(isource)  ! counts the number of different profiles
   print *,'  Finish count'
 ! READING  and findign speciation for profiles
-print *,'  Speciation for Mechanism: ',trim(cprof),"->",mecha
+  print *,'  Speciation for Mechanism: ',trim(cprof),"->",mecha
   open(unit=16,file='../chem/profile_'//trim(mecha)//'.csv',status='old',action='read')
   read(16,*)cdum,cprof
   read(16,*) nclass
   print *,'  Speciation for Mechanism: ',trim(cprof),"->",mecha
-  if(nclass.gt.ncat) stop "Change size in fagg dimension ncat"
+  if(nclass.gt.ncat) stop "Change size dimension ncat >40"
   rewind(16)
   allocate(cname(nclass))
   read(16,*)cdum
@@ -168,10 +167,10 @@ subroutine voc_agregation(isource)
   allocate (emis(size(grid2),nclass,nh))
   emis=0
   ng =size(grid2)
-  ns =size(prof2)
-  if(isource.eq.3)then
+  ns =size(prof2) ! Only for Point sources
+  if(isource.eq.3) then
 !$omp parallel do private(k,i,j,l,ih)
-    do ii=1,lfa
+    do ii=1,lines_in_file
       do k=1,ng    ! grid
       if(grid(ii).eq.grid2(k).and. capa(ii,1).eq.layer(k,1)) then
         do i=1,ns  !profiles
@@ -191,7 +190,7 @@ subroutine voc_agregation(isource)
 !$omp end parallel do
   else
 !$omp parallel do private(k,i,j,l,ih)
-    do ii=1,lfa
+    do ii=1,lines_in_file
       do k=1,ng    ! grid
         if(grid(ii).eq.grid2(k)) then
           do i=1,ns  !profiles
@@ -328,19 +327,19 @@ subroutine count(isource)
     allocate(xl(size(iscc)))
     xl=.true.
 !$omp parallel do private(j)
-    do i=1,lfa-1
-      do j=i+1,lfa
+    do i=1,lines_in_file-1
+      do j=i+1,lines_in_file
         if(grid(j).eq.grid(i).and.xl(j)) xl(j)=.false.
       end do
     end do
 !$omp end parallel do
     j=0
-    do i=1,lfa
+    do i=1,lines_in_file
       if(xl(i)) j=j+1
     end do
     allocate(grid2(j))
     j=0
-    do i=1,lfa
+    do i=1,lines_in_file
       if(xl(i)) then
         j=j+1
         grid2(j)=grid(i)
@@ -352,19 +351,19 @@ subroutine count(isource)
     allocate(xl(size(iscc)))
     xl=.true.
 !$omp parallel do private(j)
-    do i=1,lfa-1
-      do j=i+1,lfa
+    do i=1,lines_in_file-1
+      do j=i+1,lines_in_file
         if(grid(j).eq.grid(i).and.xl(j).and. capa(i,1).eq.capa(j,1)) xl(j)=.false.
       end do
     end do
 !$omp end parallel do
     j=0
-    do i=1,lfa
+    do i=1,lines_in_file
       if(xl(i)) j=j+1
     end do
     allocate(grid2(j),layer(j,2))
     j=0
-    do i=1,lfa
+    do i=1,lines_in_file
       if(xl(i)) then
         j=j+1
         grid2(j)=grid(i)
