@@ -1,8 +1,8 @@
 #
 #
-AT_INIT([RADM2MET])
+AT_INIT([Diete])
 AT_BANNER([***** Module subroutines and functions Testing Suite  *****])
 
-AT_SETUP([Log printing])
-AT_TESTED( test1 )
+AT_SETUP(Testing check, lee_nml kverano)
+AT_TESTED( test1  test2 test3)
 AT_CLEANUP
