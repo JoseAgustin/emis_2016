@@ -71,13 +71,18 @@ End_Of_File
 #: Options     : domain
 check_domain ()
 {
+echo -e "      \033[3;46m   ___  _ ___ _____ ___   \033[0m"
+echo -e "      \033[3;46m  |   \(_) __|_   _| __|  \033[0m"
+echo -e "      \033[3;46m  | |) | | _|  | | | _|   \033[0m"
+echo -e "      \033[3;46m  |___/|_|___| |_| |___|  \033[0m"
+echo -e "      \033[3;46m                          \033[0m"
 cd 01_datos
 existe=0
 if [ -d $1 ]
 then
    echo "  *** Relizando para "$dominio"   *****"
 else
-   echo "  Dominio "$dominio" no existe en el directorio *****"
+   echo -e "\033[1;45m  Dominio "$dominio" no existe en el directorio \033[0m"
    exit 1
 fi
 cd ..
@@ -90,26 +95,31 @@ cd ..
 #: Options     : name of directory
 make_tmpdir ()
 {
-if [ -d $1 ]
+if [ ! -d $1 ]
 then
+   echo "  *** Creating directory "$1"   *****"
+   mkdir $1
+else
    if [ $HacerArea -eq 1 ]; then
      echo "     Making New Directory"
      rm -rf $1
      mkdir $1
+   else
+          echo "  hacearea="$HacerArea
+     if [ ! -f $1/AVOC_2016.csv ];then
+       echo -e "     \033[1;45m There is no Spatial Distribution \033[0m"
+       exit 2
+     fi
    fi
+fi
    echo "  *** In directory "$1"   *****"
    cd $1
-else
-   echo "  *** Creating directory "$1"   *****"
-   mkdir $1
-   cd $1
-fi
+
  ln -fs ../01_datos/$dominio .
  ln -fs ../01_datos/chem .
  ln -fs ../01_datos/time .
  ln -fs ../01_datos/emis .
  ln -fs ../bin .
-
 }
 #: Title       : hace_area
 #: Date        : 25/04/2021
@@ -119,7 +129,7 @@ fi
 #: Options     : none
 hace_area(){
 if [ $HacerArea -eq 1 ]; then
-echo "     Making Spatial distribution in Area sources"
+echo -e "    \033[1;48m Making Spatial distribution in Area sources \033[0m"
 bin/ASpatial.exe >./area.log
 fi
 

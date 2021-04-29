@@ -18,7 +18,7 @@
 #
 dominio=tijuana
 # To set spatial distribution = 1 else =0
-HacerArea=0
+HacerArea=1
 #
 # Mechanism selcetion
 # avalable:
@@ -59,6 +59,7 @@ wait
 #
 # Starts Loop for Time
 #
+echo -e "     \033[1;44m  Starting run Time Loop   \033[0m"
 while [ $dia -le $dia2 ] ;do
 if [ -d dia$dia ]
 then
@@ -87,6 +88,6 @@ fi
     mv *00\:00 ../../inventario/${dominio}
 
 cd ..
-echo "DONE  Guarda "$MECHA $dia
+echo -e "     \033[1;44m  DONE STORING "$MECHA $dia "\033[0m"
  let dia=dia+1
 done
