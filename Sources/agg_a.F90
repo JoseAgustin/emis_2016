@@ -10,6 +10,8 @@ program area_speciation
    use voc_split
    use master
     call lee_namelist
+     
+    if(trim(mecha).eq."ghg") return
 
     call lee_voc(1)
 

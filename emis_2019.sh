@@ -1,9 +1,9 @@
 #!/bin/bash
 #
 #: Title       : emis_2019.sh
-#: Date        : 25/04/2021
+#: Date        : 25/05/2022
 #: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
-#: Version     : 1.0  26/04/2021 Actualizacion para IE del 2016
+#: Version     : 1.1  26/05/2022 Actualizacion para GHG
 #: Description : Programa de emisiones con funciones
 #: Options     : None
 #SBATCH -J emi_2019
@@ -16,15 +16,15 @@
 #   guadalajara  jalisco    mexicali  mexico  mexico9
 #   monterrey    monterrey3 queretaro tijuana
 #
-dominio=tijuana
+dominio=mexico9
 # To set spatial distribution = 1 else =0
-HacerArea=0
+HacerArea=1
 #
 # Mechanism selcetion
 # avalable:
-# cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07
+# cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07 ghg
 #
-MECHA=radm2
+MECHA=ghg
 # Si saprc07 AQM_SELECT = 0 WRF 1 CHIMERE
 AQM_SELECT=1
 #  Build the namelist_emis.nml file

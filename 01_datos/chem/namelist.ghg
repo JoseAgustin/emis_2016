@@ -1,0 +1,12 @@
+!: Title       : namelist.ghg
+!: Date        : 25/04/2021
+!: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
+!: Version     : 2.7  30/05/2022
+!: Description : Scaling factor for GHG mechanism
+!    SCALA
+!       CO2   
+&SCALE
+scala =1.00
+scalm =1.00
+scalp =1.00
+/

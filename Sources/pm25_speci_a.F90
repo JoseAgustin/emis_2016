@@ -29,7 +29,12 @@ program pm25_speciation
     use omp_lib
 #endif
 use PM25_speciation_mod
+use master
 integer :: isource= 1 ! 1 area 2 mobile 3 point
+
+   call lee_namelist
+  
+   if(trim(mecha).eq."ghg") return
 
 	call lee(isource)
 

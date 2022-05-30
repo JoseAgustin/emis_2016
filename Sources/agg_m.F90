@@ -11,6 +11,8 @@ program mobile_speciation
    use master
     call lee_namelist
 
+    if(trim(mecha).eq."ghg") return
+
     call lee_voc(2)
 
     call voc_agregation(2)

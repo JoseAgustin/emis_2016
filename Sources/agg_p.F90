@@ -12,6 +12,8 @@ program point_speciation
 
     call lee_namelist
 
+    if(trim(mecha).eq."ghg") return
+
     call lee_voc(3)
 
     call voc_agregation(3)

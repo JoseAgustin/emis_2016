@@ -231,6 +231,7 @@ En este directorio tambien contiene la especiación química de los VOC para lue
 - profile\_saprc99.csv -Mecanismo Statewide Air Pollution Research Center (SAPRC 1999)
 - profile\_saprc07.csv -Mecanismo Statewide Air Pollution Research Center (SAPRC 2007)
 - profile\_radm2.csv – Mecanismo Regional Acid Deposition Model, ver 2. (RADM2)
+- profile\_ghg.csv  -  Solo para gases efecto invernadero (CO2, CH4)
 
 Para la realización de esto se emplean tres programas, uno para cada tipo de fuente así:
 

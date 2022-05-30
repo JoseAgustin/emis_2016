@@ -22,7 +22,7 @@ HacerArea=1
 #
 # Mechanism selcetion
 # avalable:
-# cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07
+# cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07 ghg
 #
 MECHA=radm2
 # Si saprc07 AQM_SELECT = 0 WRF 1 CHIMERE
