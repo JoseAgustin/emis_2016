@@ -231,7 +231,7 @@ En este directorio tambien contiene la especiación química de los VOC para lue
 - profile\_saprc99.csv -Mecanismo Statewide Air Pollution Research Center (SAPRC 1999)
 - profile\_saprc07.csv -Mecanismo Statewide Air Pollution Research Center (SAPRC 2007)
 - profile\_radm2.csv – Mecanismo Regional Acid Deposition Model, ver 2. (RADM2)
-- profile\_ghg.csv  -  Solo para gases efecto invernadero (CO2, CH4)
+- profile\_ghg.csv  -  Solo para gases efecto invernadero (CO2)
 
 Para la realización de esto se emplean tres programas, uno para cada tipo de fuente así:
 
@@ -328,7 +328,7 @@ En el directorio principal emis\_2016 se edita el script emis\_2016.sh
 
   3. Se selecciona el mecanismo, asignado el valor en MECHA en el caso de __saprc07__  se puede asignar  la variable  `model = 0` para  WRF  y  ` =1` para CHIMERE
 
-          # Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07
+          # Los mecanismos a usar cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07 ghg
           #
           MECHA=radm2
           model =0
