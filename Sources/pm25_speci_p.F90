@@ -35,12 +35,13 @@ integer :: isource= 3 ! 1 area 2 mobile 3 point
 
    call lee_namelist
 
-   if(trim(mecha).eq."ghg") return
+   if(trim(mecha).eq."ghg") then
+    write(6,*) " ***** Skipping Speciation ****"
+  else
+	  call lee(isource)
 
-	call lee(isource)
+    call calculos
 
-   call calculos
-
-	call guarda(isource)
-
+	  call guarda(isource)
+  end if
 end program pm25_speciation

@@ -21,9 +21,9 @@
 !>
 !>  OTHER PMFINE, generally crustal
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  04/26/2021
-!>   @version  3.0
-!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+!>   @date  05/31/2022
+!>   @version  3.1
+!>   @copyright Universidad Nacional Autonoma de Mexico 2022
 program pm25_speciation
 #ifdef _OPENMP
     use omp_lib
@@ -34,13 +34,14 @@ use master
 integer :: isource= 2 ! 1 area 2 mobile 3 point
 
    call lee_namelist
+   if(trim(mecha).eq."ghg") then
+    write(6,*) " ***** Skipping Speciation ****"
+  else
+	 call lee(isource)
 
-   if(trim(mecha).eq."ghg") return
+	 call calculos
 
-	call lee(isource)
-
-	call calculos
-
-	call guarda(isource)
+	 call guarda(isource)
+  end if
 
 end program pm25_speciation
