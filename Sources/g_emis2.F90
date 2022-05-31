@@ -183,13 +183,13 @@ subroutine setup_mecha
         stop "END program..."
     case("ghg")
         print *,"Setup variables for ",mecha
-        nf=1    ! number of files antropogenic
-        ns=1    ! number of compounds
+        nf=3    ! number of files antropogenic
+        ns=2    ! number of compounds
         radm=ns
         L_PM25=23    ! Posicion del archivo PM2.5
         L_CN_i=30    ! Posicion archivo CN del INEM
         L_CN_S=28    ! Posicion archivo CN de especiacion
-        L_CH4_i=2    ! Posicion archivo CH4 del INEM
+        L_CH4_i=3    ! Posicion archivo CH4 del INEM
         L_CH4_S=2     ! Posicion archivo CH4 de especiacion
         allocate(ename(radm),cname(radm))
         allocate(isp(radm))
@@ -197,13 +197,13 @@ subroutine setup_mecha
         allocate(fnameA(nf),fnameM(nf),fnameP(nf))
         allocate(scala(nf),scalm(nf),scalp(nf))
         allocate(id_var(radm))
-        ename=(/'CO2        '/)
-        cname=(/'Carbon Dioxide  '/)
-        fnameA=(/'TACO2_2016.csv   '/)
-        fnameM=(/'TMCO2_2016.csv   '/)
-        fnameP=(/'T_ANNCO2.csv     '/)
-        isp=[ 1 ]
-        WTM=(/44./)
+        ename=(/'CO2        ','CH4        '/)
+        cname=(/'Carbon Dioxide  ','Methane         '/)
+        fnameA=(/'TACO2_2016.csv   ','GHG_CH4_A.txt    ','TACH4_2016.csv   '/)
+        fnameM=(/'TMCO2_2016.csv   ','GHG_CH4_M.txt    ','TMCH4_2016.csv   '/)
+        fnameP=(/'T_ANNCO2.csv     ','GHG_CH4_P.txt    ','T_ANNCH4.csv     '/)
+        isp=[ 1 ,2 ]
+        WTM=(/44.,16./)
         call lee_namelist_mecha('ghg    ')
     case("cbm05")
         print *,"Setup variables for ",mecha

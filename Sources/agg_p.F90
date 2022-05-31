@@ -10,15 +10,12 @@ program point_speciation
    use voc_split
    use master
 
-    call lee_namelist
+     call lee_namelist
 
-  if(trim(mecha).eq."ghg") then
-      write(6,*)   " ***** Skipping Speciation ****"
-   else
      call lee_voc(3)
 
      call voc_agregation(3)
 
      call guarda_voc(3)
-   end if
+   
 end program point_speciation

@@ -11,13 +11,10 @@ program mobile_speciation
    use master
     call lee_namelist
 
-    if(trim(mecha).eq."ghg") then
-      write(6,*)   " ***** Skipping Speciation ****"
-   else
     call lee_voc(2)
 
     call voc_agregation(2)
 
     call guarda_voc(2)
-   end if
+
 end program mobile_speciation

@@ -9,15 +9,13 @@
 program area_speciation
    use voc_split
    use master
+
     call lee_namelist
 
-  if(trim(mecha).eq."ghg") then
-     write(6,*) " ***** Skipping Speciation ****"
-   else
     call lee_voc(1)
 
     call voc_agregation(1)
 
     call guarda_voc(1)
-   end if
+
 end program area_speciation

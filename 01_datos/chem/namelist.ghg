@@ -6,7 +6,7 @@
 !    SCALA
 !       CO2   
 &SCALE
-scala =1.00
-scalm =1.00
-scalp =1.00
+scala =1.00,1.00
+scalm =1.00,1.00
+scalp =1.00,1.00
 /
