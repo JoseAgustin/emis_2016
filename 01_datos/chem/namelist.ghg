@@ -1,10 +1,10 @@
 !: Title       : namelist.ghg
-!: Date        : 25/04/2021
+!: Date        : 01/06/2022
 !: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
-!: Version     : 2.7  30/05/2022
-!: Description : Scaling factor for GHG mechanism
+!: Version     : 2.7  02/06/2022
+!: Description : Scaling factor for GHG only for carbon dioxide and methane
 !    SCALA
-!       CO2   
+!       CO2  CH4 
 &SCALE
 scala =1.00,1.00
 scalm =1.00,1.00
