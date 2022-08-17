@@ -16,9 +16,9 @@ integer ::periodo ;!> geographical area selected in namelist_emis.nml
 !> Days per month
 integer,dimension(12) :: daym ! days in a month
 !> start day for summer time period for years 2014 to 2020
-integer,dimension(2014:2021) :: inicia ! dia inicial del horario de verano
+integer,dimension(2014:2022) :: inicia ! dia inicial del horario de verano
 !> end day for summer time period for years 2014 to 2020
-integer,dimension(2014:2021) :: termina  ! dia fin del horario de verano
+integer,dimension(2014:2022) :: termina  ! dia fin del horario de verano
 character(len=12):: zona!> Photochemical mechanism selected in namelist_emis.nml
 character (len=19) ::  mecha
 !> during summer period  consider timasvaing .true. or not .false.
@@ -26,9 +26,9 @@ logical :: lsummer
 ! number of day in a month
 !          jan feb mar apr may jun jul aug sep oct nov dec
     data daym /31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
-!              2014 2015 2016 2017 2018 2019 2020 2021
-    data inicia  /6,  5,   3,   2,   1,  7,   5,  4/
-    data termina /26,25,  30,  29,  28, 27,  25, 31/
+!              2014 2015 2016 2017 2018 2019 2020 2021 2022
+    data inicia  /6,  5,   3,   2,   1,  7,   5,  4, 3/
+    data termina /26,25,  30,  29,  28, 27,  25, 31, 30/
 
 common /nlm/daym,mecha,zona
 contains
@@ -86,8 +86,8 @@ implicit none
     print '(A,I2,A,I2)','Error in day value: ',idia,' larger than days in month ',daym(month)
     stop
   end if
-if (anio.gt.2021 .or. anio.lt.2014 )then
-  print '(A,I2,A,I2)','Error in anio value: ',anio,' not between 2014 to 2021 ',daym(month)
+if (anio.gt.2022 .or. anio.lt.2014 )then
+  print '(A,I2,A,I2)','Error in anio value: ',anio,' not between 2014 to 2022 ',daym(month)
   stop
 end if
 
