@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 #: Title       : modifica.sh
-#: Date        : 09/10/2020
+#: Date        : 09/10/2022
 #: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
 #: Version     : 1.0  09/10/2020 Modificacion de inventario de emisiones
 #: Description : Programa de emisiones con funciones
@@ -9,17 +9,18 @@
 #
 ProcessDir=$PWD
 echo "Directorio actual "$ProcessDir
+echo "Emisiones de fuentes móviles"
 #awk ' NR>1 {print $1}' municipio.txt
 # Evalua si existe el archivo de salida para borrar
-if [ -e tol_escI.csv ]
+if [ -e tol_base_movil.csv ]
 then
-rm tol_escI.csv
+rm tol_base_movil.csv
 fi
 IEMI=../01_datos/emis/movil/emiss_2016.csv
-head -1 $IEMI > tol_escI.csv
+head -1 $IEMI > tol_base_movil.csv
 # Escenario 1
 #  VOC    CO     NOx    NO2    NH3    PM10  PM2.5   CN     CO2   SO2     CH4
-# 23.3%  22.1%  17.9%  17.1%  22.1%  22.3%  21.2%  15.3%  19.8%  20.4%  17.7%
+#  2.4    4       1      1      1     5      5     1      1     10      1
 #   3     4       5     6       7      8     9      10     11     12      13
 #0.7668 0.7793 0.8213 0.8295 0.7786 0.7956 0.7771 0.7881 0.8018 0.8225  0.8466
 awk -F, 'NR>1 {
@@ -27,17 +28,59 @@ if ($1==15005 || $1==15018 || $1==15027 || $1==15051 || $1==15054 ||
     $1==15055 || $1==15062 || $1==15067 || $1==15072 || $1==15073 ||
     $1==15076 || $1==15087 || $1==15090 || $1==15106 || $1==15115 || $1==15118){
   printf ("%s,%s,", $1, $2) ;
-  printf("%f,%f,%f,%f,", $3*0.7668, $4*0.7793, $5*0.8213, $6*0.8295);
-  printf("%f,%f,%f,%f,", $7*0.7786, $8*0.7956, $9*0.7771,$10*0.7881);
-  printf("%f,%f,%f,",$11*0.8018,$12*0.8225,$13*0.8466);
+  printf("%f,%f,%f,%f,", $3*2.4, $4*4, $5*1, $6*1);
+  printf("%f,%f,%f,%f,",$7*1, $8*5, $9*5,$10*1);
+  printf("%f,%f,%f,",$11*1,$12*10.,$13*1);
   printf ("%s",$NF)
   printf ("\n");
 }else
 	print $0;
-}' $IEMI  >> tol_escI.csv
-
+}' $IEMA  >> tol_base_movil.csv
+#
+echo Emisiones de VOC fuentes de área x2.4
+IEMA=../01_datos/emis/area/IVOC_2016.csv
+head -3 $IEMA > tol_base_IVOC.csv
+awk -F, 'NR>3 {
+if ($3==15005 || $3==15018 || $3==15027 || $3==15051 || $3==15054 ||
+    $3==15055 || $3==15062 || $3==15067 || $3==15072 || $3==15073 ||
+    $3==15076 || $3==15087 || $3==15090 || $3==15106 || $3==15115 || $3==15118)
+    {
+      printf ("%s,%s,%s,",$1,$2,$3) ;
+      for (i = 4; i < NF; i++) printf ("%g," $i*2.4) ;
+      printf("%f" $NF*2.4);
+    }
+    else print $0}' $IEMA >>tol_base_IVOC.csv
+#
+echo Emisiones de SO2 fuentes de área x10
+IEMA=../01_datos/emis/area/ISO2_2016.csv
+head -3 $IEMA > tol_base_ISO2.csv
+awk -F, 'NR>3 {
+if ($1==5 && ( $2==18 || $2==27 || $2==51 || $2==54 ||
+     $2==55 || $2==62 || $2==67 || $2==72 || $2==73 ||
+     $2==76 || $2==87 || $2==90 || $1==106||$2==115 || $2==118))
+    {
+      printf ("%s,%s,%s,",$1,$2,$3) ;
+      for (i = 4; i < NF; i++) printf("%f," $i*10) ;
+      printf("%f" $NF*10);
+    }
+    else print $0 }' $IEMA >> tol_base_ISO2.csv
+#
+echo Emisiones de CO fuentes de área x4
+IEMA=../01_datos/emis/area/ICO__2016.csv
+head -3 $IEMA > tol_base_ICO.csv
+awk -F, 'NR>3 {
+if ($1==5 && ( $2==18 || $2==27 || $2==51 || $2==54 ||
+     $2==55 || $2==62 || $2==67 || $2==72 || $2==73 ||
+     $2==76 || $2==87 || $2==90 || $1==106||$2==115 || $2==118))
+    {
+      printf ("%s,%s,%s,",$1,$2,$3) ;
+      for (i = 4; i < NF; i++) printf("%f," $i*4) ;
+      printf("%f" $NF*4);
+    }
+    else  print $0}' $IEMA >> tol_base_ICO.csv
+    
 # Evalua si existe el archivo de salida para borrar
-if [ -e tol_escII.csv ]
+if [ -e tol_baseI.csv ]
 then
 rm tol_escII.csv
 fi
