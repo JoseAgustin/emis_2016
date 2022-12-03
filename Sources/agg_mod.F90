@@ -266,7 +266,7 @@ subroutine guarda_voc(isource)
 !$omp end parallel do
     print *,"*****  DONE ",csource," SPECIATION *****"
 200 format (I8,",",I3,",",24(ES12.5,","),I3)
-701 format(I7,",",24(ES12.5,","))
+701 format(I7,24(",",ES12.5))
 end subroutine guarda_voc
 !                        _
 !   ___ ___  _   _ _ __ | |_
