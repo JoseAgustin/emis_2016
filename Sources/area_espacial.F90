@@ -417,11 +417,11 @@ subroutine area_spatial_storing
 !310 format(I9,",",I6,",",F7.4,",",F7.4,60(",",ES12.5))
 
     Print *,"   ***   Guardando Emisiones de Area   ***"
-    write(FMT,"('(I3,'',g_per_year'',',I0,'('','',A10))')")nnscc
-    write(FTT,"('(I9,'','',I6,2('',''F7.4),',I0,'('','',ES12.5))')")nnscc
 !$omp parallel do private(iun,i,l,suma)
     do k=1,nf
-        open(newunit=iun,file=ofile(k),ACTION='write')
+      write(FMT,"('(I3,'',g_per_year'',',I0,'('','',A10))')")nscc(k)
+      write(FTT,"('(I9,'','',I6,2('',''F7.4),',I0,'('','',ES12.5))')")nscc(k)
+      open(newunit=iun,file=ofile(k),ACTION='write')
         write(iun,*)'grid,CID,Furb,Frural,SCCs'
         write(iun,FMT)nscc(k),(scc(k,i),i=1,nscc(k))
         print *,"   Agricola ",ofile(k)
@@ -433,7 +433,7 @@ subroutine area_spatial_storing
             if (suma.gt.0) &
 &           write(iun,FTT) gria(i),ida(i),0.,fa(i),(eagr(i,k,l),l=1,nscc(k))
         end do
-        print *,"   Bosque",k
+        print *,"   Bosque",k,nscc(k)
         do i=1,size(fb)
             suma=0
             do l=1,nscc(k)
@@ -442,7 +442,7 @@ subroutine area_spatial_storing
             if (suma.gt.0) &
 &            write(iun,FTT) grib(i),idb(i),0.,fb(i),(ebos(i,k,l),l=1,nscc(k))
         end do
-        print *,"   Poblacion",k
+        print *,"   Poblacion"
         do i=1,size(fp1)
            suma=0
             do l=1,nscc(k)
