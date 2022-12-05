@@ -37,7 +37,7 @@ integer :: ny    ;!> netcdf unit ID for file1  in file (24 or 12 hrs)
 integer ::ncid   ;!> netcdf unit ID for file1  in file2 (12 hrs)
 integer :: ncid2 ;!> GRIDCODE in emission input files
 integer*8 :: idcf;!> GRIDCODE in output grid obtaines from localiza
-integer,allocatable :: idcg(:) ;!> UTM Z zone
+integer*8,allocatable :: idcg(:) ;!> UTM Z zone
 integer,allocatable:: utmzd(:,:); !> array with Species index
 integer,allocatable :: isp(:) ;!> array of variables ID
 integer,allocatable:: id_var(:)  ;!>netcdf longitude ID in netcdf file
@@ -1148,6 +1148,8 @@ subroutine lee_emis(ii,borra)
     integer,INTENT(in):: ii
     integer :: i,ih,is,j,k,levl,levld
     integer :: iun
+    integer :: ncol,pren,ren0
+    integer :: pcol,col0
     real ::rdum, constant
     real,dimension(nh)::edum
     character (len=15)::ruta
@@ -1156,10 +1158,7 @@ subroutine lee_emis(ii,borra)
     if (borra) eft =0.
 !$omp parallel sections num_threads (3) private(i,j,ih,k,idcf,constant,is,iun,edum,ruta)
 !$omp section
-    if (ii.le.5 .or. (ii.ge.L_PM25-2 .and. ii.le.L_PM25).or.ii.eq.L_CN_i .or. ii .eq.L_CH4_i)then
-        ruta="./"
-    else if( ii.gt. L_PM25) then; ruta="./"
-    else;     ruta="./"; end if
+    ruta="./"
     open(newunit=iun,file=trim(ruta)//fnameA(ii),status='OLD',action='READ')
     read(iun,*)cdum
     if (ii.eq.1)then
@@ -1173,32 +1172,31 @@ subroutine lee_emis(ii,borra)
     if(model.eq.1.and.ii.eq.1) SUPF1=SUPF1*6.022e23/1e10/3.6e3 !mol h-1 km-2 -> molec s-1 cm-2
     constant=scala(ii)*SUPF1/WTM(is)
     write(6,'(i4,x,A,A,2ES11.1)') ii,ruta//fnameA(ii),current_date(1:13),constant
+    ! Busca el numero de columnas totales
+     ncol=idcg(nx+1)-idcg(1)
+     ! Busca columna y renglon del primer valor del dominio
+     call get_position(idcg(1),ncol, ren0,col0)
+     ren0=ren0-1
+     col0=col0-1
     do
         if(ii.eq.L_PM25) then
             read(iun,*,END=100) idcf,rdum,(edum(ih),ih=1,nh)
         else
             read(iun,*,END=100) idcf,(edum(ih),ih=1,nh)
         end if
-        k=0
-        busca: do j=1,ny
-        do i=1,nx
-            k=k+1
-            if(idcg(k).eq.idcf) then
-                do ih=1,nh
-                    eft(i,j,1,ih)=eft(i,j,1,ih)+edum(ih)*constant
-                    ! Emission from g to gmol by 1/WTM 1/(CDIM*CDIM)
-                end do
-                exit busca
-            end if
+    ! busca en el dominio la posicion de la emision
+        call get_position(idcf,ncol, pren, pcol)
+        j=pren-ren0
+        i=pcol-col0
+        do ih=1,nh
+           eft(i,j,1,ih)=eft(i,j,1,ih)+edum(ih)*constant
+        !Emission from g to gmol by 1/WTM 1/(CDIM*CDIM)
         end do
-        end do busca
     end do
 100 close(iun)
+print *,i,j,"linea 1197"
 !$omp section
-    if (ii.le.5 .or. (ii.ge.L_PM25-2 .and. ii.le.L_PM25).or.ii.eq.L_CN_i .or. ii .eq.L_CH4_i)then
-        ruta="./"
-    else if( ii.gt. L_PM25) then; ruta="./"
-    else;     ruta="./"; end if
+    ruta="./"
     open(newunit=iun,file=trim(ruta)//fnameM(ii),status='OLD',action='READ')
     read(iun,*)cdum
     if (ii.eq.1)then
@@ -1217,28 +1215,20 @@ subroutine lee_emis(ii,borra)
         else
             read(iun,*,END=200) idcf,(edum(ih),ih=1,nh)
         end if
-        k=0
-        busca2: do j=1,ny
-            do i=1,nx
-                k=k+1
-                if(idcg(k).eq.idcf) then
-                    do ih=1,nh
-                    ! Emission from g to gmol by 1/WTM
-                        eft(i,j,1,ih)=eft(i,j,1,ih)+edum(ih)*constant
-                    end do
-                    exit busca2
-                end if
-            end do
-        end do busca2
+        ! busca en el dominio la posicion de la emision
+        call get_position(idcf,ncol, pren, pcol)
+        j=pren-ren0
+        i=pcol-col0
+        do ih=1,nh
+            eft(i,j,1,ih)=eft(i,j,1,ih)+edum(ih)*constant
+        !Emission from g to gmol by 1/WTM 1/(CDIM*CDIM)
+        end do
     end do
 200 close(iun)
 !
 !  For point sources
 !$omp section
-    if (ii.le.5 .or. (ii.ge.L_PM25-2 .and. ii.le.L_PM25).or.ii.eq.L_CN_i .or. ii .eq.L_CH4_i)then
-        ruta="./"
-    else if( ii.gt. L_PM25) then; ruta="./"
-    else;     ruta="./"; end if
+    ruta="./"
     open(newunit=iun,file=trim(ruta)//fnameP(ii),status='OLD',action='READ')
     read(iun,*)cdum
     if (ii.eq.1)then
@@ -1250,8 +1240,8 @@ subroutine lee_emis(ii,borra)
     if(ii.ge.L_PM25-1) then; is=L_PM25 ;else ;is=ii;end if
     if(ii.eq.L_CH4_i) is=L_CH4_S
     write(6,'(i4,x,A,A,f7.1)') ii,ruta//fnameP(ii),current_date(1:13)
-    constant=scalp(ii)*SUPF1/WTM(is)
-    rdum=SUPF1/WTM(is)
+    constant=scalp(ii)*SUPF1/WTM(is) ! for surface only
+    rdum=SUPF1/WTM(is)               ! for upper layers
     do
         if(ii.eq.L_PM25) then   !for PM2.5
             read(iun,*,END=300) crdum,idcf,levl,(edum(ih),ih=1,nh),levld
@@ -1260,31 +1250,26 @@ subroutine lee_emis(ii,borra)
             read(iun,*,END=300) idcf,levl,(edum(ih),ih=1,nh),levld
         end if
       if(levl.gt.zlev .or.levld.gt.zlev) Stop "*** Change dimension line  allocate(eft.."
-        k=0
-        busca3: do j=1,ny
-            do i=1,nx
-            k=k+1
-            if(idcg(k).eq.idcf) then
-            do ih=1,nh
-            ! Emission from g to gmol by 1/WTM
-                if(ih.gt.9 .and. ih.lt.19) then
-                    if(levl.lt.2) then
-                      eft(i,j,levl,ih)=eft(i,j,levl,ih)+edum(ih)*constant
-                    else
-                      eft(i,j,levl,ih)=eft(i,j,levl,ih)+edum(ih)*rdum
-                    end if
-                else
-                    if(levld.lt.2) then
-                      eft(i,j,levld,ih)=eft(i,j,levld,ih)+edum(ih)*constant
-                    else
-                      eft(i,j,levld,ih)=eft(i,j,levld,ih)+edum(ih)*rdum
-                    end if
-                end if
-                end do
-                exit busca3
-                end if
-            end do
-        end do busca3
+      ! busca en el dominio la posicion de la emision
+      call get_position(idcf,ncol, pren, pcol)
+      j=pren-ren0
+      i=pcol-col0
+      do ih=1,nh
+          ! Emission from g to gmol by 1/WTM
+          if(ih.gt.9 .and. ih.lt.19) then
+              if(levl.lt.2) then
+                  eft(i,j,levl,ih)=eft(i,j,levl,ih)+edum(ih)*constant
+              else
+                  eft(i,j,levl,ih)=eft(i,j,levl,ih)+edum(ih)*rdum
+              end if
+          else
+              if(levld.lt.2) then
+                  eft(i,j,levld,ih)=eft(i,j,levld,ih)+edum(ih)*constant
+              else
+                  eft(i,j,levld,ih)=eft(i,j,levld,ih)+edum(ih)*rdum
+              end if
+          end if
+      end do
     end do
 300 continue
 close(iun)
@@ -1452,5 +1437,29 @@ do i=1,nx
     end do
 end do
 !$omp end parallel do
+end subroutine
+!            _                        _ _   _
+!  __ _  ___| |_      _ __   ___  ___(_) |_(_) ___  _ __
+! / _` |/ _ \ __|    | '_ \ / _ \/ __| | __| |/ _ \| '_ \
+!| (_| |  __/ |_     | |_) | (_) \__ \ | |_| | (_) | | | |
+! \__, |\___|\__|____| .__/ \___/|___/_|\__|_|\___/|_| |_|
+! |___/        |_____|_|
+!>  @brief Seach the position in the grid by cell number
+!>   @author  D. Herrera Moro
+!>   @date  10/12/2022
+!>   @version  1.0
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+subroutine get_position( cell,ncol, ren, col)
+    implicit none
+    integer*8, intent(in) :: cell
+    integer  ,intent(in)  :: ncol
+    integer, intent(out):: ren,col
+    ren = cell/ncol
+    col = mod(cell,ncol)
+    if (col.eq.0 .and. ren.ne.0) col=ncol
+    if (col.ne.ncol.or. ren.eq.0) then
+         ren=ren+1
+    end if
+
 end subroutine
 end program emissions_save_nc
