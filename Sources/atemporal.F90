@@ -19,7 +19,7 @@ module area_temporal_mod
 integer :: daytype ;!> number of emission files
 integer,parameter :: nf=10    ;!> max number of scc descriptors in input files
 integer,parameter :: nnscc=59 ;!> number of day in year
-integer,parameter ::juliano=366 ;!> number of hour per day
+integer,parameter ::yjuliano=366 ;!> number of hour per day
 integer,parameter :: nh=24 ;!> number of max lines in emiA
 integer :: nmax
 !> Number of lines in emissions file
@@ -59,7 +59,7 @@ integer,allocatable :: id5(:,:)
 !> SCC codes per file
 character(len=10),dimension(nnscc) ::iscc
 !> Number of days in year
-character(len=3),dimension(juliano):: cdia
+character(len=3),dimension(yjuliano):: cdia
 !> Initial date of the emissions period
 character (len=19) :: current_date
  !> Input file name

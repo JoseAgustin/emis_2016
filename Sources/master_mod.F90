@@ -141,4 +141,34 @@ end subroutine lee_namelist
     end if
 233 format("******  HORARIO de VERANO *******",/,3x,"Abril ",I2,x,"a Octubre ",I2)
 end function
+!            _                        _ _   _
+!  __ _  ___| |_      _ __   ___  ___(_) |_(_) ___  _ __
+! / _` |/ _ \ __|    | '_ \ / _ \/ __| | __| |/ _ \| '_ \
+!| (_| |  __/ |_     | |_) | (_) \__ \ | |_| | (_) | | | |
+! \__, |\___|\__|____| .__/ \___/|___/_|\__|_|\___/|_| |_|
+! |___/        |_____|_|
+!>  @brief Seach the position by column and row in the grid by cell number the grid contains colum x row ids
+!>   @author  D. Herrera Moro
+!>   @date  10/12/2022
+!>   @version  1.0
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+!>   @param cell   grid id number
+!>   @param ncol   grid column number
+!>   @param row    grid row id
+!>   @param col    grid column id
+subroutine get_position( cell,ncol, row, col)
+    implicit none
+!>  grid id number
+    integer*8, intent(in) :: cell !>  column total number in the grid
+    integer  ,intent(in)  :: ncol !>  row in the grid corresponding to cell
+    integer, intent(out):: row    !>  column in the grid corresponding to cell
+    integer, intent(out):: col
+    row = cell/ncol
+    col = mod(cell,ncol)
+    if (col.eq.0 .and. row.ne.0) col=ncol
+    if (col.ne.ncol.or. row.eq.0) then
+         row=row+1
+    end if
+
+end subroutine
 end module master

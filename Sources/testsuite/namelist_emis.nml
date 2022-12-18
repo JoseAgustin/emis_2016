@@ -1,0 +1,16 @@
+&REGION_NML
+ ZONA="palenque    ",
+ /
+&FECHA_NML
+ IDIA=31         ,
+ MONTH=3          ,
+ ANIO=2021       ,
+ PERIODO=2          ,
+ /
+&VERANO_NML
+ LSUMMER=F,
+ /
+&CHEM_NML
+ MECHA="radm2              ",
+ MODEL=0          ,
+ /

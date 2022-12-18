@@ -1001,6 +1001,7 @@ end subroutine guarda_variables
 !>   @param  iyear year number for identifying leap year
 !>   @param  imes month number for identifying number of days
 !>   @param  iday day number
+!>   @param  jdia julian day
  function juliano(iyear,imes,iday) result(jdia)
     implicit none
     integer :: jdia
@@ -1437,29 +1438,5 @@ do i=1,nx
     end do
 end do
 !$omp end parallel do
-end subroutine
-!            _                        _ _   _
-!  __ _  ___| |_      _ __   ___  ___(_) |_(_) ___  _ __
-! / _` |/ _ \ __|    | '_ \ / _ \/ __| | __| |/ _ \| '_ \
-!| (_| |  __/ |_     | |_) | (_) \__ \ | |_| | (_) | | | |
-! \__, |\___|\__|____| .__/ \___/|___/_|\__|_|\___/|_| |_|
-! |___/        |_____|_|
-!>  @brief Seach the position in the grid by cell number
-!>   @author  D. Herrera Moro
-!>   @date  10/12/2022
-!>   @version  1.0
-!>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine get_position( cell,ncol, ren, col)
-    implicit none
-    integer*8, intent(in) :: cell
-    integer  ,intent(in)  :: ncol
-    integer, intent(out):: ren,col
-    ren = cell/ncol
-    col = mod(cell,ncol)
-    if (col.eq.0 .and. ren.ne.0) col=ncol
-    if (col.ne.ncol.or. ren.eq.0) then
-         ren=ren+1
-    end if
-
 end subroutine
 end program emissions_save_nc
