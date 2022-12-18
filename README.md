@@ -1,4 +1,4 @@
-31-may-2022
+18-dec-2022
 
 # Emissions conversion system
 
@@ -36,14 +36,17 @@ a subdirectories
 - `testsuite` code for testing subroutines and functions.
 - `inventario` output subdirectory
 
---
-## Instalation 
+---
+# Instalation 
 1. run `configure`
 2. then `make`
-2. and `make install`
+3. and  `make install`
 
-## Running
-1. Use the `emis_2016.sh` script for running
+---
+# Running
+
+1. Use the `emis_2016.sh` script for running a Tijuana case
+
 ---
 ## Sistema de conversión de emisiones
 
@@ -373,6 +376,8 @@ La siguiente tabla muestra el tamaño de las salidas para cada área considerand
 | Tijuana | 42 MB |
 
 [1]: La superficie de _bosque_ representa **todo** tipo de vegetación en la celda que no es agrícola.
+
+---
 
 ### CHIMERE
 El sistema puede generar las salidas en el formato para el modelo [CHIMERE] [2]  cambios son:

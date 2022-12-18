@@ -1,12 +1,15 @@
 ! testing get_position
 !>  @brief Testing get_position subroutine
-!>   Returns 1 if the date is within daysaving time period
+!>  the i,j values of the matrix is identify by using the grid id
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  12/17/2022
-!>   @version  3.0
+!>   @version  1.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2022
-!>   @param idgrid  day in the month
-!>   @param mes  month of the year
+!>   @param idgrid grid  id number
+!>   @param columna column index
+!>   @param renglon row index
+!>   @param nx      number of columns in the mesh
+!>   @param ny      number of rows
 program test_get_position
     use master, only:get_position
     integer*8:: idgrid
