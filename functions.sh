@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#: Title       : corre_2016.sh
+#: Title       : functions.sh
 #: Date        : 25/04/2021
 #: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
 #: Version     : 1.0  26/04/2021 Actualizacion para IE del 2016

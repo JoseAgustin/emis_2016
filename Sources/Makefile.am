@@ -1,5 +1,6 @@
 #
 # This file is processed by automake (produces file Makefile.in)
+# Cofiguration file for emis_2016
 #
 bin_PROGRAMS = ASpatial.exe
 bin_PROGRAMS += carr.exe vial.exe agrega.exe
@@ -32,9 +33,9 @@ CLEANFILES = *.o *.mod *~
 ASpatial_exe_SOURCES = master_mod.F90 area_espacial.F90
 Atemporal_exe_SOURCES = master_mod.F90 atemporal.F90
 # Mobile  spatial allocation
-carr_exe_SOURCES = master_mod.F90 suma_carretera.F90
-vial_exe_SOURCES = master_mod.F90 suma_vialidades.F90
-agrega_exe_SOURCES    = agrega.F90
+carr_exe_SOURCES = master_mod.F90 mobile_mod.F90 suma_carretera.F90
+vial_exe_SOURCES = master_mod.F90 mobile_mod.F90 suma_vialidades.F90
+agrega_exe_SOURCES    = master_mod.F90 mobile_mod.F90 agrega.F90
 #
 MSpatial_exe_SOURCES  = movil_spatial.F90
 Mtemporal_exe_SOURCES = check.F90 master_mod.F90 movil_temp.F90

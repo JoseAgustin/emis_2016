@@ -123,10 +123,12 @@ Mtemporal_exe_LDADD = $(LDADD)
 am_Puntual_exe_OBJECTS = master_mod.$(OBJEXT) t_puntal.$(OBJEXT)
 Puntual_exe_OBJECTS = $(am_Puntual_exe_OBJECTS)
 Puntual_exe_LDADD = $(LDADD)
-am_agrega_exe_OBJECTS = agrega.$(OBJEXT)
+am_agrega_exe_OBJECTS = master_mod.$(OBJEXT) mobile_mod.$(OBJEXT) \
+	agrega.$(OBJEXT)
 agrega_exe_OBJECTS = $(am_agrega_exe_OBJECTS)
 agrega_exe_LDADD = $(LDADD)
-am_carr_exe_OBJECTS = master_mod.$(OBJEXT) suma_carretera.$(OBJEXT)
+am_carr_exe_OBJECTS = master_mod.$(OBJEXT) mobile_mod.$(OBJEXT) \
+	suma_carretera.$(OBJEXT)
 carr_exe_OBJECTS = $(am_carr_exe_OBJECTS)
 carr_exe_LDADD = $(LDADD)
 am_emiss_exe_OBJECTS = check.$(OBJEXT) master_mod.$(OBJEXT) \
@@ -157,7 +159,8 @@ am_spp_exe_OBJECTS = agg_mod.$(OBJEXT) master_mod.$(OBJEXT) \
 	agg_p.$(OBJEXT)
 spp_exe_OBJECTS = $(am_spp_exe_OBJECTS)
 spp_exe_LDADD = $(LDADD)
-am_vial_exe_OBJECTS = master_mod.$(OBJEXT) suma_vialidades.$(OBJEXT)
+am_vial_exe_OBJECTS = master_mod.$(OBJEXT) mobile_mod.$(OBJEXT) \
+	suma_vialidades.$(OBJEXT)
 vial_exe_OBJECTS = $(am_vial_exe_OBJECTS)
 vial_exe_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -334,9 +337,9 @@ CLEANFILES = *.o *.mod *~
 ASpatial_exe_SOURCES = master_mod.F90 area_espacial.F90
 Atemporal_exe_SOURCES = master_mod.F90 atemporal.F90
 # Mobile  spatial allocation
-carr_exe_SOURCES = master_mod.F90 suma_carretera.F90
-vial_exe_SOURCES = master_mod.F90 suma_vialidades.F90
-agrega_exe_SOURCES = agrega.F90
+carr_exe_SOURCES = master_mod.F90 mobile_mod.F90 suma_carretera.F90
+vial_exe_SOURCES = master_mod.F90 mobile_mod.F90 suma_vialidades.F90
+agrega_exe_SOURCES = master_mod.F90 mobile_mod.F90 agrega.F90
 #
 MSpatial_exe_SOURCES = movil_spatial.F90
 Mtemporal_exe_SOURCES = check.F90 master_mod.F90 movil_temp.F90
