@@ -24,8 +24,10 @@ integer,dimension(12) :: daym ! days in a month
 integer,dimension(2014:2022) :: inicia ! dia inicial del horario de verano
 !> end day for summer time period for years 2014 to 2020
 integer,dimension(2014:2022) :: termina  ! dia fin del horario de verano
-character(len=12):: zona!> Photochemical mechanism selected in namelist_emis.nml
-character (len=19) ::  mecha
+!> emissions area selected
+character(len=12):: zona   ! area de emisiones a estimar
+!> Photochemical mechanism selected in namelist_emis.nml
+character (len=19) ::  mecha  ! mecanismo quimico seleccionado
 !> during summer period  consider timasvaing .true. or not .false.
 logical :: lsummer
 ! number of day in a month
@@ -163,7 +165,6 @@ end function
 !>   @param col    grid column id
 subroutine get_position( cell,ncol, row, col)
     implicit none
-!>  grid id number
     integer*8, intent(in) :: cell !>  column total number in the grid
     integer  ,intent(in)  :: ncol !>  row in the grid corresponding to cell
     integer, intent(out):: row    !>  column in the grid corresponding to cell

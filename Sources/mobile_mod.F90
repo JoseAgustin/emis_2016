@@ -19,7 +19,7 @@
 ! |_| |_| |_|\___/|_.__/|_|_|\___|___|_| |_| |_|\___/ \__,_|
 !                              |_____|
 module mobile_mod
-; !> GRIDCODE number in Highway file
+!> GRIDCODE number in Highway file
 integer :: nm      ; !> GRIDCODE number in Streets file
 integer :: nm2     ; !> GRIDCODE number in combined Highway and street file
 integer :: nm3
@@ -63,10 +63,10 @@ contains
 !| (_| (_) | |_| | .` | | |
 ! \___\___/ \___/|_|\_| |_|
 !
-!> @brief Identifies the different municipalities in the CARRETERAS.csv file.
+!> @brief Identifies the different municipalities in the VIALIDADES.CSV/CARRETERAS.csv file.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  07/12/2020
-!>   @version 2.2
+!>   @version 2.3
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine count
     logical,allocatable::xl(:)
@@ -115,7 +115,7 @@ subroutine count
     print *,'Number of different grids',j
     deallocate(xl)
 end subroutine count
-!> @brief Reads street area file (VIALIDADES.csv)
+!> @brief Reads street/highway file (VIALIDADES.csv/CARRETERAS.csv)
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  04/26/2022
 !>   @version  3.0
@@ -131,7 +131,8 @@ use master
 implicit none
 
     integer :: i
-   character(len=15) ::fname_in
+!> input data file name
+    character(len=15) ::fname_in
     character(len=50) ::fname
     character (len=10) ::cdum
 
@@ -209,6 +210,7 @@ end subroutine vial_fraction_calculation
 !
 subroutine vial_fraction_saving(ofile)
 implicit none
+!> Output file name salida.csv for carreteras /salida2.csv for vialidades
 character (len=12):: ofile
 integer i,j
 open(unit=11,file=ofile,action='write')

@@ -203,7 +203,8 @@ La distribución espacial de las emisiones de fuentes móviles, emplea el archiv
     
 <a name="tmparea"></a>
 ### Directorio tmp[area]/dia[dia]
-<dia> corresponde al día del mes (p.e. si dia=27  entonces el directorio sería `dia27`)
+
+__[dia]__ corresponde al día del mes (p.e. si dia=27  entonces el directorio sería `dia27`)
 
 En este directorio se encuentran los archivos con la distribución temporal de las emisiones de fuentes de área, mediante el programa en fortran Atemporal.exe que emplea los archivos generados en tmp[area] y los que contienen los perfiles temporales, los archivos de salida que genera son:
 
@@ -217,8 +218,9 @@ Correspondientes a cada contaminante y para el caso de PM2.5 y VOC se incluye un
 
 <a name="mobiltime"></a>
 #### Emisiones de fuentes móviles
-Los archivos que corresponden a la distribución temporal de las emisiones de fuentes móviles mediante el programa `Mtemporal.exe`, que emplea como entrada los archivos del directorio `tmp[area]` y los archvios que contienen los perfiles temporales (`01\_datos/time`), los archivos de salida que genera son: 
-`TMCH4\_2016.csv, TMCO\_\_2016.csv, TMCOV\_2016.csv, TMNO\_\_2016.csv, TMPM102016.csv, TMSO2\_2016.csv, TMCN\_\_2016.csv, TMCO2\_2016.csv, TMNH3\_2016.csv, TMNO2\_2016.csv` y `TMPM2\_2016.csv.`
+Los archivos que corresponden a la distribución temporal de las emisiones de fuentes móviles mediante el programa `Mtemporal.exe`, que emplea como entrada los archivos del directorio `tmp[area]` y los archvios que contienen los perfiles temporales (`01\_datos/time`), los archivos de salida que genera son:
+
+    `TMCH4\_2016.csv, TMCO\_\_2016.csv, TMCOV\_2016.csv, TMNO\_\_2016.csv, TMPM102016.csv, TMSO2\_2016.csv, TMCN\_\_2016.csv, TMCO2\_2016.csv, TMNH3\_2016.csv, TMNO2\_2016.csv` y `TMPM2\_2016.csv.`
 
 Correspondientes a cada contaminante y para el caso de PM2.5 y COV se incluye una columna con el código SCC que se emplea para la especiación química.
 

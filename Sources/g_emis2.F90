@@ -1001,9 +1001,9 @@ end subroutine guarda_variables
 !>   @param  iyear year number for identifying leap year
 !>   @param  imes month number for identifying number of days
 !>   @param  iday day number
-!>   @param  jdia julian day
  function juliano(iyear,imes,iday) result(jdia)
     implicit none
+!>  ouput variable containing the julian day
     integer :: jdia
     integer,intent(in) :: iyear
     integer,intent(in) :: imes
