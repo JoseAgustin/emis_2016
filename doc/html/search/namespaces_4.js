@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['sortunique_363',['sortunique',['../namespacesortunique.html',1,'']]]
+  ['sortunique_366',['sortunique',['../namespacesortunique.html',1,'']]]
 ];

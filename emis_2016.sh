@@ -16,7 +16,7 @@
 #   guadalajara  jalisco    mexicali  mexico  mexico9
 #   monterrey    monterrey3 queretaro tijuana
 #
-dominio=tijuana
+dominio=mexico
 # To set spatial distribution = 1 else =0
 HacerArea=1
 #
@@ -31,7 +31,7 @@ AQM_SELECT=1
 # Cambiar aqui la fecha
 mes=5
 dia=11
-dia2=12
+dia2=11
 #
 #    Aqui cambiar el año a modelar
 #
