@@ -4,5 +4,5 @@ AT_INIT([Diete])
 AT_BANNER([***** Module subroutines and functions Testing Suite  *****])
 
 AT_SETUP(Testing check, lee_nml kverano get_position)
-AT_TESTED( test1  test2 test3 test4)
+AT_TESTED( test1 test2 test3 test4 test5)
 AT_CLEANUP

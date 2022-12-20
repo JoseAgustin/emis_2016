@@ -89,9 +89,10 @@ POST_UNINSTALL = :
 
 # Parallel version
 @WITH_OMPI_TRUE@am__append_2 = $(OPENMP_FCFLAGS)
-TESTS = test1$(EXEEXT) test2$(EXEEXT) test3$(EXEEXT) test4$(EXEEXT)
+TESTS = test1$(EXEEXT) test2$(EXEEXT) test3$(EXEEXT) test4$(EXEEXT) \
+	test5$(EXEEXT)
 check_PROGRAMS = test1$(EXEEXT) test2$(EXEEXT) test3$(EXEEXT) \
-	test4$(EXEEXT)
+	test4$(EXEEXT) test5$(EXEEXT)
 subdir = Sources/testsuite
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -118,6 +119,10 @@ am_test4_OBJECTS = $(top_builddir)/Sources/master_mod.$(OBJEXT) \
 	t_get_position.$(OBJEXT)
 test4_OBJECTS = $(am_test4_OBJECTS)
 test4_LDADD = $(LDADD)
+am_test5_OBJECTS = $(top_builddir)/Sources/sort_uniq.$(OBJEXT) \
+	t_unique.$(OBJEXT)
+test5_OBJECTS = $(am_test5_OBJECTS)
+test5_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -145,9 +150,9 @@ am__v_FCLD_ = $(am__v_FCLD_@AM_DEFAULT_V@)
 am__v_FCLD_0 = @echo "  FCLD    " $@;
 am__v_FCLD_1 = 
 SOURCES = $(test1_SOURCES) $(test2_SOURCES) $(test3_SOURCES) \
-	$(test4_SOURCES)
+	$(test4_SOURCES) $(test5_SOURCES)
 DIST_SOURCES = $(test1_SOURCES) $(test2_SOURCES) $(test3_SOURCES) \
-	$(test4_SOURCES)
+	$(test4_SOURCES) $(test5_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -490,6 +495,7 @@ test1_SOURCES = $(top_srcdir)/Sources/check.F90 t_check.F90
 test2_SOURCES = $(top_srcdir)/Sources/master_mod.F90 t_leenm.F90
 test3_SOURCES = $(top_srcdir)/Sources/master_mod.F90 t_kverano.F90
 test4_SOURCES = $(top_srcdir)/Sources/master_mod.F90 t_get_position.F90 
+test5_SOURCES = $(top_srcdir)/Sources/sort_uniq.F90 t_unique.F90
 
 #  Additional files to be cleaned with 'make clean'
 CLEANFILES = *.o *.mod package.m4 testsuite
@@ -560,6 +566,13 @@ test3$(EXEEXT): $(test3_OBJECTS) $(test3_DEPENDENCIES) $(EXTRA_test3_DEPENDENCIE
 test4$(EXEEXT): $(test4_OBJECTS) $(test4_DEPENDENCIES) $(EXTRA_test4_DEPENDENCIES) 
 	@rm -f test4$(EXEEXT)
 	$(AM_V_FCLD)$(FCLINK) $(test4_OBJECTS) $(test4_LDADD) $(LIBS)
+$(top_builddir)/Sources/sort_uniq.$(OBJEXT):  \
+	$(top_builddir)/Sources/$(am__dirstamp) \
+	$(top_builddir)/Sources/$(DEPDIR)/$(am__dirstamp)
+
+test5$(EXEEXT): $(test5_OBJECTS) $(test5_DEPENDENCIES) $(EXTRA_test5_DEPENDENCIES) 
+	@rm -f test5$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(test5_OBJECTS) $(test5_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -791,6 +804,13 @@ test3.log: test3$(EXEEXT)
 test4.log: test4$(EXEEXT)
 	@p='test4$(EXEEXT)'; \
 	b='test4'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test5.log: test5$(EXEEXT)
+	@p='test5$(EXEEXT)'; \
+	b='test5'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

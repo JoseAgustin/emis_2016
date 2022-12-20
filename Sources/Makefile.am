@@ -46,8 +46,8 @@ spa_exe_SOURCES = agg_mod.F90 master_mod.F90 agg_a.F90
 spm_exe_SOURCES = agg_mod.F90 master_mod.F90 agg_m.F90
 spp_exe_SOURCES = agg_mod.F90 master_mod.F90 agg_p.F90
 # Particle speciation
-spm25a_exe_SOURCES = e_pm25_mod.F90 master_mod.F90 pm25_speci_a.F90
-spm25m_exe_SOURCES = e_pm25_mod.F90 master_mod.F90 pm25_speci_m.F90
-spm25p_exe_SOURCES = e_pm25_mod.F90 master_mod.F90 pm25_speci_p.F90
+spm25a_exe_SOURCES = sort_uniq.F90 e_pm25_mod.F90 master_mod.F90 pm25_speci_a.F90
+spm25m_exe_SOURCES = sort_uniq.F90 e_pm25_mod.F90 master_mod.F90 pm25_speci_m.F90
+spm25p_exe_SOURCES = sort_uniq.F90 e_pm25_mod.F90 master_mod.F90 pm25_speci_p.F90
 # Storage
 emiss_exe_SOURCES = check.F90 master_mod.F90 g_emis2.F90
