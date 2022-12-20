@@ -234,16 +234,23 @@ end subroutine mobile_emiss_reading
 !>   @version  3.5
 subroutine count
     use SortUnique
-    integer :: ii
+    integer :: ii,i,j
     integer(kind=4), allocatable  :: lista(:)
     character(len=10), allocatable :: listc(:)
     lista=grid
     grid2=Unique(lista)
     deallocate(lista)
-    lista=im
-    im2 =Unique(lista)
+    allocate(im2(size(grid2)))
+    ! Busca la timezone a partir del grid
+    do j=1,size(grid2)
+        do i=1,size(grid)
+            if(grid(i).eq.grid2(j)) then
+                im2(j)=im(i)
+                exit
+            end if
+        end do
+    end do
     print *,'    Number of different cells',size(grid2)
-    deallocate(lista)
 !
 ! From emissions file F_moviles.csv
     listc=iscc
