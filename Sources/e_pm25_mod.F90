@@ -129,76 +129,35 @@ implicit none
 200 format(I7,x,I3,x,24(ES11.4,x),I3)
 701 format(I7,24(",",ES11.4))
 end subroutine guarda
-!                        _
-!   ___ ___  _   _ _ __ | |_
-!  / __/ _ \| | | | '_ \| __|
-! | (_| (_) | |_| | | | | |_
-!  \___\___/ \__,_|_| |_|\__|
-!>  @brief Identifies the different PM2.5 profiles and cells
+!                        _   ____  __  __ ____  ____
+!   ___ ___  _   _ _ __ | |_|  _ \|  \/  |___ \| ___|
+!  / __/ _ \| | | | '_ \| __| |_) | |\/| | __) |___ \
+! | (_| (_) | |_| | | | | |_|  __/| |  | |/ __/ ___) |
+!  \___\___/ \__,_|_| |_|\__|_|   |_|  |_|_____|____/
+!
+!>  @brief Identifies the different PM2.5 profiles and grid cells
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  04/26/2021
-!>   @version  3.0
-!>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine count
+!>   @date  20/12/2022
+!>   @version  3.5
+!>   @copyright Universidad Nacional Autonoma de Mexico 2022
+subroutine countPM25
+  use SortUnique
+  integer(kind=4), allocatable  :: lista(:)
   integer i,j,nn
-  logical,allocatable::xl(:)
-  nn=size(profile)
-  allocate(xl(nn))
-  xl=.true.
-!$omp parallel do private(j)
-  do i=1,nn-1
-    do j=i+1,nn
-      if(profile(j).eq.profile(i).and.xl(j))then
-        xl(j)=.false.
-        exit
-      end if
-    end do
-  end do
-!$omp end parallel do
-  j=0
-  do i=1,nn
-    if(xl(i)) j=j+1
-  end do
-  allocate(prof2(j),isp(j))
-  j=0
-  do i=1,nn
-    if(xl(i)) then
-    j=j+1
-    prof2(j)=profile(i)
-  end if
-  end do
 !
- print *,'Number different profiles',j !,prof2
+    lista=profile
+    prof2 =Unique(lista)
+    deallocate(lista)
+    j=size(prof2)
+    allocate(isp(j))
 !
-  deallocate(xl)
-  allocate(xl(lfa))
-
-  xl=.true.
-!$omp parallel do private(j)
-  do i=1,lfa-1
-   do j=i+1,lfa
-    if(grid(j).eq.grid(i).and.xl(j))then
-        xl(j)=.false.
-        exit
-    end if
-   end do
-  end do
-!$omp end parallel do
-  j=0
-  do i=1,lfa
-    if(xl(i)) j=j+1
-  end do
-  allocate(grid2(j))
-  j=0
-  do i=1,lfa
-    if(xl(i)) then
-      j=j+1
-      grid2(j)=grid(i)
-    end if
-  end do
-  print *,'Number of different cells',j
-  deallocate(xl)
-end subroutine count
+ print *,'    Number different profiles',j !,prof2
+!
+    lista=grid
+    grid2=Unique(lista)
+  deallocate(lista)
+  print *,'    Number of different cells',size(grid2)
+end subroutine countPM25
 !  _
 ! | | ___  ___
 ! | |/ _ \/ _ \
@@ -275,8 +234,8 @@ subroutine lee(isource)
   close(15)
   !print '(15I5)',(profile(i),i=1,lfa)
  !323 format(2i10,60F10.4)
-  print *,'Start count'
-  call count  ! counts the number of different profiles
+  print *,'Start countPM2.5'
+  call countPM25  ! counts the number of different profiles
   print *,'Finishing count'
 ! READING  and finding speciation for profiles
   fname='pm25_profiles.csv'
