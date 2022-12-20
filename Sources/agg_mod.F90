@@ -103,7 +103,6 @@ subroutine lee_voc(isource)
   call count(isource)  ! counts the number of different profiles
   print *,'  Finish count'
 ! READING  and findign speciation for profiles
-  print *,'  Speciation for Mechanism: ',trim(cprof),"->",mecha
   open(unit=16,file='../chem/profile_'//trim(mecha)//'.csv',status='old',action='read')
   read(16,*)cdum,cprof
   read(16,*) nclass
