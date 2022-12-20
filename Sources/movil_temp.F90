@@ -711,7 +711,7 @@ end subroutine ubicar
 ! | (__| | |  __/ (_| |    | |_) |  __/ |  |  _| | |
 !  \___|_|  \___|\__,_|____| .__/ \___|_|  |_| |_|_|
 !                    |_____|_|
-!>  @brief Develops a 24 hour profile for CST with or witput daylight savingd day
+!>  @brief Develops a 24 hour profile for CST with or without daylight saving day
 !>   @param status NetCDF functions return a non-zero status codes on error.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  04/26/2021

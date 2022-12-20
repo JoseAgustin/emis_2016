@@ -32,7 +32,7 @@ integer,allocatable ::grid2(:) ;!>time zone emis and grid files
 integer,allocatable :: im(:)   ;!>time zone grid file unique values array
 integer,allocatable :: im2(:)
 !>Emissions CVENMUN ID (ID_state*1000 + ID_municipality)
-integer*8,allocatable :: emid(:) ;!>SCC from emissions
+integer*8,allocatable :: emid(:) ;!>SCC from emission file
 character (len=10),allocatable::iscc(:) ;!>SCC code in emis and subset of unique SCC codes.
 character (len=10),allocatable::jscc(:) ;!>pollutant name from emissions file header
 character (len= 5),dimension(npol) :: pol
@@ -65,9 +65,8 @@ contains
 !  _ __ ___   ___ | |__ (_) | ___
 ! | '_ ` _ \ / _ \| '_ \| | |/ _ \
 ! | | | | | | (_) | |_) | | |  __/
-! |_| |_| |_|\___/|_.__/|_|_|\___|
-!                 _   _       _         _             _
-!  ___ _ __   __ _| |_(_) __ _| |    ___| |_ ___  _ __(_)_ __   __ _
+! |_| |_| |_|\___/|_.__/|_|_|\___|____   _             _
+!  ___ _ __   __ _| |_(_) __ _| |_____|_| |_ ___  _ __(_)_ __   __ _
 ! / __| '_ \ / _` | __| |/ _` | |   / __| __/ _ \| '__| | '_ \ / _` |
 ! \__ \ |_) | (_| | |_| | (_| | |   \__ \ || (_) | |  | | | | | (_| |
 ! |___/ .__/ \__,_|\__|_|\__,_|_|___|___/\__\___/|_|  |_|_| |_|\__, |
@@ -101,8 +100,7 @@ end subroutine mobile_spatial_storing
 !  _ __ ___   ___ | |__ (_) | ___
 ! | '_ ` _ \ / _ \| '_ \| | |/ _ \
 ! | | | | | | (_) | |_) | | |  __/
-! |_| |_| |_|\___/|_.__/|_|_|\___|
-!                  _   _       _     _                 _   _
+! |_| |_| |_|\___/|_.__/|_|_|\___|   _                 _   _
 !  ___ _ __   __ _| |_(_) __ _| |   | | ___   ___ __ _| |_(_)_ __   __ _
 ! / __| '_ \ / _` | __| |/ _` | |   | |/ _ \ / __/ _` | __| | '_ \ / _` |
 ! \__ \ |_) | (_| | |_| | (_| | |   | | (_) | (_| (_| | |_| | | | | (_| |
@@ -146,7 +144,7 @@ end subroutine mobile_spatial_locating
 ! | '_ ` _ \ / _ \| '_ \| | |/ _ \
 ! | | | | | | (_) | |_) | | |  __/
 ! |_| |_| |_|\___/|_.__/|_|_|\___|
-!                _                                _ _
+!                 _                                _ _
 !   ___ _ __ ___ (_)___ ___     _ __ ___  __ _  __| (_)_ __   __ _
 !  / _ \ '_ ` _ \| / __/ __|   | '__/ _ \/ _` |/ _` | | '_ \ / _` |
 ! |  __/ | | | | | \__ \__ \   | | |  __/ (_| | (_| | | | | | (_| |
@@ -229,51 +227,32 @@ end subroutine mobile_emiss_reading
 !  / __/ _ \| | | | '_ \| __|
 ! | (_| (_) | |_| | | | | |_
 !  \___\___/ \__,_|_| |_|\__|
-!> @brief Counting the number of different GRDICODE cells
+!> @brief Counting the number of different GRDICODE cells,
+!>  obtains unique SCC and timezones (im)
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  04/26/2021
-!>   @version  3.0
+!>   @date  20/12/2022
+!>   @version  3.5
 subroutine count
-    integer i,j
-    logical,allocatable::mask(:)
-!
-    allocate(mask(size(grid)))
-    mask=.true.
-!$omp parallel do private(j)
-    do i=1,nl2-1
-        do j=i+1,nl2
-            if(grid(j).eq.grid(i).and.mask(j)) then
-                mask(j)=.false.
-                exit
-            end if
-        end do
-    end do
-!$omp end parallel do
-    grid2 = pack(grid,mask)
-    im2   = pack(im,mask)
-
-  print *,'Number of different cells',size(grid2)
-  deallocate(mask)
+    use SortUnique
+    integer :: ii
+    integer(kind=4), allocatable  :: lista(:)
+    character(len=10), allocatable :: listc(:)
+    lista=grid
+    grid2=Unique(lista)
+    deallocate(lista)
+    lista=im
+    im2 =Unique(lista)
+    print *,'    Number of different cells',size(grid2)
+    deallocate(lista)
 !
 ! From emissions file F_moviles.csv
-  allocate(mask(size(iscc)))
-
-  mask=.true.
-!$omp parallel do private(i)
-  do ii=1,nl-1
-    do i=ii+1,nl
-    if(iscc(ii).eq.iscc(i).and.mask(i)) mask(i)=.false.
-	end do
-  end do
-!$omp end parallel do
-
-    jscc =pack(iscc,mask)
+    listc=iscc
+    jscc=CUnique(listc)
+    deallocate(listc)
     ii=size(jscc)
-    print *,'different SCC ',ii
-    allocate(pemi(j,npol,ii))
+    print *,'    Different SCC ',ii
+    allocate(pemi(size(grid2),npol,ii))
     pemi=0
-
-  deallocate(mask)
 end subroutine count
 
 end program

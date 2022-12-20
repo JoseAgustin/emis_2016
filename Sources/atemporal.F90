@@ -688,18 +688,18 @@ subroutine hpsort(n)
     i=l
     j=l+l
 20 if(j.le.ir)then
-    if(j.lt.ir)then
-      if(idcel3(j).lt.idcel3(j+1))j=j+1
-    end if
-    if(rra.lt.idcel3(j))then
+     if(j.lt.ir)then
+        if(idcel3(j).lt.idcel3(j+1))j=j+1
+     end if
+     if(rra.lt.idcel3(j))then
         idcel3(i)=idcel3(j)
         i=j
         j=j+j
-    else
+     else
         j=ir+1
-    endif
-    goto 20
-    endif
+     endif
+     goto 20
+   endif
       idcel3(i)=rra
     goto 10
 end subroutine hpsort

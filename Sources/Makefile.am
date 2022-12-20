@@ -37,7 +37,7 @@ carr_exe_SOURCES = master_mod.F90 mobile_mod.F90 suma_carretera.F90
 vial_exe_SOURCES = master_mod.F90 mobile_mod.F90 suma_vialidades.F90
 agrega_exe_SOURCES    = master_mod.F90 mobile_mod.F90 agrega.F90
 #
-MSpatial_exe_SOURCES  = movil_spatial.F90
+MSpatial_exe_SOURCES  = sort_uniq.F90 movil_spatial.F90
 Mtemporal_exe_SOURCES = check.F90 master_mod.F90 movil_temp.F90
 # Point emissions temporal
 Puntual_exe_SOURCES   = master_mod.F90 t_puntal.F90
