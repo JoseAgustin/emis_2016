@@ -181,6 +181,7 @@ subroutine voc_agregation(isource)
                 end do
               end do
             end do
+            exit
           end if
         end do
       end if
@@ -201,6 +202,7 @@ subroutine voc_agregation(isource)
                   end do
                 end do
               end do
+              exit ! profiles
             end if
           end do
         end if
@@ -280,37 +282,19 @@ end subroutine guarda_voc
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param isource type of emissions source 1=area 2=mobile 3=point
 subroutine count(isource)
+  use SortUnique
   implicit none
   integer, INTENT(IN)  ::isource
-  integer i,j,nn,iun
+  integer i,j,iun
+  integer(kind=4), allocatable  :: lista(:)
   logical,allocatable::xl(:)
-  nn=size(profile)
-  allocate(xl(nn))
-  xl=.true.
-!$omp parallel do private(j)
-  do i=1,nn-1
-    do j=i+1,nn
-      if(profile(j).eq.profile(i).and.xl(j))then
-        xl(j)=.false.
-        exit
-      end if
-    end do
-  end do
-!$omp end parallel do
-  j=0
-  do i=1,nn
-    if(xl(i)) j=j+1
-  end do
-  allocate(prof2(j),isp(j))
-  j=0
-  do i=1,nn
-   if(xl(i)) then
-     j=j+1
-     prof2(j)=profile(i)
-   end if
-  end do
+  lista=profile
+  prof2=Unique(lista)
+  deallocate(lista)
+  j=size(prof2)
+  allocate(isp(j))
 !
-  print *,'   Number different profiles',j !,prof2
+  print *,'    Number different profiles',j !,prof2
 !
   if(isource.eq.1) then
     open(newunit=iun,file='index.csv',status='old')
@@ -322,37 +306,18 @@ subroutine count(isource)
     close(iun)
   end if
   if(isource.eq.2) then
-    deallocate(xl)
-    allocate(xl(size(iscc)))
-    xl=.true.
-!$omp parallel do private(j)
-    do i=1,lines_in_file-1
-      do j=i+1,lines_in_file
-        if(grid(j).eq.grid(i).and.xl(j)) xl(j)=.false.
-      end do
-    end do
-!$omp end parallel do
-    j=0
-    do i=1,lines_in_file
-      if(xl(i)) j=j+1
-    end do
-    allocate(grid2(j))
-    j=0
-    do i=1,lines_in_file
-      if(xl(i)) then
-        j=j+1
-        grid2(j)=grid(i)
-      end if
-    end do
+    lista=grid
+    grid2=Unique(lista)
+    deallocate(lista)
+    j=size(grid2)
   end if
   if(isource.eq.3) then
-    deallocate(xl)
     allocate(xl(size(iscc)))
     xl=.true.
 !$omp parallel do private(j)
     do i=1,lines_in_file-1
       do j=i+1,lines_in_file
-        if(grid(j).eq.grid(i).and.xl(j).and. capa(i,1).eq.capa(j,1)) xl(j)=.false.
+        if(grid(j).eq.grid(i).and.xl(j).and.capa(i,1).eq.capa(j,1)) xl(j)=.false.
       end do
     end do
 !$omp end parallel do
@@ -370,8 +335,8 @@ subroutine count(isource)
         layer(j,2)=capa(i,2)
       end if
     end do
+    deallocate(xl)
   end if
 print *,'   Number of different cells',j,size(grid2)
-deallocate(xl)
 end subroutine count
 end module voc_split
