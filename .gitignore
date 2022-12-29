@@ -12,7 +12,7 @@ libnetcdf*
 Makefile
 *2016.csv
 ANH3_2016.csv
-
+config.status
 index.csv
 CARRETERAS.csv
 VIALIDADES.csv
