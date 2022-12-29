@@ -95,7 +95,8 @@ check_PROGRAMS = test1$(EXEEXT) test2$(EXEEXT) test3$(EXEEXT) \
 	test4$(EXEEXT) test5$(EXEEXT)
 subdir = Sources/testsuite
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/autoconf/ax_f08_newunit.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)

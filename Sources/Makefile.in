@@ -98,7 +98,8 @@ bin_PROGRAMS = ASpatial.exe$(EXEEXT) carr.exe$(EXEEXT) \
 @WITH_OMPI_TRUE@am__append_2 = $(OPENMP_FCFLAGS)
 subdir = Sources
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/autoconf/ax_f08_newunit.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
@@ -135,12 +136,12 @@ am_emiss_exe_OBJECTS = check.$(OBJEXT) master_mod.$(OBJEXT) \
 	g_emis2.$(OBJEXT)
 emiss_exe_OBJECTS = $(am_emiss_exe_OBJECTS)
 emiss_exe_LDADD = $(LDADD)
-am_spa_exe_OBJECTS = agg_mod.$(OBJEXT) master_mod.$(OBJEXT) \
-	agg_a.$(OBJEXT)
+am_spa_exe_OBJECTS = sort_uniq.$(OBJEXT) agg_mod.$(OBJEXT) \
+	master_mod.$(OBJEXT) agg_a.$(OBJEXT)
 spa_exe_OBJECTS = $(am_spa_exe_OBJECTS)
 spa_exe_LDADD = $(LDADD)
-am_spm_exe_OBJECTS = agg_mod.$(OBJEXT) master_mod.$(OBJEXT) \
-	agg_m.$(OBJEXT)
+am_spm_exe_OBJECTS = sort_uniq.$(OBJEXT) agg_mod.$(OBJEXT) \
+	master_mod.$(OBJEXT) agg_m.$(OBJEXT)
 spm_exe_OBJECTS = $(am_spm_exe_OBJECTS)
 spm_exe_LDADD = $(LDADD)
 am_spm25a_exe_OBJECTS = sort_uniq.$(OBJEXT) e_pm25_mod.$(OBJEXT) \
@@ -155,8 +156,8 @@ am_spm25p_exe_OBJECTS = sort_uniq.$(OBJEXT) e_pm25_mod.$(OBJEXT) \
 	master_mod.$(OBJEXT) pm25_speci_p.$(OBJEXT)
 spm25p_exe_OBJECTS = $(am_spm25p_exe_OBJECTS)
 spm25p_exe_LDADD = $(LDADD)
-am_spp_exe_OBJECTS = agg_mod.$(OBJEXT) master_mod.$(OBJEXT) \
-	agg_p.$(OBJEXT)
+am_spp_exe_OBJECTS = sort_uniq.$(OBJEXT) agg_mod.$(OBJEXT) \
+	master_mod.$(OBJEXT) agg_p.$(OBJEXT)
 spp_exe_OBJECTS = $(am_spp_exe_OBJECTS)
 spp_exe_LDADD = $(LDADD)
 am_vial_exe_OBJECTS = master_mod.$(OBJEXT) mobile_mod.$(OBJEXT) \
@@ -346,9 +347,9 @@ Mtemporal_exe_SOURCES = check.F90 master_mod.F90 movil_temp.F90
 # Point emissions temporal
 Puntual_exe_SOURCES = master_mod.F90 t_puntal.F90
 # Gas Chemical speciation
-spa_exe_SOURCES = agg_mod.F90 master_mod.F90 agg_a.F90
-spm_exe_SOURCES = agg_mod.F90 master_mod.F90 agg_m.F90
-spp_exe_SOURCES = agg_mod.F90 master_mod.F90 agg_p.F90
+spa_exe_SOURCES = sort_uniq.F90 agg_mod.F90 master_mod.F90 agg_a.F90
+spm_exe_SOURCES = sort_uniq.F90 agg_mod.F90 master_mod.F90 agg_m.F90
+spp_exe_SOURCES = sort_uniq.F90 agg_mod.F90 master_mod.F90 agg_p.F90
 # Particle speciation
 spm25a_exe_SOURCES = sort_uniq.F90 e_pm25_mod.F90 master_mod.F90 pm25_speci_a.F90
 spm25m_exe_SOURCES = sort_uniq.F90 e_pm25_mod.F90 master_mod.F90 pm25_speci_m.F90

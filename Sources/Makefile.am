@@ -42,9 +42,9 @@ Mtemporal_exe_SOURCES = check.F90 master_mod.F90 movil_temp.F90
 # Point emissions temporal
 Puntual_exe_SOURCES   = master_mod.F90 t_puntal.F90
 # Gas Chemical speciation
-spa_exe_SOURCES = agg_mod.F90 master_mod.F90 agg_a.F90
-spm_exe_SOURCES = agg_mod.F90 master_mod.F90 agg_m.F90
-spp_exe_SOURCES = agg_mod.F90 master_mod.F90 agg_p.F90
+spa_exe_SOURCES = sort_uniq.F90 agg_mod.F90 master_mod.F90 agg_a.F90
+spm_exe_SOURCES = sort_uniq.F90 agg_mod.F90 master_mod.F90 agg_m.F90
+spp_exe_SOURCES = sort_uniq.F90 agg_mod.F90 master_mod.F90 agg_p.F90
 # Particle speciation
 spm25a_exe_SOURCES = sort_uniq.F90 e_pm25_mod.F90 master_mod.F90 pm25_speci_a.F90
 spm25m_exe_SOURCES = sort_uniq.F90 e_pm25_mod.F90 master_mod.F90 pm25_speci_m.F90
