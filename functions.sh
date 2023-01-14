@@ -80,7 +80,7 @@ cd 01_datos
 existe=0
 if [ -d $1 ]
 then
-   echo "  *** Relizando para "$dominio"   *****"
+   echo "  *** Realizando para "$dominio"   *****"
 else
    echo -e "\033[1;45m  Dominio "$dominio" no existe en el directorio \033[0m"
    exit 1

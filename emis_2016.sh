@@ -16,7 +16,7 @@
 #   guadalajara  jalisco    mexicali  mexico  mexico9
 #   monterrey    monterrey3 queretaro tijuana
 #
-dominio=mexico
+dominio=ecaim
 # To set spatial distribution = 1 else =0
 HacerArea=1
 #

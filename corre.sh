@@ -119,7 +119,7 @@ if [ $existe -eq 0 ];then
 echo "  Dominio "$dominio" no existe en el directorio *****"
 exit
 else
-echo "  Relizando para "$dominio"   *****"
+echo "  Realizando para "$dominio"   *****"
 cat << End_Of_File > namelist_emis.nml
 !
 !   Definicion de variables para calculo del Inventario

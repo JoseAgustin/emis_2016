@@ -4907,8 +4907,8 @@ fi
         # If not found, check for nc-config
   if test -z "${NETCDF_CONFIG}"
 then :
-  # Extract the first word of "nf-config", so it can be a program name with args.
-set dummy nf-config; ac_word=$2
+  # Extract the first word of "nc-config", so it can be a program name with args.
+set dummy nc-config; ac_word=$2
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 printf %s "checking for $ac_word... " >&6; }
 if test ${ac_cv_prog_NETCDF_CONFIG+y}
