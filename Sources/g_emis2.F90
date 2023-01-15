@@ -27,7 +27,8 @@ integer :: ns    ;!> =ns+5 number of Mechanism classes
 integer :: radm  ;!> Position of pm2.5 in the variables array
 integer :: L_PM25   ;!> Position of BC in variables array from INEM
 integer :: L_CN_i   ;!> Position of BC in variables array from Speciation file
-integer :: L_CN_S   ;!> Position of CH4 in variables array from INEM
+integer :: L_CN_S   ;!> Position of OC in variables array from INEM
+integer :: L_OC      ;!> Position of CH4 in variables array from INEM
 integer :: L_CH4_i   ;!> Position of CH4 in variables array from Speciation file
 integer :: L_CH4_S   ;!> number of cell in the grid
 integer :: ncel   ;!>  number of lines in files
@@ -209,12 +210,13 @@ subroutine setup_mecha
         print *,"Setup variables for ",mecha
         nf=30    ! number of files antropogenic
         ns=28    ! number of compounds
-        radm=ns+5 ! number of Mechanism classes
-        L_PM25=23  ! Posicion del archivo PM2.5
+        radm=ns+5+2 ! number of Mechanism classes
+        L_PM25=23    ! Posicion del archivo PM2.5
         L_CN_i=30    ! Posicion archivo CN del INEM
         L_CN_S=28    ! Posicion archivo CN de especiacion
-        L_CH4_i=29    ! Posicion archivo CH4 del INEM
-        L_CH4_S=7     ! Posicion archivo CH4 de especiacion
+        L_OC  =27    ! Posicion archivo OC del INEM
+        L_CH4_i=29   ! Posicion archivo CH4 del INEM
+        L_CH4_S=7    ! Posicion archivo CH4 de especiacion
         allocate(ename(radm),cname(radm))
         allocate(isp(radm))
         allocate(wtm(ns))
@@ -229,7 +231,8 @@ subroutine setup_mecha
      'ISOP       ','OLE        ','PAR        ','TERP       ','TOL        ',&
      'XYL        ','CO2        ','PM_10      ','PMFP       ','PSO4I      ',&
      'PNO3I      ','PM25I      ','APOCI      ','PECI       ','PSO4J      ',&
-     'PNO3J      ','PM25J      ','APOCJ      ','PECJ       '/)
+     'PNO3J      ','PM25J      ','APOCJ      ','PECJ       ','APOC       ',&
+     'EC         '/)
     else
      ename=(/'E_CO       ','E_NH3      ','E_NO       ','E_NO2      ',&
      'E_SO2      ','E_ALD2     ','E_CH4      ','E_ALDX     ','E_ETH      ',&
@@ -237,7 +240,8 @@ subroutine setup_mecha
      'E_ISOP     ','E_OLE      ','E_PAR      ','E_TERP     ','E_TOL      ',&
      'E_XYL      ','E_CO2      ','E_PM_10    ','E_PM25     ','E_SO4I     ',&
      'E_NO3I     ','E_PM25I    ','E_ORGI     ','E_ECI      ','E_SO4J     ',&
-     'E_NO3J     ','E_PM25J    ','E_ORGJ     ','E_ECJ      '/)
+     'E_NO3J     ','E_PM25J    ','E_ORGJ     ','E_ECJ      ','E_OC       ',&
+     'E_BC       '/)
     end if
     cname=(/'Carbon Monoxide ','Ammonia NH3     ','NO              ', &
     'NO2             ','SO2             ','Acetaldehyde    ','METHANE         ',&
@@ -247,7 +251,7 @@ subroutine setup_mecha
     'Xylene+others   ','Carbon Dioxide  ','PM 10um mode    ','PM 2.5um mode   ',&
     'Sulfates        ','Nitrates        ','PM2.5I          ','Organic         ',&
     'Elemental Carbon','Sulfates J mode ','Nitrates J mode ','PM2.5 J mode    ',&
-    'Organic Carbon  ','Elemental Carbon'/)
+    'Organic Carbon  ','Elemental Carbon','Organic Carbon  ','Black Carbon    '/)
     fnameA=(/'TACO__2016.csv   '  ,&
     'TANH3_2016.csv   ','TANOx_2016.csv   ','TANOx_2016.csv   ','TASO2_2016.csv   ',&
     'CBM05_ALD2_A.txt ','CBM05_CH4_A.txt  ','CBM05_ALDX_A.txt ','CBM05_ETH_A.txt  ',&
@@ -278,7 +282,7 @@ subroutine setup_mecha
         isp=[ 1, 2, 3, 4, 5, 6, 7, 8, 9,10, &
         11,12,13,14,15, 16,17,18,19,20, &
         21,22,23,24,25, 26,27,28,29,30, &
-        31,32,33]
+        31,32,33,34,35]
         WTM=(/28., 17., 30., 46., 64.,32.,  16., 32., 32.,32.,32.,&   !
         64., 16., 16., 80., 32.,16., 160.,112.,128., 44.,&
         3600.,3600.,3600.,3600.,3600.,3600.,3600./)
@@ -287,10 +291,11 @@ subroutine setup_mecha
         print *,"Setup variables for ",mecha
         nf=39    ! number of files antropogenic
         ns=37    ! number of compounds
-        radm=ns+5 ! number of Mechanism classes
+        radm=ns+5+2 ! number of Mechanism classes + BC and OC
         L_PM25=32  ! Posicion del archivo PM2.5
         L_CN_i=39    ! Posicion archivo CN del INEM
         L_CN_S=37    ! Posicion archivo CN de especiacion
+        L_OC  =36    ! Posicion del OC en el INEM
         L_CH4_i=38    ! Posicion archivo CH4 del INEM
         L_CH4_S=6     ! Posicion archivo CH4 de especiacion
         allocate(ename(radm),cname(radm))
@@ -306,7 +311,8 @@ subroutine setup_mecha
     'E_CH3OH    ','E_MGLY     ','E_MVK      ','E_TOLUENE  ','E_XYLENE   ',&
     'E_CO2      ','E_PM_10    ','E_PM25     ',&
     'E_SO4I     ','E_NO3I     ','E_PM25I    ','E_ORGI     ','E_ECI      ',&
-    'E_SO4J     ','E_NO3J     ','E_PM25J    ','E_ORGJ     ','E_ECJ      '/)
+    'E_SO4J     ','E_NO3J     ','E_PM25J    ','E_ORGJ     ','E_ECJ      ',&
+    'E_OC       ','E_BC       '/)
     cname=(/'Carbon Monoxide ','Nitrogen Oxide  ','Nitrogen Dioxide',&
     'Ammonia         ','Sulfur Dioxide  ','Methane         ','Benzene         ',&
     'Lumped Alkan C>3','Lumped Alkanes  ','A Pinene        ','Ethyne          ',&
@@ -317,7 +323,8 @@ subroutine setup_mecha
     'Toluene         ','Xylenes         ','Carbon Dioxide  ','PM_10           ',&
     'PM_2.5um        ','Sulfates        ','Nitrates        ','OTHER           ',&
     'Organic Carbon  ','Elemental Carbon','SulfatesJ       ','NitratesJ       ',&
-    'OTHER           ','Organic Carbon  ','Elemental Carbon'/)
+    'OTHER           ','Organic Carbon  ','Elemental Carbon','Organic Carbon  ',&
+    'Black Carbon    '/)
     fnameA=(/'TACO__2016.csv   ','TANOx_2016.csv   ','TANOx_2016.csv   ',&
     'TANH3_2016.csv   ','TASO2_2016.csv   ',&
     'MOZART_CH4_A.txt ','MOZART_BENZ_A.txt','MOZART_BIGA_A.txt','MOZART_BIGE_A.txt',&
@@ -355,7 +362,7 @@ subroutine setup_mecha
         11,12,13,14,15, 16,17,18,19,20, &
         21,22,23,24,25, 26,27,28,29,30, &
         31,32,33,34,35, 36,37,38,39,40, &
-        41,42/)
+        41,42,43,44/)
         WTM=(/ 28.0, 30.00, 46.00, 17.00, 64.0,  16.043,&
         78.00, 72.00, 56.00,136.00,26.00, 28.00,&
         46.00,30.00, 42.00, 44.00, 30.00, 44.00,&
@@ -367,12 +374,13 @@ subroutine setup_mecha
         print *,"Setup variables for ",mecha
         nf=55    ! number of files antropogenic
         ns=53    ! number of compounds
-        radm=ns+5 ! number of Mechanism classes
-        L_PM25=48  ! Posicion del archivo PM2.5
+        radm=ns+5+2 ! number of Mechanism classes
+        L_PM25=48    ! Posicion del archivo PM2.5
         L_CN_i=55    ! Posicion archivo CN del INEM
-        L_CN_S=52    ! Posicion archivo CN de especiacion
-        L_CH4_i=54    ! Posicion archivo CH4 del INEM
-        L_CH4_S=6     ! Posicion archivo CH4 de especiacion
+        L_CN_S=53    ! Posicion archivo CN de especiacion
+        L_OC  =52    ! Posicion archivo OC del INEM
+        L_CH4_i=54   ! Posicion archivo CH4 del INEM
+        L_CH4_S=6    ! Posicion archivo CH4 de especiacion
         allocate(ename(radm),cname(radm))
         allocate(isp(radm))
         allocate(wtm(ns))
@@ -388,7 +396,7 @@ subroutine setup_mecha
     'E_ORA2 ','E_ACE  ','E_BALD ','E_EOH  ','E_ETEG ','E_ORA1 ','E_MOH  ',&
     'E_CO2  ','E_PM_10','E_PM_25', &
     'E_SO4I ','E_NO3I ','E_PM25I','E_ORGI ','E_ECI  ',&
-    'E_SO4J ','E_NO3J ','E_PM25J','E_ORGJ ','E_ECJ  '/)
+    'E_SO4J ','E_NO3J ','E_PM25J','E_ORGJ ','E_ECJ  ','E_OC   ','E_BC   '/)
     cname=(/'Carbon Monoxide ','Ammonia NH3     ','Nitrogen Oxide  ', &
     'Nitrogen Dioxide','Sulfur Dioxide  ','Methane CH4     ','Ethane          ',&
     'Alkanes, alcohol','Alkanes, alcohol','Alkanes, alcohol','Ethene          ',&
@@ -403,7 +411,8 @@ subroutine setup_mecha
     'Formic acid     ','Methanol        ','Carbon Dioxide  ','PM 10um mode    ',&
     'PM 2.5um mode   ','Sulfates Particl','Nitrates Particl','PM2.5 I mode    ',&
     'Organic Carbon  ','Elemental Carbon','Sulfates J mode ','Nitrates J mode ',&
-    'PM2.5 J mode    ','Organic J Carbon','Elemental CarboJ'/)
+    'PM2.5 J mode    ','Organic J Carbon','Elemental CarboJ','Organic Carbon  ',&
+    'Black Carbon    '/)
     fnameA=(/'TACO__2016.csv   ','TANH3_2016.csv   ','TANOx_2016.csv   ','TANOx_2016.csv   ',&
     'TASO2_2016.csv   ','RACM2_CH4_A.txt  ','RACM2_ETH_A.txt  ','RACM2_HC3_A.txt  ',&
     'RACM2_HC5_A.txt  ','RACM2_HC8_A.txt  ','RACM2_ETE_A.txt  ','RACM2_OLI_A.txt  ',&
@@ -451,7 +460,7 @@ subroutine setup_mecha
         21,22,23,24,25, 26,27,28,29,30,&
         31,32,33,34,35, 36,37,38,39,40,&
         41,42,43,44,45, 46,47,48,49,50,&
-        51,52,53,54,55, 56,57,58/)
+        51,52,53,54,55, 56,57,58,59,60/)
         WTM=(/28., 17., 30., 46., 64.,   16., 30., 44., 72., 114.,&
         28., 68., 42., 54., 78.,   92.,106.,106.,106., 30., &
         58., 58., 72., 86., 60.,   74.,108., 94.,136., 68., &
@@ -463,10 +472,11 @@ subroutine setup_mecha
         print *,"Setup variables for ",mecha
         nf=36    ! number of files antropogenic
         ns=34    ! number of compounds
-        radm=ns+5 ! number of Mechanism classes
+        radm=ns+5+2 ! number of Mechanism classes
         L_PM25=29  ! Posicion del archivo PM2.5
         L_CN_i=36    ! Posicion archivo CN del INEM
         L_CN_S=34    ! Posicion archivo CN de especiacion
+        L_OC  =33    ! Posicion archivo OC del INEM
         L_CH4_i=35    ! Posicion archivo CH4 del INEM
         L_CH4_S=7     ! Posicion archivo CH4 de especiacion
         allocate(ename(radm),cname(radm))
@@ -480,7 +490,8 @@ subroutine setup_mecha
     'E_HC3  ','E_HC5  ','E_HC8  ','E_HCHO ','E_ISO  ','E_KET  ','E_MACR ', &
     'E_MGLY ','E_MVK  ','E_OL2  ','E_OLI  ','E_OLT  ','E_ORA1 ','E_ORA2 ', &
     'E_TOL  ','E_XYL  ','E_CO2  ','E_PM_10','E_PM25 ','E_SO4I ','E_NO3I ','E_PM25I',&
-    'E_ORGI ','E_ECI  ','E_SO4J ','E_NO3J ','E_PM25J','E_ORGJ ','E_ECJ  '/)
+    'E_ORGI ','E_ECI  ','E_SO4J ','E_NO3J ','E_PM25J','E_ORGJ ','E_ECJ  ','E_OC   ',&
+    'E_BC   '/)
     cname=(/'Carbon Monoxide ','NH3             ','NO              ', &
     'NO2             ','SO2             ','ALDEHYDES       ','METHANE         ','CRESOL          ',&
     'Ethane          ','Glyoxal         ','HC3             ','HC5             ','HC8             ',&
@@ -489,7 +500,7 @@ subroutine setup_mecha
     'Acetic Acid     ','TOLUENE         ','XYLENE          ','Carbon Dioxide  ','PM 10um         ',&
     'PM 2.5um        ','Sulfates        ','Nitrates        ','PM 2.5 I        ','Organic         ',&
     'Elemental Carbon','Sulfates J mode ','Nitrates J mode ','PM 2.5 J mode   ','Organic J mode  ',&
-    'Elemental Carbon'/)
+    'Elemental Carbon','Organic Carbon  ','Black Carbon    '/)
     fnameA=['TACO__2016.csv   ',&
      'TANH3_2016.csv   ','TANOx_2016.csv   ','TANOx_2016.csv   ','TASO2_2016.csv   ',&
      'RADM-2_ALD_A.txt ','RADM-2_CH4_A.txt ','RADM-2_CSL_A.txt ','RADM-2_ETH_A.txt ',&
@@ -523,7 +534,7 @@ subroutine setup_mecha
         isp=[ 1, 2, 3, 4, 5,  6, 7, 8, 9,10, &
         11,12,13,14,15, 16,17,18,19,20, &
         21,22,23,24,25, 26,27,28,29,30, &
-        31,32,33,34,35, 36,37,38,39]
+        31,32,33,34,35, 36,37,38,39,40,41]
         WTM=[28., 17., 30., 46.,64.,    44.,16.,108.,30.,58.,&   !
         &    44., 72.,114., 30.,68.,    72.,70., 72.,70.,28.,&
         &    56., 42., 46., 60.,92.,   106.,44.,&
@@ -533,10 +544,11 @@ subroutine setup_mecha
         print *,"Setup variables for ",mecha
         nf=47    ! number of files antropogenic
         ns=45    ! number of compounds
-        radm=ns+5 ! number of Mechanism classes
+        radm=ns+5+2 ! number of Mechanism classes
         L_PM25=40  ! Posicion del archivo PM2.5
         L_CN_i=47    ! Posicion archivo CN del INEM
         L_CN_S=45    ! Posicion archivo CN de especiacion
+        L_OC  =44    ! Posicion archivo OC del INEM
         L_CH4_i=46    ! Posicion archivo CH4 del INEM
         L_CH4_S=6     ! Posicion archivo CH4 de especiacion
         allocate(ename(radm),cname(radm))
@@ -555,7 +567,7 @@ subroutine setup_mecha
     'E_MVK      ','E_OLE1     ','E_OLE2     ','E_PHEN     ','E_PROD2    ','E_RCHO     ',&
     'E_RCO_OH   ','E_TERP     ','E_CO2      ','E_PM_10    ','E_PM25     ','E_SO4I     ',&
     'E_NO3I     ','E_PM25I    ','E_ORGI     ','E_ECI      ','E_SO4J     ','E_NO3J     ',&
-    'E_PM25J    ','E_ORGJ     ','E_ECJ      ']
+    'E_PM25J    ','E_ORGJ     ','E_ECJ      ','E_OC       ','E_BC       ']
 
     cname=['Carbon Monoxide ','Nitrogen Oxide  ','Nitrogen Dioxide','Ammonia         ',&
     'Sulfur Dioxide  ','Methane         ','Acetone         ','Alkanes 3       ',&
@@ -569,7 +581,7 @@ subroutine setup_mecha
     'Terpenes        ','Carbon Dioxide  ','PM_10           ','PM 2.5 um mode  ',&
     'Sulfates Particl','Nitrates Particl','OTHER Particles ','Organic C partic',&
     'Elemental Carbon','Sulfates J mode ','Nitrates J mode ','OTHER           ',&
-    'Organic Carbon  ','Elemental Carbon']
+    'Organic Carbon  ','Elemental Carbon','Organic Carbon  ','Black Carbon    ']
     fnameA=(/'TACO__2016.csv    ',&
     'TANOx_2016.csv    ','TANOx_2016.csv    ','TANH3_2016.csv    ','TASO2_2016.csv    ',&
     'SAPRC99_CH4_A.txt ','SAPRC99_ACET_A.txt','SAPRC99_ALK3_A.txt','SAPRC99_ALK4_A.txt',&
@@ -613,7 +625,8 @@ subroutine setup_mecha
               11,12,13,14,15, 16,17,18,19,20, &
               21,22,23,24,25, 26,27,28,29,30, &
               31,32,33,34,35, 36,37,38,39,40, &
-              41,42,43,44,45, 46,47,48,49,50/)
+              41,42,43,44,45, 46,47,48,49,50, &
+              51,52/)
      if (model.eq.1) then ! for chimere
         WTM=(/ 28.0, 30.00, 46.00, 17.00, 64.0,  16.043,&
         58.08, 58.61, 77.60,118.89, 95.16,118.72,&
@@ -638,10 +651,11 @@ subroutine setup_mecha
     print *,"Setup variables for ",mecha
       nf=49    ! number of files antropogenic
       ns=47    ! number of compounds
-      radm=ns+5 ! number of Mechanism classes
+      radm=ns+5+2 ! number of Mechanism classes
       L_PM25=42  ! Posicion del archivo PM2.5
       L_CN_i=49    ! Posicion archivo CN del INEM
       L_CN_S=47    ! Posicion archivo CN de especiacion
+      L_OC  =46    ! Posicion archivo OC del INEM
       L_CH4_i=48    ! Posicion archivo CH4 del INEM
       L_CH4_S=6     ! Posicion archivo CH4 de especiacion
       allocate(ename(radm),cname(radm))
@@ -660,7 +674,8 @@ subroutine setup_mecha
       'MEOH       ','MGLY       ','MVK        ','OLE1       ','OLE2       ','PACD       ',&
       'PRD2       ','RCHO       ','RNO3       ','TERP       ','CO2        ','PPM_big    ',&
       'PPM_fin    ','E_SO4I     ','E_NO3I     ','E_PM25I    ','OCAR_fin   ','BCAR_fin   ',&
-      'E_SO4J     ','E_NO3J     ','E_PM25J    ','OCAR_coa   ','BCAR_coa   '/)
+      'E_SO4J     ','E_NO3J     ','E_PM25J    ','OCAR_coa   ','BCAR_coa   ','OCAR       ',&
+      'BCAR       '/)
       else
       ename=[&
        'E_CO       ','E_NO       ','E_NO2      ','E_NH3      ','E_SO2      ',&
@@ -673,7 +688,7 @@ subroutine setup_mecha
        'E_PRD2     ','E_RCHO     ','E_RNO3     ','E_TERP     ','E_CO2      ',&
        'E_PM_10    ','E_PM25     ','E_SO4I     ','E_NO3I     ','E_PM25I    ',&
        'E_ORGI     ','E_ECI      ','E_SO4J     ','E_NO3J     ','E_PM25J    ',&
-       'E_ORGJ     ','E_ECJ      ']
+       'E_ORGJ     ','E_ECJ      ','E_OC       ','E_BC       ']
       end if
     cname=['Carbon Monoxide ','Nitrogen Oxide  ','Nitrogen Dioxide','Ammonia         ',&
     'Sulfur Dioxide  ','Methane         ','Acetic Acid. Als','Acetone         ',&
@@ -688,7 +703,7 @@ subroutine setup_mecha
     'Carbon Dioxide  ','PM_10           ','PM 2.5 um mode  ',&
     'Sulfates Particl','Nitrates Particl','OTHER Particles ','Organic C partic',&
     'Elemental Carbon','Sulfates J mode ','Nitrates J mode ','OTHER           ',&
-    'Organic Carbon  ','Elemental Carbon']
+    'Organic Carbon  ','Elemental Carbon','Organic Carbon  ','Black Carbon    ']
 
   fnameA=['TACO__2016.csv    ',&
       'TANOx_2016.csv    ','TANOx_2016.csv    ','TANH3_2016.csv    ','TASO2_2016.csv    ',&
@@ -737,7 +752,7 @@ fnameP=(/'T_ANNCO.csv       ',&
             21,22,23,24,25, 26,27,28,29,30, &
             31,32,33,34,35, 36,37,38,39,40, &
             41,42,43,44,45, 46,47,48,49,50, &
-            51,52/)
+            51,52,53,54/)
       WTM=(/28.0, 30.00, 46.00, 17.00,  64.0, 16.043,&
             60.05,58.08,26.03728, 30.07, 36.73, 58.61,&
             77.6, 118.89, 95.16, 118.72, 86.09, 106.13,&
@@ -1195,7 +1210,6 @@ subroutine lee_emis(ii,borra)
         end do
     end do
 100 close(iun)
-print *,i,j,"linea 1197"
 !$omp section
     ruta="./"
     open(newunit=iun,file=trim(ruta)//fnameM(ii),status='OLD',action='READ')
@@ -1365,10 +1379,12 @@ call check( nf90_put_var(ncid2,id_var(isp(ikk)),efs,start=(/1,1,1,1/),count=(/nx
 !$omp end parallel sections
         endif
     else
-!
+!  For Particles
     if(periodo.eq.1) then
-     call check( nf90_put_var(ncid, id_var(isp(ikk)),eft*0.2,start=(/1,1,1,1/)) )
-     call check( nf90_put_var(ncid, id_var(isp(ikk+5)),eft*0.8,start=(/1,1,1,1/)) )
+        call check( nf90_put_var(ncid, id_var(isp(ikk)),eft*0.2,start=(/1,1,1,1/)) )
+        call check( nf90_put_var(ncid, id_var(isp(ikk+5)),eft*0.8,start=(/1,1,1,1/)) )
+     if(ikk.eq.L_CN_S .or. ikk.eq.L_OC) \
+     call check( nf90_put_var(ncid, id_var(isp(ikk+7)),eft,start=(/1,1,1,1/)) )
     else
       call copy_val_12to23
 !$omp parallel sections num_threads (2)
@@ -1379,6 +1395,10 @@ call check( nf90_put_var(ncid2,id_var(isp(ikk)),efs,start=(/1,1,1,1/),count=(/nx
       call check( nf90_put_var(ncid2,id_var(isp(ikk)),efs*0.2,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
       call check( nf90_put_var(ncid2,id_var(isp(ikk+5)),efs*0.8,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
 !$omp end parallel sections
+      if(ikk.eq.L_CN_S .or. ikk.eq.L_OC) then
+        call check( nf90_put_var(ncid ,id_var(isp(ikk+7)),eft,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
+        call check( nf90_put_var(ncid2,id_var(isp(ikk+7)),efs,start=(/1,1,1,1/),count=(/nx,ny,zlev,12/)))
+      end if
     end if !periodo
     end if
 if(ikk.eq.ns) call check( nf90_close(ncid) )

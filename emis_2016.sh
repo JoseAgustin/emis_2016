@@ -16,7 +16,7 @@
 #   guadalajara  jalisco    mexicali  mexico  mexico9
 #   monterrey    monterrey3 queretaro tijuana
 #
-dominio=ecaim
+dominio=tijuana
 # To set spatial distribution = 1 else =0
 HacerArea=1
 #
@@ -39,7 +39,7 @@ nyear=2016
 #
 #   Si se desea un archivo de 24 hrs  nfile=1
 #              dos archivos de 12 hrs nfile=2
-nfile=2
+nfile=1
 
 #####  END OF USER MODIFICATIONS  #####
 source functions.sh
@@ -88,6 +88,6 @@ fi
     mv *00\:00 ../../inventario/${dominio}
 
 cd ..
-echo -e "     \033[1;44m  DONE STORING "$MECHA $dia "\033[0m"
+echo -e "     \033[1;34m  DONE STORING "$MECHA $dia "\033[0m"
  let dia=dia+1
 done
