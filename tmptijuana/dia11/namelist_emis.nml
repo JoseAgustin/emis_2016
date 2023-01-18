@@ -33,6 +33,6 @@ lsummer = .true.
 !  cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07
 !  if saprc07  model= 0 WRF 1 CHIMERE
 &chem_nml
-mecha='radm2'
+mecha='ghg'
 model=1
 /

@@ -198,7 +198,7 @@ subroutine setup_mecha
         allocate(fnameA(nf),fnameM(nf),fnameP(nf))
         allocate(scala(nf),scalm(nf),scalp(nf))
         allocate(id_var(radm))
-        ename=(/'CO2        ','CH4        '/)
+        ename=(/'E_CO2      ','E_CH4      '/)
         cname=(/'Carbon Dioxide  ','Methane         '/)
         fnameA=(/'TACO2_2016.csv   ','GHG_CH4_A.txt    ','TACH4_2016.csv   '/)
         fnameM=(/'TMCO2_2016.csv   ','GHG_CH4_M.txt    ','TMCH4_2016.csv   '/)
