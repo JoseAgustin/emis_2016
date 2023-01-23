@@ -13,12 +13,12 @@ zona ="tijuana"
 ! se proporciona el anio
 ! month jan =1 to dec=12
 ! day in the month (from 1 to 28,30 or 31)
-! anio a modelar validos: 2014 a 2020
+! anio a modelar validos: 2014 a 2022
 ! Si se quiere un archvio de 24 hr periodo=1
 !    o dos archivos de 12 hr peridodo=2
-idia=11
-month=5
-anio=2016
+idia=22
+month=01
+anio=2023
 periodo=1
 /
 !Horario de verano
@@ -26,13 +26,13 @@ periodo=1
 ! .true. o .false. para considerar o no el cambio cuando se
 !  esta en horario de verano
 !
-lsummer = .true.
+lsummer = .false.
 /
 ! Quimica a utilizar
 ! Los mecanismos a usar:
 !  cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07
 !  if saprc07  model= 0 WRF 1 CHIMERE
 &chem_nml
-mecha='ghg'
+mecha='radm2'
 model=1
 /

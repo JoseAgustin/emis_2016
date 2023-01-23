@@ -93,7 +93,7 @@ implicit none
     print '(A,I2,A,I2)','Error in day value: ',idia,' larger than days in month ',daym(month)
     stop
   end if
-if (anio.gt.2022 .or. anio.lt.2014 )then
+if (lsummer .and. (anio.gt.2022 .or. anio.lt.2014) )then
   print '(A,I2,A,I2)','Error in anio value: ',anio,' not between 2014 to 2022 ',daym(month)
   stop
 end if
