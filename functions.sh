@@ -37,7 +37,7 @@ zona ="$dominio"
 ! se proporciona el anio
 ! month jan =1 to dec=12
 ! day in the month (from 1 to 28,30 or 31)
-! anio a modelar validos: 2014 a 2020
+! anio a modelar validos: 2014 a 2022
 ! Si se quiere un archvio de 24 hr periodo=1
 !    o dos archivos de 12 hr peridodo=2
 idia=$dia
@@ -50,7 +50,7 @@ periodo=$nfile
 ! .true. o .false. para considerar o no el cambio cuando se
 !  esta en horario de verano
 !
-lsummer = .true.
+lsummer = .false.
 /
 ! Quimica a utilizar
 ! Los mecanismos a usar:
@@ -101,7 +101,7 @@ then
    mkdir $1
 else
    if [ $HacerArea -eq 1 ]; then
-     echo "     Making New Directory"
+     echo "     Erasing and creating Directory"
      rm -rf $1
      mkdir $1
    else
