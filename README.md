@@ -380,7 +380,21 @@ La siguiente tabla muestra el tamaño de las salidas para cada área considerand
 [1]: La superficie de _bosque_ representa **todo** tipo de vegetación en la celda que no es agrícola.
 
 ---
+## For  CAMS annual emissions
 
+ |Codigo CAMS  |Description   |  Codigo IPCC (2019 guidelines, volume 1, chap 4)  |
+ |ENE:  |Power_generation  |    1A1 |
+ |RES:  |Residential_commercial_and_other_combustion  |   1A4 |
+ |TRO:  |Road_transportation   |  1A3b |
+ |TNR:  |Non-road_transportation    | 1A3 |
+ |FEF:  |Fugitive_emissions_from_solid_fuels   |  1B |
+ |IND:  |Industrial_process (Energy consumption of manufacture industry+ process)   |  1A2 and 2 |
+ |AGS:  |Agricultural_soils (without fires)  |   3C |
+ |AGL:  |Agriculture_livestock    | 3A |
+ |SHP:  |Navigation  |   1A3d |
+ |SWD: | Solid_waste_and_waste_water   |  4 |
+
+---
 ### CHIMERE
 El sistema puede generar las salidas en el formato para el modelo [CHIMERE] [2]  cambios son:
 1. los nombres de las variables 
