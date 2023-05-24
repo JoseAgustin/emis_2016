@@ -3,6 +3,7 @@
 # Cofiguration file for emis_2016
 #
 bin_PROGRAMS = ASpatial.exe
+bin_PROGRAMS += Aanual.exe
 bin_PROGRAMS += carr.exe vial.exe agrega.exe
 bin_PROGRAMS += Atemporal.exe
 bin_PROGRAMS += MSpatial.exe
@@ -32,6 +33,7 @@ CLEANFILES = *.o *.mod *~
 # Area emissions spatial distribution and temporal
 ASpatial_exe_SOURCES = master_mod.F90 area_espacial.F90
 Atemporal_exe_SOURCES = master_mod.F90 atemporal.F90
+Aanual_exe_SOURCES = master_mod.F90 areaanual.F90
 # Mobile  spatial allocation
 carr_exe_SOURCES = master_mod.F90 mobile_mod.F90 suma_carretera.F90
 vial_exe_SOURCES = master_mod.F90 mobile_mod.F90 suma_vialidades.F90

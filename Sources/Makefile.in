@@ -86,12 +86,12 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = ASpatial.exe$(EXEEXT) carr.exe$(EXEEXT) \
-	vial.exe$(EXEEXT) agrega.exe$(EXEEXT) Atemporal.exe$(EXEEXT) \
-	MSpatial.exe$(EXEEXT) Mtemporal.exe$(EXEEXT) \
-	Puntual.exe$(EXEEXT) spa.exe$(EXEEXT) spm.exe$(EXEEXT) \
-	spp.exe$(EXEEXT) spm25a.exe$(EXEEXT) spm25m.exe$(EXEEXT) \
-	spm25p.exe$(EXEEXT) emiss.exe$(EXEEXT)
+bin_PROGRAMS = ASpatial.exe$(EXEEXT) Aanual.exe$(EXEEXT) \
+	carr.exe$(EXEEXT) vial.exe$(EXEEXT) agrega.exe$(EXEEXT) \
+	Atemporal.exe$(EXEEXT) MSpatial.exe$(EXEEXT) \
+	Mtemporal.exe$(EXEEXT) Puntual.exe$(EXEEXT) spa.exe$(EXEEXT) \
+	spm.exe$(EXEEXT) spp.exe$(EXEEXT) spm25a.exe$(EXEEXT) \
+	spm25m.exe$(EXEEXT) spm25p.exe$(EXEEXT) emiss.exe$(EXEEXT)
 @WITH_GFOR_TRUE@am__append_1 = -DPGI
 
 # Parallel version
@@ -111,6 +111,9 @@ PROGRAMS = $(bin_PROGRAMS)
 am_ASpatial_exe_OBJECTS = master_mod.$(OBJEXT) area_espacial.$(OBJEXT)
 ASpatial_exe_OBJECTS = $(am_ASpatial_exe_OBJECTS)
 ASpatial_exe_LDADD = $(LDADD)
+am_Aanual_exe_OBJECTS = master_mod.$(OBJEXT) areaanual.$(OBJEXT)
+Aanual_exe_OBJECTS = $(am_Aanual_exe_OBJECTS)
+Aanual_exe_LDADD = $(LDADD)
 am_Atemporal_exe_OBJECTS = master_mod.$(OBJEXT) atemporal.$(OBJEXT)
 Atemporal_exe_OBJECTS = $(am_Atemporal_exe_OBJECTS)
 Atemporal_exe_LDADD = $(LDADD)
@@ -190,18 +193,20 @@ AM_V_FCLD = $(am__v_FCLD_@AM_V@)
 am__v_FCLD_ = $(am__v_FCLD_@AM_DEFAULT_V@)
 am__v_FCLD_0 = @echo "  FCLD    " $@;
 am__v_FCLD_1 = 
-SOURCES = $(ASpatial_exe_SOURCES) $(Atemporal_exe_SOURCES) \
-	$(MSpatial_exe_SOURCES) $(Mtemporal_exe_SOURCES) \
-	$(Puntual_exe_SOURCES) $(agrega_exe_SOURCES) \
-	$(carr_exe_SOURCES) $(emiss_exe_SOURCES) $(spa_exe_SOURCES) \
-	$(spm_exe_SOURCES) $(spm25a_exe_SOURCES) $(spm25m_exe_SOURCES) \
-	$(spm25p_exe_SOURCES) $(spp_exe_SOURCES) $(vial_exe_SOURCES)
-DIST_SOURCES = $(ASpatial_exe_SOURCES) $(Atemporal_exe_SOURCES) \
-	$(MSpatial_exe_SOURCES) $(Mtemporal_exe_SOURCES) \
-	$(Puntual_exe_SOURCES) $(agrega_exe_SOURCES) \
-	$(carr_exe_SOURCES) $(emiss_exe_SOURCES) $(spa_exe_SOURCES) \
-	$(spm_exe_SOURCES) $(spm25a_exe_SOURCES) $(spm25m_exe_SOURCES) \
-	$(spm25p_exe_SOURCES) $(spp_exe_SOURCES) $(vial_exe_SOURCES)
+SOURCES = $(ASpatial_exe_SOURCES) $(Aanual_exe_SOURCES) \
+	$(Atemporal_exe_SOURCES) $(MSpatial_exe_SOURCES) \
+	$(Mtemporal_exe_SOURCES) $(Puntual_exe_SOURCES) \
+	$(agrega_exe_SOURCES) $(carr_exe_SOURCES) $(emiss_exe_SOURCES) \
+	$(spa_exe_SOURCES) $(spm_exe_SOURCES) $(spm25a_exe_SOURCES) \
+	$(spm25m_exe_SOURCES) $(spm25p_exe_SOURCES) $(spp_exe_SOURCES) \
+	$(vial_exe_SOURCES)
+DIST_SOURCES = $(ASpatial_exe_SOURCES) $(Aanual_exe_SOURCES) \
+	$(Atemporal_exe_SOURCES) $(MSpatial_exe_SOURCES) \
+	$(Mtemporal_exe_SOURCES) $(Puntual_exe_SOURCES) \
+	$(agrega_exe_SOURCES) $(carr_exe_SOURCES) $(emiss_exe_SOURCES) \
+	$(spa_exe_SOURCES) $(spm_exe_SOURCES) $(spm25a_exe_SOURCES) \
+	$(spm25m_exe_SOURCES) $(spm25p_exe_SOURCES) $(spp_exe_SOURCES) \
+	$(vial_exe_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -337,6 +342,7 @@ CLEANFILES = *.o *.mod *~
 # Area emissions spatial distribution and temporal
 ASpatial_exe_SOURCES = master_mod.F90 area_espacial.F90
 Atemporal_exe_SOURCES = master_mod.F90 atemporal.F90
+Aanual_exe_SOURCES = master_mod.F90 areaanual.F90
 # Mobile  spatial allocation
 carr_exe_SOURCES = master_mod.F90 mobile_mod.F90 suma_carretera.F90
 vial_exe_SOURCES = master_mod.F90 mobile_mod.F90 suma_vialidades.F90
@@ -435,6 +441,10 @@ clean-binPROGRAMS:
 ASpatial.exe$(EXEEXT): $(ASpatial_exe_OBJECTS) $(ASpatial_exe_DEPENDENCIES) $(EXTRA_ASpatial_exe_DEPENDENCIES) 
 	@rm -f ASpatial.exe$(EXEEXT)
 	$(AM_V_FCLD)$(FCLINK) $(ASpatial_exe_OBJECTS) $(ASpatial_exe_LDADD) $(LIBS)
+
+Aanual.exe$(EXEEXT): $(Aanual_exe_OBJECTS) $(Aanual_exe_DEPENDENCIES) $(EXTRA_Aanual_exe_DEPENDENCIES) 
+	@rm -f Aanual.exe$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(Aanual_exe_OBJECTS) $(Aanual_exe_LDADD) $(LIBS)
 
 Atemporal.exe$(EXEEXT): $(Atemporal_exe_OBJECTS) $(Atemporal_exe_DEPENDENCIES) $(EXTRA_Atemporal_exe_DEPENDENCIES) 
 	@rm -f Atemporal.exe$(EXEEXT)
