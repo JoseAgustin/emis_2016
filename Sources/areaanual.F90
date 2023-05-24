@@ -1,26 +1,26 @@
-!   Creado por Jose Agustin Garcia Reynoso 12/07/2017.
 !
 ! Proposito:
-!          Realiza la distribucion temporal de las emisiones de area
-!   ifort -O3 -axAVX areaanual.F90 -o Atemporal.exe
+!      Realiza la lectura de las emisiones anuales de area y guarda en netcdf
+!   ifort -O3 -axAVX areaanual.F90 -o Aanual.exe
 !   -c -parallel -guide
 !  -parallel -Dtest_gap -opt-report=1 -opt-report-phase=par -opt-report-file=stdout atemporal.F90
 ! gfortran -DPGI  -fopenmp -O2 atemporal.F90 -o Atemporal.exe
 !
-!> @brief For atemporal.F90 program. Area emissions temporal distribution variables
+!> @brief For areaanual.F90 program. Read annual area emissions and save in netcdf file per pollutant.
 !>
-!> Currently uses EPA temporal profiles
+!>   Currently uses EPA temporal profiles
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  04/26/2021
-!>   @version 3.0
-!>   @copyright Universidad Nacional Autonoma de Mexico 2020
-module area_temporal_mod
+!>   @date  05/24/2023
+!>   @version 1.0
+!>   @copyright Universidad Nacional Autonoma de Mexico 2023
+module area_anual_mod
 !> type day (1=Mon, 2= Tue, ... 7=Sun)
 integer :: daytype ;!> number of emission files
 integer,parameter :: nf=10    ;!> max number of scc descriptors in input files
-integer,parameter :: nnscc=59 ;!> number of day in year
+integer,parameter :: nnscc=59 ;!> CAMS categories number
+integer,parameter :: ncams=9 ;!> number of day in year
 integer,parameter ::yjuliano=366 ;!> number of hour per day
-integer,parameter :: nh=24 ;!> number of max lines in emiA
+integer,parameter :: nh=ncams ;!> number of max lines in emiA
 integer :: nmax
 !> Number of lines in emissions file
 integer :: nm
@@ -37,34 +37,21 @@ integer, allocatable :: idsm(:,:)
 real ::fweek
 !>Area emisions from files cel,ssc,file
 real,allocatable ::emiA(:,:,:)
-!> Emission by cel,file and hour (inorganic)
+!> Emission by cel,file (pollutant) and idCAMS
 real,allocatable :: emis(:,:,:)
-!> PM25 emissions cel,scc and hour
-real,allocatable :: epm2(:,:,:)
-!> VOC emissions cel,scc and hour
-real,allocatable :: evoc(:,:,:)
-!> month integer
-real,dimension(nnscc,nf) :: mes ;!> current day
-real,dimension(nnscc,nf) :: dia ;!> previus day
-real,dimension(nnscc,nf) ::diap ! dia currentday, diap previous day
-!> Time zone  CST
-real,dimension(nnscc,nf,nh):: hCST ;!> Time zone MST
-real,dimension(nnscc,nf,nh):: hMST ;!> Time zone PST
-real,dimension(nnscc,nf,nh):: hPST ;!> Time zone EST
-real,dimension(nnscc,nf,nh):: hEST
-!> profile ID 1=mon 2=weekday 3=hourly per SCC and pollutant.
-integer,dimension(3,nnscc,nf):: profile
 !> index per file
 integer,allocatable :: id5(:,:)
 !> SCC codes per file
 character(len=10),dimension(nnscc) ::iscc
-!> Number of days in year
-character(len=3),dimension(yjuliano):: cdia
 !> Initial date of the emissions period
-character (len=19) :: current_date
+character (len=19) :: current_date='2016-01-01_00:00:00'
  !> Input file name
-character(len=14),dimension(nf) ::efile ; !> output file name
-character(len=14),dimension(nf) :: casn
+character(len=14),dimension(nf)   :: efile ; !> output file name
+character(len=14),dimension(nf)   :: casn;!> Categories in CAMS
+character(len=3),dimension(ncams) :: idCAMS!> IPCC classification
+character(len=4),dimension(ncams) :: idIPCC !> Pollutant abreviation
+character(len=4),dimension(nf)    :: comp  !> Long name description
+character(len=76),dimension(ncams):: long_name
 
  data efile/'ASO2_2016.csv','ANOx_2016.csv','ANH3_2016.csv',&
 &           'ACO__2016.csv','APM10_2016.csv','ACO2_2016.csv',&
@@ -74,8 +61,22 @@ character(len=14),dimension(nf) :: casn
 &           'TACO__2016.csv','TAPM102016.csv','TACO2_2016.csv',&
 &           'TACN__2016.csv','TACH4_2016.csv','TAPM2_2016.csv',&
 &           'TAVOC_2016.csv'/
+ data idCAMS/'AGL','AGS','ENE','IND','RES','SHP','SWD','TNR','TRO'/
+ data idIPCC/'  3A','  3C',' 1A2',' 1A2',' 1A4',' 1A3d','   4',' 1A3','1A3b'/
+ data long_name / &
+'AGL: Agriculture_livestock                                                  ',&
+'AGS: Agricultural_soils (without fires)                                     ',&
+'ENE: Power_generation                                                       ',&
+'IND: Industrial_process (Energy consumption of manufacture industry+process)',&
+'RES: Residential_commercial_and_other_combustion                            ',&
+'SHP: Navigation                                                             ',&
+'SWD: Solid_waste_and_waste_water                                            ',&
+'TNR: Non-road_transportation                                                ',&
+'TRO: Road_transportation                                                    '/
+data comp/'SO2 ','NOx ','NH3 ','CO  ','PM10','CO2 ','BC  ','CH4 ','PM25','VOC '/
 common /vars/ fweek,nscc,nm,lh,daytype,mes,dia,current_date
-end module area_temporal_mod
+common /texto/ idCAMS,idIPCC,long_name,comp
+end module area_anual_mod
 !
 !  Progran  atemporal.F90
 !
@@ -86,11 +87,13 @@ end module area_temporal_mod
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 program area_temporal
    use master
-   use area_temporal_mod
+   use area_anual_mod
 
    call lee_namelist
 
    call area_spatial_reading
+
+   call area_sorting
 
    call area_anual_storing
 
@@ -105,27 +108,21 @@ contains
 ! \__ \ |_) | (_| | |_| | (_| | |   | | |  __/ (_| | (_| | | | | | (_| |
 ! |___/ .__/ \__,_|\__|_|\__,_|_|___|_|  \___|\__,_|\__,_|_|_| |_|\__, |
 !     |_|                      |_____|                            |___/
-!>  @brief Reads spatial area emissions and temporal profiles based on SCC.
+!>  @brief Reads spatial area emissions and stores in netcdf for CAMS.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  04/26/2021
-!>   @version 3.0
-!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+!>   @date  05/24/2023
+!>   @version 1.0
+!>   @copyright Universidad Nacional Autonoma de Mexico 2023
 subroutine area_spatial_reading
 	implicit none
 	integer i,j,k,l,m
-	integer idum,imon,iwk,ipdy,iun
-	integer iprof ! scc code from temporal file
-	integer,dimension(25) :: itfrc  !montly,weekely and hourly values and total
+	integer idum,iun
 	real rdum
-	logical fil1,fil2
-  character(len=10):: jscc
 	character(len=4):: cdum
 	character(len=18):: nfile,nfilep
-  character(len=35):: canio
-
 !
    call maxline(nmax)
-
+!
 	do k=1,nf
 	open (newunit=iun,file="../"//efile(k),status='OLD',action='read')
 	read (iun,'(A)') cdum
@@ -170,7 +167,7 @@ subroutine area_spatial_reading
      !do l=1,nh
      ! print '("Hr",x,I2,x,<nscc(k)>(f6.3))',l,(hCST(i,k,l),i=1,nscc(k))
 	 !end do
-	 print *,'   Done ',nfilep,daytype,maxval(hEST)!,maxval(hPST),maxval(hMST)
+	 print *,'   Done ',nfilep
 	end do ! K
     close(15)
     close(16)
@@ -179,6 +176,88 @@ subroutine area_spatial_reading
     close(19)
 134 FORMAT(4x,A5,x,I6,x,A5,I6)
 end subroutine area_spatial_reading
+subroutine area_sorting
+  implicit none
+  integer i,j,k,l,ival,ii
+
+  call area_grids_count ! computes the number of different cells
+  print *,"   Annual emissions"
+  emis=0
+  do k=1,nf
+    print *,efile(k)
+    do ii=1,size(idcel2)
+        do i=1,size(id5,2)
+        if(idcel2(ii).eq.id5(k,i))then
+            do j=1,nscc(k)
+            if(iscc(j).eq.'2102007000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j).eq.'2102004000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j).eq.'2103006000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2103007000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2104011000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2104006000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2104008000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2104007000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2267005000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2270005000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2302002000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2610000000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2801500100') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2810030000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2810001000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(trim(iscc(j)).eq.'30500304') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2280000000') emis(ii,k,6)=emis(ii,k,6)+emiA(k,i,j)
+            if(iscc(j).eq.'2285000000') emis(ii,k,8)=emis(ii,k,8)+emiA(k,i,j)
+            if(iscc(j).eq.'2275000000') emis(ii,k,8)=emis(ii,k,8)+emiA(k,i,j)
+            if(iscc(j).eq.'2275050000') emis(ii,k,8)=emis(ii,k,8)+emiA(k,i,j)
+            if(iscc(j).eq.'2222222222') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
+            if(iscc(j).eq.'2620030000') emis(ii,k,7)=emis(ii,k,7)+emiA(k,i,j)
+            if(iscc(j).eq.'2230070310') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
+            if(iscc(j).eq.'2285002010') emis(ii,k,8)=emis(ii,k,8)+emiA(k,i,j)
+            if(iscc(j).eq.'2265005000') emis(ii,k,2)=emis(ii,k,2)+emiA(k,i,j)
+            if(iscc(j).eq.'2801700000') emis(ii,k,2)=emis(ii,k,2)+emiA(k,i,j)
+            if(iscc(j).eq.'2805020000') emis(ii,k,1)=emis(ii,k,1)+emiA(k,i,j)
+            if(iscc(j).eq.'5555555555') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2311010000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j).eq.'2801000002') emis(ii,k,2)=emis(ii,k,2)+emiA(k,i,j)
+            if(iscc(j).eq.'2801000005') emis(ii,k,2)=emis(ii,k,2)+emiA(k,i,j)
+            if(iscc(j).eq.'2294000000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
+            if(iscc(j).eq.'2296000000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
+            if(iscc(j).eq.'2425010000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j).eq.'2425030000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j).eq.'2425040000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j).eq.'2425000000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j).eq.'2461020000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j).eq.'2420000055') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j).eq.'2415000000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j).eq.'2401005000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j).eq.'2401008000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j).eq.'2415010000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j).eq.'2401990000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j).eq.'2401080000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j).eq.'2401065000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j).eq.'2401020000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j).eq.'2401001000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2465900000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2465200000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2465100000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2465400000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j).eq.'2465600000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j).eq.'2465800000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2465000000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'3333333333') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2501060000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j).eq.'2302050000') emis(ii,k,1)=emis(ii,k,1)+emiA(k,i,j)
+            if(iscc(j).eq.'2461850000') emis(ii,k,2)=emis(ii,k,2)+emiA(k,i,j)
+            if(iscc(j).eq.'2630030000') emis(ii,k,7)=emis(ii,k,7)+emiA(k,i,j)
+            if(iscc(j).eq.'2850000010') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            end do
+        end if
+        end do
+    end do
+end do
+!  end do
+end subroutine area_sorting
+
 
 !   __ _ _ __ ___  __ _
 !  / _` | '__/ _ \/ _` |
@@ -189,24 +268,22 @@ end subroutine area_spatial_reading
 ! | ||  __/ | | | | | |_) | (_) | | | (_| | |   \__ \ || (_) | |  | | | | | (_| |
 !  \__\___|_| |_| |_| .__/ \___/|_|  \__,_|_|___|___/\__\___/|_|  |_|_| |_|\__, |
 !                   |_|                    |_____|                         |___/
-!>  @brief Saves area emission with the temporal profile in hourly basis.
+!>  @brief Saves area emission for CAMS.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  04/26/2021
-!>   @version 3.0
-!>   @copyright Universidad Nacional Autonoma de Mexico 2020
-subroutine area_temporal_storing
+!>   @date  05/24/2023
+!>   @version 1.0
+!>   @copyright Universidad Nacional Autonoma de Mexico 2023
+subroutine area_anual_storing
   implicit none
   integer i,j,k,l,iun
   real suma
-  character(len=3):: cdia(7)
-  data cdia/'MON','TUE','WND','THR','FRD','SAT','SUN'/
   print *,"Area Emissions Temporal distribution saving"
 !$omp parallel sections num_threads (3) private(k,i,l,j,iun)
 !$omp section
-  do k=1,nf-2
+  do k=1,nf
    open(newunit=iun,file=casn(k),action='write')
    write(iun,*)casn(k),'ID, Hr to Hr24'
-   write(iun,'(I8,4A)')size(emis,dim=1),",",current_date,", ",cdia(daytype)
+   write(iun,'(I8,4A)')size(emis,dim=1),",",current_date
    do i=1,size(emis,dim=1)
     suma=0
     do l=1,nh
@@ -217,45 +294,9 @@ subroutine area_temporal_storing
    close(unit=iun)
   end do
 100 format(I7,",",23(ES12.3,","),ES12.3)
-!$omp section
-   k=nf-1
-! WARNING iscc and pm25 must be the before last one to be read.
-   print *," PM2.5"
-   open(newunit=iun,file=casn(k),action='write')
-   write(iun,*)casn(k),'ID, SCC,  Hr to Hr24'
-   write(iun,'(I8,4A)')size(epm2,dim=1)*nscc(k),",",current_date,', ',cdia(daytype)
-   do i=1,size(epm2,dim=1)
-     do j=1,nscc(k)
-     suma=0
-     do l=1,nh
-       suma=suma+epm2(i,j,l)
-     end do
-     if(suma.gt.0)  write(iun,110)idcel2(i),iscc(j),(epm2(i,j,l),l=1,nh)
-     end do
-   end do
-	close(iun)
-!$omp section
-	k=nf
-! WARNING iscc and voc must be the last one to be read.
-   print *," VOC"
-   open(newunit=iun,file=casn(k),action='write')
-   write(iun,*)casn(k),'ID, SCC,  Hr to Hr24'
-   write(iun,'(I8,4A)')size(evoc,dim=1)*nscc(k),",",current_date,', ',cdia(daytype)
-   do i=1,size(evoc,dim=1)
-     do j=1,nscc(k)
-     suma=0
-     do l=1,nh
-       suma=suma+evoc(i,j,l)
-     end do
-     if(suma.gt.0) write(iun,110)idcel2(i),iscc(j),(evoc(i,j,l),l=1,nh)
-     end do
-   end do
-!$omp end parallel sections
-	close(iun)
     print *,"*****  DONE Temporal Area *****"
-110 format(I7,",",A10,",",23(ES12.4,","),ES12.4)
-    deallocate(idcel,id5,idcel2,idsm,emiA,emis,epm2,evoc)
-end subroutine area_temporal_storing
+    deallocate(idcel,id5,idcel2,idsm,emiA,emis)
+end subroutine area_anual_storing
 !   __ _ _ __ ___  __ _
 !  / _` | '__/ _ \/ _` |
 ! | (_| | | |  __/ (_| |
@@ -267,9 +308,9 @@ end subroutine area_temporal_storing
 !  |___/                |_____|
 !>  @brief Counts the number of different cells in file and stores in index.csv file.
 !>   @author  Jose Agustin Garcia Reynoso
-!>   @date  04/26/2021
-!>   @version 3.0
-!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+!>   @date  05/24/2023
+!>   @version 1.0
+!>   @copyright Universidad Nacional Autonoma de Mexico 2023
 subroutine area_grids_count
   integer i,j
   integer idum
@@ -298,8 +339,7 @@ subroutine area_grids_count
   allocate(idcel2(j))
   idcel2=idcel3
   close(123)
-  allocate(emis(j,nf-2,nh))
-  allocate(epm2(j,nscc(nf-1),nh),evoc(j,nscc(nf),nh))
+  allocate(emis(j,nf,nh))
    emis=0
    evoc=0
   deallocate(idcel3)
