@@ -33,7 +33,7 @@ CLEANFILES = *.o *.mod *~
 # Area emissions spatial distribution and temporal
 ASpatial_exe_SOURCES = master_mod.F90 area_espacial.F90
 Atemporal_exe_SOURCES = master_mod.F90 atemporal.F90
-Aanual_exe_SOURCES = master_mod.F90 areaanual.F90
+Aanual_exe_SOURCES = check.F90 master_mod.F90 areaanual.F90
 # Mobile  spatial allocation
 carr_exe_SOURCES = master_mod.F90 mobile_mod.F90 suma_carretera.F90
 vial_exe_SOURCES = master_mod.F90 mobile_mod.F90 suma_vialidades.F90

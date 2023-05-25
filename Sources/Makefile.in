@@ -111,7 +111,8 @@ PROGRAMS = $(bin_PROGRAMS)
 am_ASpatial_exe_OBJECTS = master_mod.$(OBJEXT) area_espacial.$(OBJEXT)
 ASpatial_exe_OBJECTS = $(am_ASpatial_exe_OBJECTS)
 ASpatial_exe_LDADD = $(LDADD)
-am_Aanual_exe_OBJECTS = master_mod.$(OBJEXT) areaanual.$(OBJEXT)
+am_Aanual_exe_OBJECTS = check.$(OBJEXT) master_mod.$(OBJEXT) \
+	areaanual.$(OBJEXT)
 Aanual_exe_OBJECTS = $(am_Aanual_exe_OBJECTS)
 Aanual_exe_LDADD = $(LDADD)
 am_Atemporal_exe_OBJECTS = master_mod.$(OBJEXT) atemporal.$(OBJEXT)
@@ -342,7 +343,7 @@ CLEANFILES = *.o *.mod *~
 # Area emissions spatial distribution and temporal
 ASpatial_exe_SOURCES = master_mod.F90 area_espacial.F90
 Atemporal_exe_SOURCES = master_mod.F90 atemporal.F90
-Aanual_exe_SOURCES = master_mod.F90 areaanual.F90
+Aanual_exe_SOURCES = check.F90 master_mod.F90 areaanual.F90
 # Mobile  spatial allocation
 carr_exe_SOURCES = master_mod.F90 mobile_mod.F90 suma_carretera.F90
 vial_exe_SOURCES = master_mod.F90 mobile_mod.F90 suma_vialidades.F90
