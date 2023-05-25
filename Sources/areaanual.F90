@@ -35,7 +35,7 @@ integer :: iverano  ! si es en periodo de verano
 !> number of scc codes per file
 integer,dimension(nf) :: nscc ; !> GRIDID in emissions
 integer, allocatable :: idcel(:) ;!> GRIDID not duplictes
-integer, allocatable ::idcel2(:) ;!> GRIDID fir identification of not duplicate
+integer*8, allocatable ::idcel2(:) ;!> GRIDID fir identification of not duplicate
 integer, allocatable ::idcel3(:) ;!> state municipality IDs emiss and time zone
 integer, allocatable :: idsm(:,:);!> GRIDCODE in emission input files
 integer*8 :: idcf;!> GRIDCODE in output grid obtaines from localiza
@@ -68,6 +68,8 @@ character(len=3),dimension(ncams) :: idCAMS;!> IPCC classification
 character(len=4),dimension(ncams) :: idIPCC;!> Pollutant abreviation
 character(len=4),dimension(nf)    :: ename  !> Long name description
 character(len=76),dimension(ncams):: cname
+character(len=66),dimension(nf):: long_nm
+
 character (len=40) :: titulo
 
 
@@ -92,8 +94,20 @@ character (len=40) :: titulo
 'SWD: Solid_waste_and_waste_water                                            ',&
 'TNR: Non-road_transportation                                                ',&
 'TRO: Road_transportation                                                    '/
+data long_nm/&
+'surface_upward_mass_flux_of_sulfur_dioxide                        ',&
+'surface_upward_mass_flux_of_nox                                   ',&
+'surface_upward_mass_flux_of_ammonia                               ',&
+'surface_upward_mass_flux_of_carbon_monoxide                       ',&
+'surface_upward_mass_flux_of_pm10_ambient_aerosol_particles_in_air ',&
+'surface_upward_mass_flux_of_carbon_dioxide                        ',&
+'surface_upward_mass_flux_of_black_carbon                          ',&
+'surface_upward_mass_flux_of_methane                               ',&
+'surface_upward_mass_flux_of_pm2p5_ambient_aerosol_particles_in_air',&
+'surface_upward_mass_flux_of_nmvoc                                 '/
+
 common /vars/ fweek,nscc,nm,lh,daytype,dia
-common /texto/ idCAMS,idIPCC,ename,cname
+common /texto/ idCAMS,idIPCC,ename,cname,long_nm
 common /domain/ ncel,nl,nx,ny,CDIM,SUPF1
 common /fileout/id_varlong,id_varlat,id_varpop,&
 id_unlimit,id_utmx,id_utmy,id_utmz,ncid
@@ -181,17 +195,7 @@ subroutine area_spatial_reading
 	end do
     idcel3=idcel
 	close(iun)
-  print *,"Done reading: ",efile(k),size(idcel3)
-
-      !print '(A3,<nscc(k)>(I5))','mon',(profile(1,i,k),i=1,nscc(k))
-      !print '(A3,<nscc(k)>(I3,x))','day',(profile(2,i,k),i=1,nscc(k))
-	  !print '(A3,<nscc(k)>(I3,x))','hr ',(profile(3,i,k),i=1,nscc(k))
-	 print *,'   Done Reading files'
-
-     !do l=1,nh
-     ! print '("Hr",x,I2,x,<nscc(k)>(f6.3))',l,(hCST(i,k,l),i=1,nscc(k))
-	 !end do
-	 print *,'   Done ',nfilep
+    print *,"Done reading: ",efile(k),size(idcel3)
 	end do ! K
     close(15)
     close(16)
@@ -300,11 +304,11 @@ end subroutine area_sorting
 subroutine area_anual_storing
 use netcdf
   implicit none
-  integer i,j,k,l,iun
+  integer i,j,k,l,m,iun
   integer :: Layer
   integer, parameter :: NDIMS=6;!> Number of layers in emission
   integer,parameter :: zlev=1
-  integer :: dimids2(2),dimids3(3),dimids4(4)
+  integer :: dimids2(2),dimids3(3),dimids(2)
   integer,dimension(NDIMS):: dim,id_dim
   integer :: ncol,pren,ren0
   integer :: pcol,col0
@@ -318,9 +322,9 @@ use netcdf
   integer :: id_utmx ;!>netcdf UTMy coordinate variable ID in netcdf file
   integer :: id_utmy ;!>netcdf UTMz coordinate variable ID in netcdf file
   integer :: id_utmz
-  real    :: suma
+  real,dimension(ncams) :: suma
   character (len=19),dimension(NDIMS) ::sdim
-  character(8)  :: fecha
+  character(8)  :: fecha,varname
   character(10) :: time
   character(24) :: hoy
   data sdim /"Time               ","DateStrLen         ","west_east          ",&
@@ -341,7 +345,7 @@ use netcdf
   end do
   dimids2 = (/id_dim(2),id_dim(1)/)
   dimids3 = (/id_dim(3),id_dim(4),id_dim(1) /)
-  dimids4 = (/id_dim(3),id_dim(4),id_dim(6),id_dim(1)/)
+  dimids  = (/id_dim(3),id_dim(4)/)
 !Atributos Globales NF90_GLOBAL
 call check( nf90_put_att(ncid, NF90_GLOBAL, "WEST-EAST_GRID_DIMENSION",nx))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "SOUTH-NORTH_GRID_DIMENSION",ny))
@@ -392,8 +396,8 @@ call check( nf90_put_att(ncid, id_unlimit, "calendar", "standard"))
 call check( nf90_put_att(ncid, id_unlimit, "axis", "T"))
 call check( nf90_put_att(ncid, id_unlimit, "comment", "Time dimension in years"))
 
-call check( nf90_def_var(ncid, "lon", NF90_REAL,(/id_dim(3),id_dim(4)/),id_varlong) )
-call check( nf90_def_var(ncid, "lat", NF90_REAL,(/id_dim(3),id_dim(4)/),id_varlat) )
+call check( nf90_def_var(ncid, "lon", NF90_REAL,dimids,id_varlong) )
+call check( nf90_def_var(ncid, "lat", NF90_REAL,dimids,id_varlat) )
 call check( nf90_put_att(ncid, id_varlong, "long_name", "Longitude"))
 call check( nf90_put_att(ncid, id_varlong, "units", "degrees_east"))
 call check( nf90_put_att(ncid, id_varlong, "axis", "X"))
@@ -403,28 +407,28 @@ call check( nf90_put_att(ncid, id_varlat, "units", "degrees_north"))
 call check( nf90_put_att(ncid, id_varlat, "axis", "Y"))
 call check( nf90_put_att(ncid, id_varlat, "comment", "Grid values for the domain LAMBERT CONFORMAL"))
 !print *," Pob"
-call check( nf90_def_var(ncid,"POB",NF90_REAL,(/id_dim(3),id_dim(4)/) ,id_varpop ) )
+call check( nf90_def_var(ncid,"POB",NF90_REAL,dimids ,id_varpop ) )
 ! Assign  attributes
 call check( nf90_put_att(ncid, id_varpop, "FieldType", 104 ) )
 call check( nf90_put_att(ncid, id_varpop, "MemoryOrder", "XYZ") )
 call check( nf90_put_att(ncid, id_varpop,"description","Population in each grid"))
 call check( nf90_put_att(ncid, id_varpop, "units", "number"))
 ! Para Mercator
-call check( nf90_def_var(ncid, "UTMx", NF90_REAL,(/id_dim(3),id_dim(4)/),id_utmx ) )
+call check( nf90_def_var(ncid, "UTMx", NF90_REAL,dimids,id_utmx ) )
 ! Assign  attributes
 call check( nf90_put_att(ncid, id_utmx, "FieldType", 104 ) )
 call check( nf90_put_att(ncid, id_utmx, "MemoryOrder", "XYZ") )
 call check( nf90_put_att(ncid, id_utmx, "description", "UTM coordinate west-east") )
 call check( nf90_put_att(ncid, id_utmx, "units", "km"))
 call check( nf90_put_att(ncid, id_utmx, "axis", "X") )
-call check( nf90_def_var(ncid, "UTMy", NF90_REAL,(/id_dim(3),id_dim(4)/),id_utmy ) )
+call check( nf90_def_var(ncid, "UTMy", NF90_REAL,dimids,id_utmy ) )
 ! Assign  attributes
 call check( nf90_put_att(ncid, id_utmy, "FieldType", 104 ) )
 call check( nf90_put_att(ncid, id_utmy, "MemoryOrder", "XYZ") )
 call check( nf90_put_att(ncid, id_utmy, "description", "UTM coordinate sotuth-north") )
 call check( nf90_put_att(ncid, id_utmy, "units", "km"))
 call check( nf90_put_att(ncid, id_utmy, "axis", "Y") )
-call check( nf90_def_var(ncid, "UTMz", NF90_INT,(/id_dim(3),id_dim(4)/),id_utmz ) )
+call check( nf90_def_var(ncid, "UTMz", NF90_INT,dimids,id_utmz ) )
 ! Assign  attributes
 call check( nf90_put_att(ncid, id_utmz, "FieldType", 104 ) )
 call check( nf90_put_att(ncid, id_utmz, "MemoryOrder", "XYZ") )
@@ -442,30 +446,41 @@ call check( nf90_put_att(ncid, id_utmz, "units", "None"))
     call check( nf90_put_var(ncid, id_varlat,xlat,start=(/1,1/)) )
     call check( nf90_put_var(ncid, id_varlong,xlon,start=(/1,1/)) )
 ! Poblacion
-  call check( nf90_put_var(ncid, id_varpop,pob,start=(/1,1/)) )
-do i=1,ncams
-call crea_attr(ncid,3,dimids3,ename(k)//":"//trim(idCAMS(i)),cname(i),"kg m-2 s-1",id_var(i))
-end do
+    call check( nf90_put_var(ncid, id_varpop,pob,start=(/1,1/)) )
+ !   do i=1,ncams
+!    varname="        "
+!    varname=trim(ename(k))//"-"//trim(idCAMS(i))
+!    call crea_attr(ncid,2,dimids,varname,long_nm(k),cname(i),"kg m-2 s-1",id_var(i))
+ !   end do
 ! Busca el numero de columnas totales
    ncol=idcg(nx+1)-idcg(1)
 ! Busca columna y renglon del primer valor del dominio
   call get_position(idcg(1),ncol, ren0,col0)
   ren0=ren0-1
   col0=col0-1
-call get_position(id5(k,1),ncol, ren0,col0)
-j=pren-ren0
-i=pcol-col0
-print *,i,j
-do i=1,size(emis,dim=1)
-    suma=0
+    do m=1,size(emis,dim=1)
+    call get_position(idcel2(m),ncol, pren,pcol)
+    j=pren-ren0
+    i=pcol-col0
+    if(m.eq.1) print *,i,j
+     suma=0
+        do l=1,nh
+            eft(i,j,l)=eft(i,j,l)+emis(m,k,l)*0.0315360/SUPF1 !conversion to g s-1 m-2
+            suma(l)=suma(l)+emis(m,k,l)
+        end do  !l
+            !if(suma.gt.0) write(iun,100)idcel2(i),(emis(i,k,l),l=1,nh)
+        end do !m
     do l=1,nh
-        suma=suma+emis(i,k,l)
+    if(int(suma(l)/10).gt.0) then
+    varname="        "
+    varname=trim(ename(k))//"-"//trim(idCAMS(l))
+    call  crea_attr(ncid,2,dimids,varname,long_nm(k),cname(l),"kg m-2 s-1",id_var(l))
+    call check( nf90_put_var(ncid, id_var(l),eft,start=(/1,1,l/),count=(/nx,ny,l/)) )
+    end if
     end do
-        !if(suma.gt.0) write(iun,100)idcel2(i),(emis(i,k,l),l=1,nh)
-    end do
-  end do
-
-    call check( nf90_close(ncid) )
+ end do
+    print *,suma
+     call check( nf90_close(ncid) )
     print *,"*****  DONE Temporal Area *****"
     deallocate(idcel,id5,idcel2,idsm,emiA,emis)
 end subroutine area_anual_storing
@@ -683,22 +698,22 @@ end function
 !>   @param cname description variable name
 !>   @param cunits units of the variable
 !>   @param id_var variable ID
-subroutine crea_attr(ncid,idm,dimids,svar,name,cunits,id_var)
+subroutine crea_attr(ncid,idm,dimids,svar,name,desc,cunits,id_var)
 use netcdf
     implicit none
     integer , INTENT(IN) ::ncid,idm
     integer, INTENT(out) :: id_var
     integer, INTENT(IN),dimension(idm):: dimids
-    character(len=*), INTENT(IN)::svar,name,cunits
+    character(len=*), INTENT(IN)::svar,name,desc,cunits
     character(len=50) :: cvar
-    cvar="mass_flux_of_ "//trim(svar)
+    cvar="mass_flux_of_"//trim(svar)
 
     call check( nf90_def_var(ncid, svar, NF90_REAL, dimids,id_var ) )
     ! Assign  attributes
     call check( nf90_put_att(ncid, id_var, "coordinates", "lon lat" ) )
-    call check( nf90_put_att(ncid, id_var, "description", Cvar) )
-    call check( nf90_put_att(ncid, id_var, "long_name", name) )
-    call check( nf90_put_att(ncid, id_var, "units", cunits))
+    call check( nf90_put_att(ncid, id_var, "description",desc) )
+    call check( nf90_put_att(ncid, id_var, "long_name",name) )
+    call check( nf90_put_att(ncid, id_var, "units",cunits))
     call check( nf90_put_att(ncid, id_var, "stagger", "Z") )
     return
 end subroutine crea_attr
