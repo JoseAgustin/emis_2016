@@ -435,7 +435,6 @@ call check( nf90_put_att(ncid, id_utmz, "MemoryOrder", "XYZ") )
 call check( nf90_put_att(ncid, id_utmz, "description", "UTM Zone") )
 call check( nf90_put_att(ncid, id_utmz, "units", "None"))
 
-
 !   Terminan definiciones
     call check( nf90_enddef(ncid) )
 !  Coordenadas Mercator UTM
@@ -447,7 +446,9 @@ call check( nf90_put_att(ncid, id_utmz, "units", "None"))
     call check( nf90_put_var(ncid, id_varlong,xlon,start=(/1,1/)) )
 ! Poblacion
     call check( nf90_put_var(ncid, id_varpop,pob,start=(/1,1/)) )
- !   do i=1,ncams
+!Tiempo
+    call check( nf90_put_var(ncid, id_dim(1),"2016-01-01_00:00:00"))
+  !   do i=1,ncams
 !    varname="        "
 !    varname=trim(ename(k))//"-"//trim(idCAMS(i))
 !    call crea_attr(ncid,2,dimids,varname,long_nm(k),cname(i),"kg m-2 s-1",id_var(i))
@@ -462,19 +463,19 @@ call check( nf90_put_att(ncid, id_utmz, "units", "None"))
     call get_position(idcel2(m),ncol, pren,pcol)
     j=pren-ren0
     i=pcol-col0
-    if(m.eq.1) print *,i,j
+!    if(m.eq.1) print *,i,j
      suma=0
         do l=1,nh
-            eft(i,j,l)=eft(i,j,l)+emis(m,k,l)*0.0315360/SUPF1 !conversion to g s-1 m-2
             suma(l)=suma(l)+emis(m,k,l)
+            eft(i,j,l)=eft(i,j,l)+emis(m,k,l)*0.0315360/SUPF1 !conversion to g s-1 m-2
         end do  !l
             !if(suma.gt.0) write(iun,100)idcel2(i),(emis(i,k,l),l=1,nh)
         end do !m
     do l=1,nh
-    if(int(suma(l)/10).gt.0) then
+    if(int(suma(l)/10).gt.0.) then
     varname="        "
     varname=trim(ename(k))//"-"//trim(idCAMS(l))
-    call  crea_attr(ncid,2,dimids,varname,long_nm(k),cname(l),"kg m-2 s-1",id_var(l))
+    call crea_attr(ncid,2,dimids,varname,long_nm(k),cname(l),idIPCC(l),"kg m-2 s-1",id_var(l))
     call check( nf90_put_var(ncid, id_var(l),eft,start=(/1,1,l/),count=(/nx,ny,l/)) )
     end if
     end do
@@ -698,13 +699,13 @@ end function
 !>   @param cname description variable name
 !>   @param cunits units of the variable
 !>   @param id_var variable ID
-subroutine crea_attr(ncid,idm,dimids,svar,name,desc,cunits,id_var)
+subroutine crea_attr(ncid,idm,dimids,svar,name,desc,tipcc,cunits,id_var)
 use netcdf
     implicit none
     integer , INTENT(IN) ::ncid,idm
     integer, INTENT(out) :: id_var
     integer, INTENT(IN),dimension(idm):: dimids
-    character(len=*), INTENT(IN)::svar,name,desc,cunits
+    character(len=*), INTENT(IN)::svar,name,desc,tipcc,cunits
     character(len=50) :: cvar
     cvar="mass_flux_of_"//trim(svar)
 
@@ -713,8 +714,8 @@ use netcdf
     call check( nf90_put_att(ncid, id_var, "coordinates", "lon lat" ) )
     call check( nf90_put_att(ncid, id_var, "description",desc) )
     call check( nf90_put_att(ncid, id_var, "long_name",name) )
+    call check( nf90_put_att(ncid, id_var, "ipcc_id",tipcc) )
     call check( nf90_put_att(ncid, id_var, "units",cunits))
-    call check( nf90_put_att(ncid, id_var, "stagger", "Z") )
     return
 end subroutine crea_attr
 end program area_temporal
