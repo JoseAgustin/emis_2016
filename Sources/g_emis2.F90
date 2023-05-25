@@ -843,7 +843,7 @@ subroutine setup_file(FILE_NAME,istart,ncid)
        call check( nf90_def_dim(ncid,"SpStrLen", 23, id_Srtlen) )
     end if
     dimids2 = (/id_dim(2),id_dim(1)/)
-    dimids3 = (/id_dim(3),id_dim(2),id_dim(1) /)
+    dimids3 = (/id_dim(3),id_dim(4),id_dim(1) /)
     dimids4 = (/id_dim(3),id_dim(4),id_dim(6),id_dim(1)/)
     !print *,"   Atributos Globales NF90_GLOBAL ****"
     !Atributos Globales NF90_GLOBAL
@@ -1125,7 +1125,7 @@ end subroutine crea_attr
 ! | |  __/  __/   | | (_) | (_| (_| | | |/ / (_| |
 ! |_|\___|\___|___|_|\___/ \___\__,_|_|_/___\__,_|
 !            |_____|
-!>  @brief Reada the lon,lat and utm coordinates for the output grid
+!>  @brief Read the lon,lat and utm coordinates for the output grid
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  04/23/2021
 !>   @version  3.0
