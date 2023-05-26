@@ -90,9 +90,9 @@ bin_PROGRAMS = ASpatial.exe$(EXEEXT) Aanual.exe$(EXEEXT) \
 	carr.exe$(EXEEXT) vial.exe$(EXEEXT) agrega.exe$(EXEEXT) \
 	Atemporal.exe$(EXEEXT) MSpatial.exe$(EXEEXT) \
 	Mannual.exe$(EXEEXT) Mtemporal.exe$(EXEEXT) \
-	Puntual.exe$(EXEEXT) spa.exe$(EXEEXT) spm.exe$(EXEEXT) \
-	spp.exe$(EXEEXT) spm25a.exe$(EXEEXT) spm25m.exe$(EXEEXT) \
-	spm25p.exe$(EXEEXT) emiss.exe$(EXEEXT)
+	Puntual.exe$(EXEEXT) Panual.exe$(EXEEXT) spa.exe$(EXEEXT) \
+	spm.exe$(EXEEXT) spp.exe$(EXEEXT) spm25a.exe$(EXEEXT) \
+	spm25m.exe$(EXEEXT) spm25p.exe$(EXEEXT) emiss.exe$(EXEEXT)
 @WITH_GFOR_TRUE@am__append_1 = -DPGI
 
 # Parallel version
@@ -130,6 +130,10 @@ am_Mtemporal_exe_OBJECTS = check.$(OBJEXT) master_mod.$(OBJEXT) \
 	movil_temp.$(OBJEXT)
 Mtemporal_exe_OBJECTS = $(am_Mtemporal_exe_OBJECTS)
 Mtemporal_exe_LDADD = $(LDADD)
+am_Panual_exe_OBJECTS = check.$(OBJEXT) master_mod.$(OBJEXT) \
+	f_anual.$(OBJEXT)
+Panual_exe_OBJECTS = $(am_Panual_exe_OBJECTS)
+Panual_exe_LDADD = $(LDADD)
 am_Puntual_exe_OBJECTS = master_mod.$(OBJEXT) t_puntal.$(OBJEXT)
 Puntual_exe_OBJECTS = $(am_Puntual_exe_OBJECTS)
 Puntual_exe_LDADD = $(LDADD)
@@ -202,17 +206,19 @@ am__v_FCLD_1 =
 SOURCES = $(ASpatial_exe_SOURCES) $(Aanual_exe_SOURCES) \
 	$(Atemporal_exe_SOURCES) $(MSpatial_exe_SOURCES) \
 	$(Mannual_exe_SOURCES) $(Mtemporal_exe_SOURCES) \
-	$(Puntual_exe_SOURCES) $(agrega_exe_SOURCES) \
-	$(carr_exe_SOURCES) $(emiss_exe_SOURCES) $(spa_exe_SOURCES) \
-	$(spm_exe_SOURCES) $(spm25a_exe_SOURCES) $(spm25m_exe_SOURCES) \
-	$(spm25p_exe_SOURCES) $(spp_exe_SOURCES) $(vial_exe_SOURCES)
+	$(Panual_exe_SOURCES) $(Puntual_exe_SOURCES) \
+	$(agrega_exe_SOURCES) $(carr_exe_SOURCES) $(emiss_exe_SOURCES) \
+	$(spa_exe_SOURCES) $(spm_exe_SOURCES) $(spm25a_exe_SOURCES) \
+	$(spm25m_exe_SOURCES) $(spm25p_exe_SOURCES) $(spp_exe_SOURCES) \
+	$(vial_exe_SOURCES)
 DIST_SOURCES = $(ASpatial_exe_SOURCES) $(Aanual_exe_SOURCES) \
 	$(Atemporal_exe_SOURCES) $(MSpatial_exe_SOURCES) \
 	$(Mannual_exe_SOURCES) $(Mtemporal_exe_SOURCES) \
-	$(Puntual_exe_SOURCES) $(agrega_exe_SOURCES) \
-	$(carr_exe_SOURCES) $(emiss_exe_SOURCES) $(spa_exe_SOURCES) \
-	$(spm_exe_SOURCES) $(spm25a_exe_SOURCES) $(spm25m_exe_SOURCES) \
-	$(spm25p_exe_SOURCES) $(spp_exe_SOURCES) $(vial_exe_SOURCES)
+	$(Panual_exe_SOURCES) $(Puntual_exe_SOURCES) \
+	$(agrega_exe_SOURCES) $(carr_exe_SOURCES) $(emiss_exe_SOURCES) \
+	$(spa_exe_SOURCES) $(spm_exe_SOURCES) $(spm25a_exe_SOURCES) \
+	$(spm25m_exe_SOURCES) $(spm25p_exe_SOURCES) $(spp_exe_SOURCES) \
+	$(vial_exe_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -359,6 +365,7 @@ Mannual_exe_SOURCES = check.F90 master_mod.F90 movil_anual.F90
 Mtemporal_exe_SOURCES = check.F90 master_mod.F90 movil_temp.F90
 # Point emissions temporal
 Puntual_exe_SOURCES = master_mod.F90 t_puntal.F90
+Panual_exe_SOURCES = check.F90 master_mod.F90 f_anual.F90
 # Gas Chemical speciation
 spa_exe_SOURCES = sort_uniq.F90 agg_mod.F90 master_mod.F90 agg_a.F90
 spm_exe_SOURCES = sort_uniq.F90 agg_mod.F90 master_mod.F90 agg_m.F90
@@ -468,6 +475,10 @@ Mannual.exe$(EXEEXT): $(Mannual_exe_OBJECTS) $(Mannual_exe_DEPENDENCIES) $(EXTRA
 Mtemporal.exe$(EXEEXT): $(Mtemporal_exe_OBJECTS) $(Mtemporal_exe_DEPENDENCIES) $(EXTRA_Mtemporal_exe_DEPENDENCIES) 
 	@rm -f Mtemporal.exe$(EXEEXT)
 	$(AM_V_FCLD)$(FCLINK) $(Mtemporal_exe_OBJECTS) $(Mtemporal_exe_LDADD) $(LIBS)
+
+Panual.exe$(EXEEXT): $(Panual_exe_OBJECTS) $(Panual_exe_DEPENDENCIES) $(EXTRA_Panual_exe_DEPENDENCIES) 
+	@rm -f Panual.exe$(EXEEXT)
+	$(AM_V_FCLD)$(FCLINK) $(Panual_exe_OBJECTS) $(Panual_exe_LDADD) $(LIBS)
 
 Puntual.exe$(EXEEXT): $(Puntual_exe_OBJECTS) $(Puntual_exe_DEPENDENCIES) $(EXTRA_Puntual_exe_DEPENDENCIES) 
 	@rm -f Puntual.exe$(EXEEXT)

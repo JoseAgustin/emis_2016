@@ -10,6 +10,7 @@ bin_PROGRAMS += MSpatial.exe
 bin_PROGRAMS += Mannual.exe
 bin_PROGRAMS += Mtemporal.exe
 bin_PROGRAMS += Puntual.exe
+bin_PROGRAMS += Panual.exe
 bin_PROGRAMS += spa.exe spm.exe spp.exe
 bin_PROGRAMS += spm25a.exe spm25m.exe spm25p.exe
 bin_PROGRAMS += emiss.exe
@@ -45,6 +46,7 @@ Mannual_exe_SOURCES = check.F90 master_mod.F90 movil_anual.F90
 Mtemporal_exe_SOURCES = check.F90 master_mod.F90 movil_temp.F90
 # Point emissions temporal
 Puntual_exe_SOURCES   = master_mod.F90 t_puntal.F90
+Panual_exe_SOURCES   = check.F90 master_mod.F90 f_anual.F90
 # Gas Chemical speciation
 spa_exe_SOURCES = sort_uniq.F90 agg_mod.F90 master_mod.F90 agg_a.F90
 spm_exe_SOURCES = sort_uniq.F90 agg_mod.F90 master_mod.F90 agg_m.F90
