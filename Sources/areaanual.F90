@@ -466,8 +466,7 @@ call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
 ! Poblacion
     call check( nf90_put_var(ncid, id_varpop,pob,start=(/1,1/)) )
 !Tiempo
-    call check( nf90_put_var(ncid, id_dim(1),"2016-01-01_06:00:00Z"))! one year output
-print *,"tiempo"
+    call check( nf90_put_var(ncid, id_dim(1),"2016-01-01_06:00:00"))! one year output
 ! Busca el numero de columnas totales
    ncol=idcg(nx+1)-idcg(1)
 ! Busca columna y renglon del primer valor del dominio
