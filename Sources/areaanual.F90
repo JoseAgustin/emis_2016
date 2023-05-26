@@ -62,16 +62,15 @@ character(len=10),dimension(nnscc) ::iscc
 !> Initial date of the emissions period
 character (len=19) :: current_date='2016-01-01_00:00:00'
  !> Input file name
-character(len=14),dimension(nf)   :: efile ; !> output file name
-character(len=25),dimension(nf)   :: casn;!> Categories in CAMS
+character(len=14),dimension(nf)   :: efile ;!> output file name
+character(len=25),dimension(nf)   :: casn  ;!> Categories in CAMS
 character(len=3),dimension(ncams) :: idCAMS;!> IPCC classification
 character(len=4),dimension(ncams) :: idIPCC;!> Pollutant abreviation
-character(len=4),dimension(nf)    :: ename  !> Long name description
-character(len=76),dimension(ncams):: cname
+character(len=4),dimension(nf)    :: ename ;!> Long name description
+character(len=76),dimension(ncams):: cname ;!> Variable description
 character(len=66),dimension(nf):: long_nm
 
 character (len=40) :: titulo
-
 
  data efile/'ASO2_2016.csv','ANOx_2016.csv','ANH3_2016.csv',&
 &           'ACO__2016.csv','APM10_2016.csv','ACO2_2016.csv',&
@@ -365,7 +364,7 @@ use netcdf
 write(geospatial_bounds,100)"POLYGON ((",minval(xlon),minval(xlat),&
 &minval(xlon),maxval(xlat),maxval(xlon), maxval(xlat),maxval(xlon),minval(xlat),"))"
 write(ccdim,110) CDIM*1000
-call check( nf90_put_att(ncid, NF90_GLOBAL, "id","AE_2016"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "id","AE_2016_"//trim(ename(k))))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "title","Emissions from criteria pollutants and GHG for 2016"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_bounds",geospatial_bounds))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_bounds_crs","EPSG:4326"))
@@ -510,7 +509,7 @@ call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
       aguardar=0
         do l=1,nh
             suma(l)=suma(l)+emis(m,k,l)
-            eft(i,j,l)=eft(i,j,l)+emis(m,k,l)*0.0315360/SUPF1!conversion: kg s-1 m-2
+            eft(i,j,l)=eft(i,j,l)+emis(m,k,l)*0.0315360*SUPF1!conversion: kg s-1 m-2
         end do  !l
     end do !m
     do l=1,nh
@@ -526,8 +525,9 @@ call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
     call check( nf90_put_var(ncid, id_var(l),aguardar,start=(/1,1/)) )
     end if
     end do
+call check( nf90_close(ncid) )
+
  end do
-     call check( nf90_close(ncid) )
     print *,"*****  DONE Annual Output Area *****"
     deallocate(idcel,id5,idcel2,idsm,emiA,emis)
 100 format(A10,3(f9.4,f8.4,","),f9.4,f8.4,A2)
