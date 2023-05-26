@@ -737,7 +737,7 @@ end function
 !>  @brief Creates attributes for each variable in the netcdf file
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  04/23/2021
-!>   @version  3.0
+!>   @version  3.5
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 !>   @param ncid netcdf file ID
 !>   @param idm number of items in dimids array
