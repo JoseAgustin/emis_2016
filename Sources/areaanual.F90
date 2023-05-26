@@ -28,7 +28,7 @@ integer :: nl    ;!> longitude values in grid
 integer :: nx    ;!> latitude values in grid
 integer :: ny    ;!> netcdf unit ID for file1  in file (24 or 12 hrs)
 integer ::ncid   ;!>emissions by nx,ny,ncams
-real,allocatable:: eft(:,:,:)
+real,allocatable:: eft(:,:,:),aguardar(:,:)
 !> Number of lines in Time zone file
 integer :: lh ; !> if is dayligth time saving period
 integer :: iverano  ! si es en periodo de verano
@@ -173,7 +173,7 @@ subroutine area_spatial_reading
 	   nm=nm+1
 	end do
 100	 continue
-     write(6,134)"  mn=",nm,"nmax=",nmax
+     !write(6,134)"  mn=",nm,"nmax=",nmax
     if (nm.gt.nmax) STOP "*** ERROR: nm larger than nmax edit code line 140"
 	 rewind(iun)
 	 if(k.eq.1) then
@@ -331,8 +331,6 @@ use netcdf
 &            "south_north        ","bottom_top         ","emissions_zdim_stag"/
     call date_and_time(fecha,time)
     hoy=fecha(7:8)//'-'//mes(fecha(5:6))//'-'//fecha(1:4)//' '//time(1:2)//':'//time(3:4)//':'//time(5:10)
-    !hoy=fecha(7:8)//'-'//mes(fecha(5:6))//'-'//fecha(1:4)//' '//time(1:2)//':'//time(3:4)//':'//time(5:10)
-
 !
  print *,"Area Emissions Annual saving"
   do k=1,nf
@@ -347,6 +345,9 @@ use netcdf
   dimids3 = (/id_dim(3),id_dim(4),id_dim(1) /)
   dimids  = (/id_dim(3),id_dim(4)/)
 !Atributos Globales NF90_GLOBAL
+!print *,"Globales"
+call check( nf90_put_att(ncid, NF90_GLOBAL, "id","AE_2016"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "title","Emissions from criteria pollutants and GHG for 2016"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "WEST-EAST_GRID_DIMENSION",nx))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "SOUTH-NORTH_GRID_DIMENSION",ny))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "BOTTOM-TOP_GRID_DIMENSION",1))
@@ -356,17 +357,23 @@ call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lon_resolution",CDIM*100
 call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lat_min",minval(xlat)))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lon_min",minval(xlon)))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lat_max",maxval(xlat)))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lon_max",maxval(xlat)))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lon_max",maxval(xlon)))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lat_units","degrees_north"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lon_units","degrees_east"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "processing_level","Level 1"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "time_coverage_duration","P1Y"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "time_coverage_resolution","PT1Y"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "time_coverage_start","2016-01-01 06:00:00Z"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "time_coverage_end","2017-01-01 05:00:00Z"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "license","Freely Distributed"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "naming_authority","unam.mx"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "publisher_name","Agustin Garcia"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "publisher_email","agustin@atmosfera.unam.mx"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "publisher_type","institution"))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "publisher_institution","Instituto de Ciencias de la atmosfera y &
-&cambio climatico, UNAM, Mexico"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "publisher_institution","Instituto de Ciencias de la Atmosfera y &
+&Cambio Climatico, UNAM, Mexico"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "publisher_url","https://atmosfera.unam.mx"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "creator_url","https://atmosfera.unam.mx"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "standard_name_vocabulary","CF Standard Name Table"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "creator_email","agustin@atmosfera.unam.mx"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "creator_name","Jose Agustin Garcia Reynoso"))
@@ -376,7 +383,8 @@ call check( nf90_put_att(ncid, NF90_GLOBAL, "contributor_name","Agustin Garcia")
 call check( nf90_put_att(ncid, NF90_GLOBAL, "acknowledgment","ICAyCC-UNAM"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "keywords_vocabulary","CF:NetCDF COARDS Climate and Forecast Standard Names"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "keywords","SO2,NOx,PM10,NH3,NOx,BC,CO,PM2.5"))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "summary","Emissions inventory for Mexico area emissions"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "summary","Emissions inventory for Mexico area emissions 2016"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "project","PAPILA"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "institution","UNAM"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "cdm_data_type","Grid"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "standard_parallel",'17.5,29.5'))
@@ -386,10 +394,11 @@ call check( nf90_put_att(ncid, NF90_GLOBAL, "date_modified",hoy))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "product_version",1))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "date_modified",hoy))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "grid_mapping_name","lambert_conformal_conic"))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "title","Emissions from criteria pollutants and GHG for 2016"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "comment","Created with areaanual.F90 v1.0"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "history","Creation "//fecha))
 !  Define las variables
 call check( nf90_def_var(ncid, "time", NF90_CHAR, dimids2,id_unlimit ) )
-call check( nf90_put_att(ncid, id_unlimit, "units", "years since 2016-01-01 00:00:00"))
+call check( nf90_put_att(ncid, id_unlimit, "units", "years since 2016-01-01 06:00:00"))
 call check( nf90_put_att(ncid, id_unlimit, "long_name", "Format YYYY-MM-DD_HH:MN:SS"))
 call check( nf90_put_att(ncid, id_unlimit, "standard_name", "time"))
 call check( nf90_put_att(ncid, id_unlimit, "calendar", "standard"))
@@ -399,10 +408,12 @@ call check( nf90_put_att(ncid, id_unlimit, "comment", "Time dimension in years")
 call check( nf90_def_var(ncid, "lon", NF90_REAL,dimids,id_varlong) )
 call check( nf90_def_var(ncid, "lat", NF90_REAL,dimids,id_varlat) )
 call check( nf90_put_att(ncid, id_varlong, "long_name", "Longitude"))
+call check( nf90_put_att(ncid, id_varlong, "standard_name","longitude") )
 call check( nf90_put_att(ncid, id_varlong, "units", "degrees_east"))
 call check( nf90_put_att(ncid, id_varlong, "axis", "X"))
 call check( nf90_put_att(ncid, id_varlong, "comment", "Grid values for the domain LAMBERT CONFORMAL"))
 call check( nf90_put_att(ncid, id_varlat, "long_name", "Latitude"))
+call check( nf90_put_att(ncid, id_varlat, "standard_name","latitude") )
 call check( nf90_put_att(ncid, id_varlat, "units", "degrees_north"))
 call check( nf90_put_att(ncid, id_varlat, "axis", "Y"))
 call check( nf90_put_att(ncid, id_varlat, "comment", "Grid values for the domain LAMBERT CONFORMAL"))
@@ -410,31 +421,39 @@ call check( nf90_put_att(ncid, id_varlat, "comment", "Grid values for the domain
 call check( nf90_def_var(ncid,"POB",NF90_REAL,dimids ,id_varpop ) )
 ! Assign  attributes
 call check( nf90_put_att(ncid, id_varpop, "FieldType", 104 ) )
-call check( nf90_put_att(ncid, id_varpop, "MemoryOrder", "XYZ") )
-call check( nf90_put_att(ncid, id_varpop,"description","Population in each grid"))
-call check( nf90_put_att(ncid, id_varpop, "units", "number"))
+call check( nf90_put_att(ncid, id_varpop, "long_name", "Population_in_each_grid") )
+call check( nf90_put_att(ncid, id_varpop,"description","Number of people in each grid in the domain"))
+call check( nf90_put_att(ncid, id_varpop, "units", ""))
+call check( nf90_put_att(ncid, id_varpop, "coordinates", "lon lat" ) )
+call check( nf90_put_att(ncid, id_varpop, "standard_name","population") )
+
 ! Para Mercator
 call check( nf90_def_var(ncid, "UTMx", NF90_REAL,dimids,id_utmx ) )
 ! Assign  attributes
 call check( nf90_put_att(ncid, id_utmx, "FieldType", 104 ) )
-call check( nf90_put_att(ncid, id_utmx, "MemoryOrder", "XYZ") )
-call check( nf90_put_att(ncid, id_utmx, "description", "UTM coordinate west-east") )
+call check( nf90_put_att(ncid, id_utmx, "long_name", "UTM_coordinate_west-east") )
+call check( nf90_put_att(ncid, id_utmx, "standard_name","UTMx") )
 call check( nf90_put_att(ncid, id_utmx, "units", "km"))
-call check( nf90_put_att(ncid, id_utmx, "axis", "X") )
+call check( nf90_put_att(ncid, id_utmx, "coordinates", "lon lat" ) )
+call check( nf90_put_att(ncid, id_utmx, "axis", "X"))
+
 call check( nf90_def_var(ncid, "UTMy", NF90_REAL,dimids,id_utmy ) )
 ! Assign  attributes
 call check( nf90_put_att(ncid, id_utmy, "FieldType", 104 ) )
-call check( nf90_put_att(ncid, id_utmy, "MemoryOrder", "XYZ") )
-call check( nf90_put_att(ncid, id_utmy, "description", "UTM coordinate sotuth-north") )
+call check( nf90_put_att(ncid, id_utmy, "long_name", "UTM_coordinate_sotuth-north") )
+call check( nf90_put_att(ncid, id_utmy, "standard_name","UTMy") )
 call check( nf90_put_att(ncid, id_utmy, "units", "km"))
-call check( nf90_put_att(ncid, id_utmy, "axis", "Y") )
+call check( nf90_put_att(ncid, id_utmy, "coordinates", "lon lat" ) )
+call check( nf90_put_att(ncid, id_utmy, "axis", "Y"))
+
 call check( nf90_def_var(ncid, "UTMz", NF90_INT,dimids,id_utmz ) )
 ! Assign  attributes
 call check( nf90_put_att(ncid, id_utmz, "FieldType", 104 ) )
-call check( nf90_put_att(ncid, id_utmz, "MemoryOrder", "XYZ") )
-call check( nf90_put_att(ncid, id_utmz, "description", "UTM Zone") )
-call check( nf90_put_att(ncid, id_utmz, "units", "None"))
-
+call check( nf90_put_att(ncid, id_utmz, "long_name", "UTM_Zone") )
+call check( nf90_put_att(ncid, id_utmz, "standard_name","UTMz") )
+call check( nf90_put_att(ncid, id_utmz, "units", ""))
+call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
+!print *,"Termina definiciones"
 !   Terminan definiciones
     call check( nf90_enddef(ncid) )
 !  Coordenadas Mercator UTM
@@ -447,12 +466,8 @@ call check( nf90_put_att(ncid, id_utmz, "units", "None"))
 ! Poblacion
     call check( nf90_put_var(ncid, id_varpop,pob,start=(/1,1/)) )
 !Tiempo
-    call check( nf90_put_var(ncid, id_dim(1),"2016-01-01_00:00:00"))
-  !   do i=1,ncams
-!    varname="        "
-!    varname=trim(ename(k))//"-"//trim(idCAMS(i))
-!    call crea_attr(ncid,2,dimids,varname,long_nm(k),cname(i),"kg m-2 s-1",id_var(i))
- !   end do
+    call check( nf90_put_var(ncid, id_dim(1),"2016-01-01_06:00:00Z"))! one year output
+print *,"tiempo"
 ! Busca el numero de columnas totales
    ncol=idcg(nx+1)-idcg(1)
 ! Busca columna y renglon del primer valor del dominio
@@ -465,24 +480,28 @@ call check( nf90_put_att(ncid, id_utmz, "units", "None"))
     i=pcol-col0
 !    if(m.eq.1) print *,i,j
      suma=0
+      aguardar=0
         do l=1,nh
             suma(l)=suma(l)+emis(m,k,l)
-            eft(i,j,l)=eft(i,j,l)+emis(m,k,l)*0.0315360/SUPF1 !conversion to g s-1 m-2
+            eft(i,j,l)=eft(i,j,l)+emis(m,k,l)*0.0315360/SUPF1!conversion: kg s-1 m-2
         end do  !l
-            !if(suma.gt.0) write(iun,100)idcel2(i),(emis(i,k,l),l=1,nh)
-        end do !m
+    end do !m
     do l=1,nh
-    if(int(suma(l)/10).gt.0.) then
+    if(suma(l).gt.0.) then
     varname="        "
-    varname=trim(ename(k))//"-"//trim(idCAMS(l))
+    varname=trim(ename(k))//"_"//trim(idCAMS(l))
+    do i=1,nx
+      do j=1,ny
+      aguardar(i,j)=eft(i,j,l)
+      end do
+    end do
     call crea_attr(ncid,2,dimids,varname,long_nm(k),cname(l),idIPCC(l),"kg m-2 s-1",id_var(l))
-    call check( nf90_put_var(ncid, id_var(l),eft,start=(/1,1,l/),count=(/nx,ny,l/)) )
+    call check( nf90_put_var(ncid, id_var(l),aguardar,start=(/1,1/)) )
     end if
     end do
  end do
-    print *,suma
      call check( nf90_close(ncid) )
-    print *,"*****  DONE Temporal Area *****"
+    print *,"*****  DONE Annual Output Area *****"
     deallocate(idcel,id5,idcel2,idsm,emiA,emis)
 end subroutine area_anual_storing
 !   __ _ _ __ ___  __ _
@@ -643,7 +662,7 @@ subroutine lee_localiza
     write(6,'(F8.2,A30)') CDIM,trim(titulo)
     SUPF1=1./(CDIM*CDIM)  !computes  grid area in km^-1
     close(10)
-   allocate(eft(nx,ny,nh))
+   allocate(eft(nx,ny,nh),aguardar(nx,ny))
 end subroutine lee_localiza
 !
 !  _ __ ___   ___  ___
@@ -714,7 +733,8 @@ use netcdf
     call check( nf90_put_att(ncid, id_var, "coordinates", "lon lat" ) )
     call check( nf90_put_att(ncid, id_var, "description",desc) )
     call check( nf90_put_att(ncid, id_var, "long_name",name) )
-    call check( nf90_put_att(ncid, id_var, "ipcc_id",tipcc) )
+    call check( nf90_put_att(ncid, id_var, "standard_name",name) )
+    call check( nf90_put_att(ncid, id_var, "ipcc_id",trim(tipcc)) )
     call check( nf90_put_att(ncid, id_var, "units",cunits))
     return
 end subroutine crea_attr
