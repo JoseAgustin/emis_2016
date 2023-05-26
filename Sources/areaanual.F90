@@ -63,7 +63,7 @@ character(len=10),dimension(nnscc) ::iscc
 character (len=19) :: current_date='2016-01-01_00:00:00'
  !> Input file name
 character(len=14),dimension(nf)   :: efile ; !> output file name
-character(len=13),dimension(nf)   :: casn;!> Categories in CAMS
+character(len=25),dimension(nf)   :: casn;!> Categories in CAMS
 character(len=3),dimension(ncams) :: idCAMS;!> IPCC classification
 character(len=4),dimension(ncams) :: idIPCC;!> Pollutant abreviation
 character(len=4),dimension(nf)    :: ename  !> Long name description
@@ -77,10 +77,11 @@ character (len=40) :: titulo
 &           'ACO__2016.csv','APM10_2016.csv','ACO2_2016.csv',&
 &           'ACN__2016.csv','ACH4_2016.csv','APM25_2016.csv',&
 &           'AVOC_2016.csv'/
- data casn /'E_SO2_2016.nc','E_NOx_2016.nc','E_NH3_2016.nc',&
-&           'E_CO__2016.nc','E_PM102016.nc','E_CO2_2016.nc',&
-&           'E_CN__2016.nc','E_CH4_2016.nc','E_PM2_2016.nc',&
-&           'E_VOC_2016.nc'/
+ data casn /'MEX_AREA_9km_2016_SO2.nc ','MEX_AREA_9km_2016_NOx.nc ',&
+&           'MEX_AREA_9km_2016_NH3.nc ','MEX_AREA_9km_2016_CO.nc  ',&
+&           'MEX_AREA_9km_2016_PM10.nc','MEX_AREA_9km_2016_CO2.nc ',&
+&           'MEX_AREA_9km_2016_CN.nc  ','MEX_AREA_9km_2016_CH4.nc ',&
+&           'MEX_AREA_9km_2016_PM25.nc','MEX_AREA_9km_2016_VOC.nc '/
  data idCAMS/'AGL','AGS','ENE','IND','RES','SHP','SWD','TNR','TRO'/
  data idIPCC/'  3A','  3C',' 1A2',' 1A2',' 1A4','1A3d','   4',' 1A3','1A3b'/
  data ename/'SO2 ','NOx ','NH3 ','CO  ','PM10','CO2 ','BC  ','CH4 ','PM25','VOC '/
@@ -324,13 +325,16 @@ use netcdf
   integer :: id_utmz
   real,dimension(ncams) :: suma
   character (len=19),dimension(NDIMS) ::sdim
+  character (len=83)::geospatial_bounds
   character(8)  :: fecha,varname
+  character (13):: ccdim
   character(10) :: time
   character(24) :: hoy
   data sdim /"Time               ","DateStrLen         ","west_east          ",&
 &            "south_north        ","bottom_top         ","emissions_zdim_stag"/
     call date_and_time(fecha,time)
-    hoy=fecha(7:8)//'-'//mes(fecha(5:6))//'-'//fecha(1:4)//' '//time(1:2)//':'//time(3:4)//':'//time(5:10)
+    hoy=fecha(7:8)//'-'//fecha(5:6)//'-'//fecha(1:4)//'T'//time(1:2)//':'//time(3:4)&
+        //':'//time(5:10)//'Z'
 !
  print *,"Area Emissions Annual saving"
   do k=1,nf
@@ -346,27 +350,30 @@ use netcdf
   dimids  = (/id_dim(3),id_dim(4)/)
 !Atributos Globales NF90_GLOBAL
 !print *,"Globales"
+write(geospatial_bounds,100)"POLYGON ((",minval(xlon),minval(xlat),&
+&minval(xlon),maxval(xlat),maxval(xlon), maxval(xlat),maxval(xlon),minval(xlat),"))"
+write(ccdim,110) CDIM*1000
 call check( nf90_put_att(ncid, NF90_GLOBAL, "id","AE_2016"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "title","Emissions from criteria pollutants and GHG for 2016"))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "WEST-EAST_GRID_DIMENSION",nx))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "SOUTH-NORTH_GRID_DIMENSION",ny))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "BOTTOM-TOP_GRID_DIMENSION",1))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lat_resolution",CDIM*1000))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lon_resolution",CDIM*1000))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lon_resolution",CDIM*1000))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_bounds",geospatial_bounds))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_bounds_crs","EPSG:4326"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lon_resolution",ccdim))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lat_resolution",ccdim))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lat_min",minval(xlat)))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lon_min",minval(xlon)))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lat_max",maxval(xlat)))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lon_max",maxval(xlon)))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lat_units","degrees_north"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lon_units","degrees_east"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "standard_parallel",'17.5,29.5'))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "grid_mapping_name","lambert_conformal_conic"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "processing_level","Level 1"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "time_coverage_duration","P1Y"))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "time_coverage_resolution","PT1Y"))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "time_coverage_start","2016-01-01 06:00:00Z"))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "time_coverage_end","2017-01-01 05:00:00Z"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "time_coverage_resolution","P1Y"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "time_coverage_start","2016-01-01T06:00:00Z"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "time_coverage_end","2017-01-01T05:00:00Z"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "license","Freely Distributed"))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "naming_authority","unam.mx"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "naming_authority","atmosfera.unam.mx"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "publisher_name","Agustin Garcia"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "publisher_email","agustin@atmosfera.unam.mx"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "publisher_type","institution"))
@@ -375,31 +382,38 @@ call check( nf90_put_att(ncid, NF90_GLOBAL, "publisher_institution","Instituto d
 call check( nf90_put_att(ncid, NF90_GLOBAL, "publisher_url","https://atmosfera.unam.mx"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "creator_url","https://atmosfera.unam.mx"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "standard_name_vocabulary","CF Standard Name Table"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "creator_type","person"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "creator_email","agustin@atmosfera.unam.mx"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "creator_name","Jose Agustin Garcia Reynoso"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "creator_institution","Instituto de Ciencias de la Atmosfera y &
+&Cambio Climatico, UNAM, Mexico"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "Conventions","CF-1.6, Standard Name Table v19,ACDD-1.3"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "contributor_role","Investigador"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "contributor_name","Agustin Garcia"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "acknowledgment","ICAyCC-UNAM"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "keywords_vocabulary","CF:NetCDF COARDS Climate and Forecast Standard Names"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "keywords","SO2,NOx,PM10,NH3,NOx,BC,CO,PM2.5"))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "summary","Emissions inventory for Mexico area emissions 2016"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "summary","National emissions inventory for Mexico 2016&
+produced by SEMARNAT it is converted by DiETE v2 to a model ready EI, this file only contains annual &
+emissions for area sources"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "program","PAPILA,ICAyCC"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "project","PAPILA"))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "institution","UNAM"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "institution","SEMARNAT,UNAM"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "source","DiETE v2"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "references","https://doi.org/10.20937/RICA.2018.34.04.07,&
+https://www.gob.mx/semarnat/documentos/documentos-del-inventario-nacional-de-emisiones"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "cdm_data_type","Grid"))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "standard_parallel",'17.5,29.5'))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "date_issued",hoy))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "date_created",hoy))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "date_modified",hoy))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "product_version",1))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "date_modified",hoy))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "grid_mapping_name","lambert_conformal_conic"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "comment","Created with areaanual.F90 v1.0"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "history","Creation "//fecha))
 !  Define las variables
 call check( nf90_def_var(ncid, "time", NF90_CHAR, dimids2,id_unlimit ) )
-call check( nf90_put_att(ncid, id_unlimit, "units", "years since 2016-01-01 06:00:00"))
-call check( nf90_put_att(ncid, id_unlimit, "long_name", "Format YYYY-MM-DD_HH:MN:SS"))
+call check( nf90_put_att(ncid, id_unlimit, "units", "years since 2016-01-01T06:00:00Z"))
+call check( nf90_put_att(ncid, id_unlimit, "long_name", "Format YYYY-MM-DDTHH:MN:SS"))
 call check( nf90_put_att(ncid, id_unlimit, "standard_name", "time"))
 call check( nf90_put_att(ncid, id_unlimit, "calendar", "standard"))
 call check( nf90_put_att(ncid, id_unlimit, "axis", "T"))
@@ -426,6 +440,7 @@ call check( nf90_put_att(ncid, id_varpop,"description","Number of people in each
 call check( nf90_put_att(ncid, id_varpop, "units", ""))
 call check( nf90_put_att(ncid, id_varpop, "coordinates", "lon lat" ) )
 call check( nf90_put_att(ncid, id_varpop, "standard_name","population") )
+call check( nf90_put_att(ncid, id_varpop, "coverage_content_type","auxiliaryInformation") )
 
 ! Para Mercator
 call check( nf90_def_var(ncid, "UTMx", NF90_REAL,dimids,id_utmx ) )
@@ -452,6 +467,7 @@ call check( nf90_put_att(ncid, id_utmz, "FieldType", 104 ) )
 call check( nf90_put_att(ncid, id_utmz, "long_name", "UTM_Zone") )
 call check( nf90_put_att(ncid, id_utmz, "standard_name","UTMz") )
 call check( nf90_put_att(ncid, id_utmz, "units", ""))
+call check( nf90_put_att(ncid, id_utmz, "coverage_content_type","coordinate") )
 call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
 !print *,"Termina definiciones"
 !   Terminan definiciones
@@ -502,6 +518,8 @@ call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
      call check( nf90_close(ncid) )
     print *,"*****  DONE Annual Output Area *****"
     deallocate(idcel,id5,idcel2,idsm,emiA,emis)
+100 format(A10,3(f9.4,f8.4,","),f9.4,f8.4,A2)
+110 format(f5.0," meters")
 end subroutine area_anual_storing
 !   __ _ _ __ ___  __ _
 !  / _` | '__/ _ \/ _` |
@@ -731,6 +749,7 @@ use netcdf
     ! Assign  attributes
     call check( nf90_put_att(ncid, id_var, "coordinates", "lon lat" ) )
     call check( nf90_put_att(ncid, id_var, "description",desc) )
+    call check( nf90_put_att(ncid, id_var, "coverage_content_type","modelResult") )
     call check( nf90_put_att(ncid, id_var, "long_name",name) )
     call check( nf90_put_att(ncid, id_var, "standard_name",name) )
     call check( nf90_put_att(ncid, id_var, "ipcc_id",trim(tipcc)) )
