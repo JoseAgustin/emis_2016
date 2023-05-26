@@ -21,10 +21,7 @@ integer,parameter :: nnscc=36 ;!> CAMS categories number
 integer,parameter :: ncams=9  ; !> Pollutant ID in temporl profile  CO,NO,VOC, VOC Diesel, SO2
 integer,parameter :: ispc=5  ; !> Type number of vehicle  1 all, 2 automobile gas
 integer,parameter :: v_type=9 ;;!> stores gricode value from localiza.csv
-integer*8,allocatable :: idcg(:);!> i index in temporal domain for each gricode
-integer,allocatable :: idx(:) ;!> j index in temporal domain for each gricode
-integer,allocatable :: idy(:) ;!> array with map scc domain and TP domain SCC
-integer,allocatable :: mscc(:);!> longitudes in output file from localiza
+integer*8,allocatable :: idcg(:);!> longitudes in output file from localiza
 real,allocatable :: xlon(:,:)  ;!> latitudes in output file from localiza
 real,allocatable :: xlat(:,:) ; !> population in output file from localiza
 real,allocatable :: pob(:,:) ;!> UTMx coordinates in output file from localiza
@@ -38,8 +35,6 @@ integer :: nx    ;!> latitude values in grid
 integer :: ny    ;
 !> number of emissions file
 integer :: nm ! grid number in emissions file
-!> if is dayligth time saving period
-integer :: iverano  ! si es en periodo de verano
 !> number of scc codes per file
 integer,dimension(nf) :: nscc    ;!> GRIDID in emissions
 integer*8, allocatable :: idcel(:) ;!> Difference in number of hours (CST, PST, MST)
@@ -50,8 +45,8 @@ real,allocatable :: emiM(:,:,:)   ;!> Emission by cel,file and hour (inorganic)
 character (len=10),dimension(nnscc) ::iscc ;!> SCC codes from Temporal Profiles files
 character(len=10),dimension(v_type,1)::cscc
 !> Initial date of the emissions period
-character (len=19) :: current_date='2016-01-01_00:00:00'
-character(len=14),dimension(nf) :: efile ;!> output file name
+character (len=19) :: current_date='2016-01-01_00:00:00';!> output file name
+character(len=14),dimension(nf) :: efile
 character(len=27),dimension(nf) :: casn  ;!> Categories in CAMS
 character(len=3),dimension(ncams) :: idCAMS;!> IPCC classification
 character(len=4),dimension(ncams) :: idIPCC;!> Pollutant abreviation
@@ -100,7 +95,7 @@ data long_nm/&
 'surface_upward_mass_flux_of_nmvoc                                 '/
 common /vars/ fweek,nscc,nm,daytype,perfil,current_date
 common /emi_vars/ efile,casn,iscc
-common /domain/ nx,ny,iverano,CDIM,SUPF1
+common /domain/ nx,ny,CDIM,SUPF1
 common /leenetcdf/profile,tlon,tlat,t_prof_m,cscc
 common /texto/ titulo,idCAMS,idIPCC,ename,cname,long_nm
 
