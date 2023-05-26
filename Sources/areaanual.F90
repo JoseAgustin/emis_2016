@@ -205,6 +205,18 @@ subroutine area_spatial_reading
     close(19)
 134 FORMAT(4x,A5,x,I6,x,A5,I6)
 end subroutine area_spatial_reading
+!                                          _   _
+!   __ _ _ __ ___  __ _     ___  ___  _ __| |_(_)_ __   __ _
+!  / _` | '__/ _ \/ _` |   / __|/ _ \| '__| __| | '_ \ / _` |
+! | (_| | | |  __/ (_| |   \__ \ (_) | |  | |_| | | | | (_| |
+!  \__,_|_|  \___|\__,_|___|___/\___/|_|   \__|_|_| |_|\__, |
+!                     |_____|                          |___/
+!>  @brief Maps the SCC with the CAMS ids.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  05/24/2023
+!>   @version 1.0
+!>   @copyright Universidad Nacional Autonoma de Mexico 2023
+!
 subroutine area_sorting
   implicit none
   integer i,j,k,l,ival,ii
@@ -286,17 +298,17 @@ subroutine area_sorting
 end do
 !  end do
 end subroutine area_sorting
-
-
-!   __ _ _ __ ___  __ _
-!  / _` | '__/ _ \/ _` |
-! | (_| | | |  __/ (_| |
-!  \__,_|_|  \___|\__,_|                   _         _             _
-! | |_ ___ _ __ ___  _ __   ___  _ __ __ _| |    ___| |_ ___  _ __(_)_ __   __ _
-! | __/ _ \ '_ ` _ \| '_ \ / _ \| '__/ _` | |   / __| __/ _ \| '__| | '_ \ / _` |
-! | ||  __/ | | | | | |_) | (_) | | | (_| | |   \__ \ || (_) | |  | | | | | (_| |
-!  \__\___|_| |_| |_| .__/ \___/|_|  \__,_|_|___|___/\__\___/|_|  |_|_| |_|\__, |
-!                   |_|                    |_____|                         |___/
+!                                                  _
+!   __ _ _ __ ___  __ _     __ _ _ __  _   _  __ _| |
+!  / _` | '__/ _ \/ _` |   / _` | '_ \| | | |/ _` | |
+! | (_| | | |  __/ (_| |  | (_| | | | | |_| | (_| | |
+!  \__,_|_|  \___|\__,_|___\__,_|_| |_|\__,_|\__,_|_|
+!           _         |_____|
+!       ___| |_ ___  _ __(_)_ __   __ _
+!      / __| __/ _ \| '__| | '_ \ / _` |
+!      \__ \ || (_) | |  | | | | | (_| |
+!  ____|___/\__\___/|_|  |_|_| |_|\__, |
+! |_____|                         |___/
 !>  @brief Saves area emission for CAMS.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  05/24/2023
@@ -568,7 +580,6 @@ subroutine area_grids_count
    evoc=0
   deallocate(idcel3)
 end subroutine area_grids_count
-
 !  _                          _
 ! | |__  _ __  ___  ___  _ __| |_
 ! | '_ \| '_ \/ __|/ _ \| '__| __|
