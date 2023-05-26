@@ -29,8 +29,9 @@ real,allocatable :: xlon(:,:)  ;!> latitudes in output file from localiza
 real,allocatable :: xlat(:,:) ; !> population in output file from localiza
 real,allocatable :: pob(:,:) ;!> UTMx coordinates in output file from localiza
 real,allocatable :: utmxd(:,:) ;!> UTMy coordinates in output file from localiza
-real,allocatable :: utmyd(:,:) ;!> UTM Z zone
-integer, allocatable:: utmzd(:,:);!> cell dimension CDIM km
+real,allocatable :: utmyd(:,:) ;!> temporal array for storage
+real,allocatable:: aguardar(:,:) ;!> UTM Z zone
+integer, allocatable:: utmzd(:,:) ;!> cell dimension CDIM km
 real :: CDIM ;!> grid 1/area  (km^-2)
 real :: SUPF1 ;!> longitude values in grid
 integer :: nx    ;!> latitude values in grid
@@ -41,14 +42,11 @@ integer :: nm ! grid number in emissions file
 integer :: iverano  ! si es en periodo de verano
 !> number of scc codes per file
 integer,dimension(nf) :: nscc    ;!> GRIDID in emissions
-integer, allocatable :: idcel(:) ;!> Difference in number of hours (CST, PST, MST)
+integer*8, allocatable :: idcel(:) ;!> Difference in number of hours (CST, PST, MST)
 integer, allocatable :: mst(:)   ;!> fraction = weeks/month days
 real :: fweek                    ;!> Mobile emisions from files cel,ssc,file
 real,allocatable :: emiM(:,:,:)   ;!> Emission by cel,file and hour (inorganic)
-real,allocatable :: emis(:,:,:)  ;!> Time zone  CST for gridded temporal profiles
-real,allocatable :: tCST(:,:,:,:) ! idcel,pollutant,veh_type,hrs
 !> SCC codes per file
-
 character (len=10),dimension(nnscc) ::iscc ;!> SCC codes from Temporal Profiles files
 character(len=10),dimension(v_type,1)::cscc
 !> Initial date of the emissions period
@@ -201,7 +199,6 @@ subroutine libera_memoria
     if(allocated(idcel))  deallocate(idcel)
     if(allocated(mst))    deallocate(mst)
     if(allocated(emiM))   deallocate(emiM)
-    if(allocated(emis))   deallocate(emis)
     if(allocated(idcg))   deallocate(idcg)
     if(allocated(pob))   deallocate(pob)
     if(allocated(xlon))   deallocate(xlon)
@@ -209,6 +206,7 @@ subroutine libera_memoria
     if(allocated(utmxd))   deallocate(utmxd)
     if(allocated(utmyd))   deallocate(utmyd)
     if(allocated(utmzd))   deallocate(utmzd)
+    if(allocated(aguardar))   deallocate(aguardar)
   write(6,170)
   write(6,180)
 170 format(7x,"XXXXXX  Released memory    XXXXXX")
@@ -239,6 +237,7 @@ subroutine lee_localiza
     allocate(idcg(ncel))
     allocate(xlon(nx,ny),xlat(nx,ny),pob(nx,ny))
     allocate(utmxd(nx,ny),utmyd(nx,ny),utmzd(nx,ny))
+    allocate(aguardar(nx,ny))
     do j=1,ny
         do i=1,nx
             k=i+(j-1)*nx
@@ -454,8 +453,22 @@ call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
     call get_position(idcg(1),ncol, ren0,col0)
     ren0=ren0-1
     col0=col0-1
-
-
+    aguardar=0
+    do m=1,size(emiM,dim=1)
+        call get_position(idcel(m),ncol, pren,pcol)
+        j=pren-ren0
+        i=pcol-col0
+        if(m.eq.1) print *,i,j
+    !  Actualiza la posicion en i,j a partir de m
+        do l=1,nscc(k)
+        aguardar(i,j)=aguardar(i,j)+emiM(m,l,k)*0.0315360*SUPF1!conversion: kg s-1 m-2
+        end do
+    end do
+     l=9
+    varname="        "
+    varname=trim(ename(k))//"_"//trim(idCAMS(l)) ! For TRO
+    call crea_attr(ncid,2,dimids,varname,long_nm(k),cname(l),idIPCC(l),"kg m-2 s-1",id_var(l))
+    call check( nf90_put_var(ncid, id_var(l),aguardar,start=(/1,1/)) )
     call check( nf90_close(ncid) )
 end do !k
 write(6,180)
@@ -463,4 +476,43 @@ write(6,180)
 110 format(f5.0," meters")
 180 format(7x,"*****  DONE SAVING DATAFILES *****")
 end subroutine movil_annual_storing
+!                              _   _
+!   ___ _ __ ___  __ _     __ _| |_| |_ _ __
+!  / __| '__/ _ \/ _` |   / _` | __| __| '__|
+! | (__| | |  __/ (_| |  | (_| | |_| |_| |
+!  \___|_|  \___|\__,_|___\__,_|\__|\__|_|
+!                    |_____|
+!>  @brief Creates attributes for each variable in the netcdf file
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  04/23/2021
+!>   @version  3.5
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+!>   @param ncid netcdf file ID
+!>   @param idm number of items in dimids array
+!>   @param dimids ID dimensons array
+!>   @param svar variable name
+!>   @param cname description variable name
+!>   @param cunits units of the variable
+!>   @param id_var variable ID
+subroutine crea_attr(ncid,idm,dimids,svar,name,desc,tipcc,cunits,id_var)
+use netcdf
+implicit none
+integer , INTENT(IN) ::ncid,idm
+integer, INTENT(out) :: id_var
+integer, INTENT(IN),dimension(idm):: dimids
+character(len=*), INTENT(IN)::svar,name,desc,tipcc,cunits
+character(len=50) :: cvar
+cvar="mass_flux_of_"//trim(svar)
+
+call check( nf90_def_var(ncid, svar, NF90_REAL, dimids,id_var ) )
+! Assign  attributes
+call check( nf90_put_att(ncid, id_var, "coordinates", "lon lat" ) )
+call check( nf90_put_att(ncid, id_var, "description",desc) )
+call check( nf90_put_att(ncid, id_var, "coverage_content_type","modelResult") )
+call check( nf90_put_att(ncid, id_var, "long_name",name) )
+call check( nf90_put_att(ncid, id_var, "standard_name",name) )
+call check( nf90_put_att(ncid, id_var, "ipcc_id",trim(tipcc)) )
+call check( nf90_put_att(ncid, id_var, "units",cunits))
+return
+end subroutine crea_attr
 end program movil_annual
