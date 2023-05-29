@@ -459,7 +459,7 @@ call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
         aguardar(i,j)=aguardar(i,j)+emiM(m,l,k)*0.0315360*SUPF1!conversion: kg s-1 m-2
         end do
     end do
-     l=9
+     l=9  !only for mobile sources TRO
     varname="        "
     varname=trim(ename(k))//"_"//trim(idCAMS(l)) ! For TRO
     call crea_attr(ncid,2,dimids,varname,long_nm(k),cname(l),idIPCC(l),"kg m-2 s-1",id_var(l))

@@ -12,8 +12,7 @@
 module point_vars_mod
 !>   number of pollutants
 integer, parameter::nsp=10 !number of pollutants
-!>   CAMS categories
-integer, parameter:: nh=9 ;!> CAMS categories number
+!> CAMS categories number
 integer,parameter :: ncams=9  ; !> layers where emissions are reach day and night
 integer,allocatable :: capa(:,:); !> **i** index in grid to allocate a point emission
 integer,allocatable :: ict(:) ; !> **j** index in grid to allocate a point emission
@@ -24,7 +23,8 @@ real,allocatable :: xlat(:,:) ; !> population in output file from localiza
 real,allocatable :: pob(:,:) ;!> UTMx coordinates in output file from localiza
 real,allocatable :: utmxd(:,:) ;!> UTMy coordinates in output file from localiza
 real,allocatable :: utmyd(:,:) ;!> temporal array for storage
-real,allocatable:: aguardar(:,:) ;!> UTM Z zone
+
+real,allocatable::eft(:,:,:,:), aguardar(:,:,:) ;!> UTM Z zone
 integer, allocatable:: utmzd(:,:) ;!> cell dimension CDIM km
 real :: CDIM ;!> grid 1/area  (km^-2)
 real :: SUPF1 ;!> Number of lines in input file
@@ -113,6 +113,8 @@ use master
 
     call point_emissions_storage
 
+    call free_memory
+
 contains
 !              _       _
 !  _ __   ___ (_)_ __ | |_
@@ -135,7 +137,6 @@ implicit none
 	integer :: i,j,k,l,m,iun
 	integer :: idum, imon,iwk,ipdy
 	integer,dimension(25) :: itfrc  !montly,weekely and hourly values and total
-	real,allocatable ::xlat(:,:),xlon(:,:)
 	real rdum
 	logical fil1,fil2
   character(len=10)::jscc
@@ -158,7 +159,6 @@ implicit none
 !$omp end parallel sections
     print *,'**  Numero de lineas ',nl
     allocate(iscc(nl),capa(nl,2),lat(nl),lon(nl),e_mis(nl,nsp))
-    allocate(emis(i,nsp,nh))
     allocate(ict(nl),jct(nl))
     e_mis=0
 
@@ -167,8 +167,9 @@ implicit none
     do i=1,nl
       read(iun,*,err=110)lat(i),lon(i),iscc(i),(e_mis(i,j),j=1,nsp),capa(i,1),capa(i,2)
     end do
+
     close(iun)
-    e_mis=e_mis*1000000 !para g desde (Mg) TON
+    e_mis=e_mis*1000 !para kg desde (Mg) TON
     print *,'Done puntual.csv '!,cvar,maxval(e_mis)
 !
 !	localiza.csv
@@ -179,13 +180,19 @@ implicit none
 	read (iun,*) cdum  !Header
 	read (iun,*) nx,ny  !Header
 	allocate(idcg(nx,ny),xlon(nx,ny),xlat(nx,ny),mcst(nx,ny))
+    allocate(emis(nx,ny,nsp),aguardar(nx,ny,8),eft(nx,ny,8,ncams))
+    allocate(utmxd(nx,ny),utmyd(nx,ny),utmzd(nx,ny),pob(nx,ny))
+
 	do j=1,ny
 		do i=1,nx
-			read(iun,*) idcg(i,j),xlon(i,j),xlat(i,j),mcst(i,j)
+			read(iun,*) idcg(i,j),xlon(i,j),xlat(i,j),mcst(i,j),pob(i,j),utmxd(i,j),utmyd(i,j),utmzd(i,j)
 		end do
 	end do
 	!print *,ncel
     close(iun)
+CDIM=(utmxd(2,1)-utmxd(1,1))  ! in meters
+write(6,'(F8.2,A30)') CDIM
+SUPF1=1./(CDIM*CDIM)  !computes grid area in m^-2
 #ifdef _OPENMP
 !$omp parallel sections num_threads (3)
 !$omp section
@@ -228,18 +235,166 @@ subroutine point_cams_distribution
 	integer i,j,kk,l,ival,ii
 !
 	print *,'CAMS distribution'
-!$omp parallel do
+  emis=0.
   do i=1,nl
     if(ict(i).ne.0 .or.jct(i).ne.0) then
-      do kk=1,nsp
-      !print *,'k=',kk
-        do l=1,nh
-
-        end do
+      do j=1,nsp
+        if(trim(iscc(i)).eq. '0')       emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10100401') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10100601') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10100901') emis(ict(i),jct(i),4)= e_mis(i,j)+emis(ict(i),jct(i),4)
+        if(trim(iscc(i)).eq.'10101208') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10200221') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10200229') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10200401') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10200404') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10200501') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10200503') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10200504') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10200601') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10200707') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10200802') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10200903') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10201001') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10201002') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10201101') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10201201') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10201302') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10201701') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'10500105') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'20100101') emis(ict(i),jct(i),4)= e_mis(i,j)+emis(ict(i),jct(i),4)
+        if(trim(iscc(i)).eq.'20100107') emis(ict(i),jct(i),4)= e_mis(i,j)+emis(ict(i),jct(i),4)
+        if(trim(iscc(i)).eq.'20200101') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'20200102') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'20200107') emis(ict(i),jct(i),4)= e_mis(i,j)+emis(ict(i),jct(i),4)
+        if(trim(iscc(i)).eq.'20200109') emis(ict(i),jct(i),4)= e_mis(i,j)+emis(ict(i),jct(i),4)
+        if(trim(iscc(i)).eq.'20200201') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30101453') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30101822') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30101847') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30101872') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30102201') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30102826') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30106013') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30112007') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30125805') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30125815') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30187007') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30200705') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30200746') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30200778') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30200911') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30201421') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30201520') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30201903') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30203201') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30203204') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30300317') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30300931') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30300935') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30400723') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30400736') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30400737') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30400812') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30402201') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30500504') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30500619') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30500718') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30501114') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30502599') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30504030') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30504034') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30800126') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30800901') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30801006') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30901078') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'30903901') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'31613001') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'33000102') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'33000202') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'36000101') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'39090007') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'39990024') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40100101') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40100301') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40100307') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40100308') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40200101') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40200110') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40200301') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40200701') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40200801') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40200820') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40200861') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40200870') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40201403') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40201601') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40202520') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40204240') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40204435') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40301008') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40301153') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40400121') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40400403') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40500506') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40600651') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40688801') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40700801') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40700809') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40700811') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40700813') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40703601') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40703615') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40703623') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40704001') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40704403') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40704405') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40704411') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40704419') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40706801') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40706803') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40707603') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40717601') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40717602') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40717603') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40722009') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'40722803') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'50200507') emis(ict(i),jct(i),7)= e_mis(i,j)+emis(ict(i),jct(i),7)
+        if(trim(iscc(i)).eq.'2101006000') emis(ict(i),jct(i),4)= e_mis(i,j)+emis(ict(i),jct(i),4)
+        if(trim(iscc(i)).eq.'2102007000') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2102008000') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2102010000') emis(ict(i),jct(i),4)= e_mis(i,j)+emis(ict(i),jct(i),4)
+        if(trim(iscc(i)).eq.'2280002020') emis(ict(i),jct(i),6)= e_mis(i,j)+emis(ict(i),jct(i),6)
+        if(trim(iscc(i)).eq.'2301050001') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2303020000') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2308000000') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2309100000') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2310010000') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2401005600') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2401100001') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2415000000') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2415000350') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2415300000') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2440000250') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2440000260') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2440020000') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2465000250') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2495000000') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2495000035') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2495000165') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2495000255') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2501000120') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2510000165') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2510000195') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2510000250') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2530000080') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2730001000') emis(ict(i),jct(i),2)= e_mis(i,j)+emis(ict(i),jct(i),2)
+        if(trim(iscc(i)).eq.'2841010000') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
+        if(trim(iscc(i)).eq.'2850000010') emis(ict(i),jct(i),3)= e_mis(i,j)+emis(ict(i),jct(i),3)
       end do
     end if
   end do
-!$omp end parallel do
+    if(allocated(e_mis))  deallocate(e_mis)
 end subroutine point_cams_distribution
 !               _       _                     _         _
 !  _ __   ___ (_)_ __ | |_     ___ _ __ ___ (_)___ ___(_) ___  _ __  ___
@@ -257,48 +412,223 @@ end subroutine point_cams_distribution
 !>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine point_emissions_storage
+    use netcdf
 	implicit none
-	integer:: i,k,l,iun
-	character(len=14) ::fname
-	character(len=3):: cdia(7)
-	data cdia/'MON','TUE','WND','THR','FRD','SAT','SUN'/
+	integer:: i,j,k,l,m
+integer  ncid
+integer, parameter :: NDIMS=6
+integer :: dimids2(2),dimids3(3),dimids(2)
+integer,dimension(NDIMS):: dim,id_dim
+integer :: ncol,pren,ren0
+integer :: pcol,col0
+;!> array of variables ID
+integer :: id_var(ncams)  ;!>netcdf longitude ID in netcdf file
+integer :: id_varlong  ;!>netcdf latitude ID in netcdf file
+integer :: id_varlat  ;!>netcdf population ID in netcdf file
+integer :: id_varpop  ;!>netcdf unlimited variable ID in netcdf file
+integer :: id_unlimit ;!>netcdf UTMx coordinate variable ID in netcdf file
+integer :: id_utmx ;!>netcdf UTMy coordinate variable ID in netcdf file
+integer :: id_utmy ;!>netcdf UTMz coordinate variable ID in netcdf file
+integer :: id_utmz
+real    :: suma(ncams)
+character (len=19),dimension(NDIMS) ::sdim
+character (len=83)::geospatial_bounds
+character (13):: ccdim
+character(8)  :: fecha,varname
+character(10) :: time
+character(24) :: hoy
+
    Write(6,*)"Guarda"
-!$omp parallel do private(iun,i,k,l,fname)
-	do k=1,nsp
-		fname='T_'//trim(cvar(k))//'.csv'
-		open(newunit=iun,file=fname,action='write')
-		if(k.ne.nsp .and. k.ne.4) then
-		write(iun,*)cvar(k),'Lat,Lon,Capa 1, H1,H2,H3,H4,H5,H6,H7,H8,H9,to Hr24, Capa2'
-		else
-		write(iun,*)cvar(k),'SCC,Lat,Lon,Capa 1, H1,H2,H3,H4,H5,H6,H7,H8,H9,to Hr24,Capa 2'
-		end if
-		write(iun,'(I6,4A)') nl,', ',current_date,', ',cdia(daytype)
-			do i=1,nl
-			if(ict(i).ne.0 .or.jct(i).ne.0)then
-             !write(iun,300)iscc(i),lat(i),lon(i),capa(i),(emis(i,k,l),l=1,nh)
-            write(iun,310)iscc(i),idcg(ict(i),jct(i)),capa(i,1),(emis(i,k,l),l=1,nh),capa(i,2)
-			end if
-			end do
-		close(unit=iun)
+data sdim /"Time               ","DateStrLen         ","west_east          ",&
+&            "south_north        ","bottom_top         ","emissions_zdim_stag"/
+call date_and_time(fecha,time)
+hoy=fecha(7:8)//'-'//fecha(5:6)//'-'//fecha(1:4)//'T'//time(1:2)//':'//time(3:4)&
+//':'//time(5:10)//'Z'
+
+print *,"Mobile Emissions Annual saving"
+
+    do k=1,nsp
+        print *,"Output File Initialization ",casn(k)
+    call check( nf90_create(path =casn(k),cmode = NF90_NETCDF4,ncid = ncid) )
+    dim=(/1,19,nx,ny,8,1/)
+    call check( nf90_def_dim(ncid,sdim(1), NF90_UNLIMITED, id_dim(1)) )
+    do i=2,NDIMS
+    call check( nf90_def_dim(ncid, sdim(i), dim(i), id_dim(i)) )
+    end do
+    dimids2 = (/id_dim(2),id_dim(1)/)
+    dimids3 = (/id_dim(3),id_dim(4),id_dim(5) /)
+    dimids  = (/id_dim(3),id_dim(4)/)
+!    print *,"Globales"
+    write(geospatial_bounds,100)"POLYGON ((",minval(xlon),minval(xlat),&
+    &minval(xlon),maxval(xlat),maxval(xlon), maxval(xlat),maxval(xlon),minval(xlat),"))"
+    write(ccdim,110) CDIM*1000
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "id","ME_2016_"//trim(ename(k))))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "title","Emissions from criteria pollutants and GHG for 2016"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_bounds",geospatial_bounds))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_bounds_crs","EPSG:4326"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lon_resolution",ccdim))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lat_resolution",ccdim))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lat_min",minval(xlat)))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lon_min",minval(xlon)))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lat_max",maxval(xlat)))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lon_max",maxval(xlon)))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lat_units","degrees_north"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_lon_units","degrees_east"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "standard_parallel",'17.5,29.5'))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "grid_mapping_name","lambert_conformal_conic"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "processing_level","Level 1"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "time_coverage_duration","P1Y"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "time_coverage_resolution","P1Y"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "time_coverage_start","2016-01-01T06:00:00Z"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "time_coverage_end","2017-01-01T05:00:00Z"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "license","Freely Distributed"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "naming_authority","atmosfera.unam.mx"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "publisher_name","Agustin Garcia"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "publisher_email","agustin@atmosfera.unam.mx"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "publisher_type","institution"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "publisher_institution","Instituto de Ciencias de la Atmosfera y &
+    &Cambio Climatico, UNAM, Mexico"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "publisher_url","https://atmosfera.unam.mx"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "creator_url","https://atmosfera.unam.mx"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "standard_name_vocabulary","CF Standard Name Table"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "creator_type","person"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "creator_email","agustin@atmosfera.unam.mx"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "creator_name","Jose Agustin Garcia Reynoso"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "creator_institution","Instituto de Ciencias de la Atmosfera y &
+    &Cambio Climatico, UNAM, Mexico"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "Conventions","CF-1.6, Standard Name Table v19,ACDD-1.3"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "contributor_role","Investigador"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "contributor_name","Agustin Garcia"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "acknowledgment","ICAyCC-UNAM"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "keywords_vocabulary","CF:NetCDF COARDS Climate and Forecast Standard Names"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "keywords","SO2,NOx,PM10,NH3,NOx,BC,CO,PM2.5"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "summary","National emissions inventory for Mexico 2016 &
+    produced by SEMARNAT it is converted by DiETE v2 to a model ready EI, this file only contains annual &
+    emissions for point sources"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "program","PAPILA,ICAyCC"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "project","PAPILA"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "institution","SEMARNAT,UNAM"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "source","DiETE v2"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "references","https://doi.org/10.20937/RICA.2018.34.04.07,&
+    https://www.gob.mx/semarnat/documentos/documentos-del-inventario-nacional-de-emisiones"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "cdm_data_type","Grid"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "date_issued",hoy))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "date_created",hoy))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "date_modified",hoy))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "product_version",1))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "date_modified",hoy))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "comment","Created with f_anual.F90 v1.0"))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "history","Creation "//fecha))
+    !  Define las variables
+    call check( nf90_def_var(ncid, "time", NF90_CHAR, dimids2,id_unlimit ) )
+    call check( nf90_put_att(ncid, id_unlimit, "units", "years since 2016-01-01T06:00:00Z"))
+    call check( nf90_put_att(ncid, id_unlimit, "long_name", "Format YYYY-MM-DDTHH:MN:SS"))
+    call check( nf90_put_att(ncid, id_unlimit, "standard_name", "time"))
+    call check( nf90_put_att(ncid, id_unlimit, "calendar", "standard"))
+    call check( nf90_put_att(ncid, id_unlimit, "axis", "T"))
+    call check( nf90_put_att(ncid, id_unlimit, "comment", "Time dimension in years"))
+
+    call check( nf90_def_var(ncid, "lon", NF90_REAL,dimids,id_varlong) )
+    call check( nf90_def_var(ncid, "lat", NF90_REAL,dimids,id_varlat) )
+    call check( nf90_put_att(ncid, id_varlong, "long_name", "Longitude"))
+    call check( nf90_put_att(ncid, id_varlong, "standard_name","longitude") )
+    call check( nf90_put_att(ncid, id_varlong, "units", "degrees_east"))
+    call check( nf90_put_att(ncid, id_varlong, "axis", "X"))
+    call check( nf90_put_att(ncid, id_varlong, "comment", "Grid values for the domain LAMBERT CONFORMAL"))
+    call check( nf90_put_att(ncid, id_varlat, "long_name", "Latitude"))
+    call check( nf90_put_att(ncid, id_varlat, "standard_name","latitude") )
+    call check( nf90_put_att(ncid, id_varlat, "units", "degrees_north"))
+    call check( nf90_put_att(ncid, id_varlat, "axis", "Y"))
+    call check( nf90_put_att(ncid, id_varlat, "comment", "Grid values for the domain LAMBERT CONFORMAL"))
+    !print *," Pob"
+    call check( nf90_def_var(ncid,"POB",NF90_REAL,dimids ,id_varpop ) )
+    ! Assign  attributes
+    call check( nf90_put_att(ncid, id_varpop, "FieldType", 104 ) )
+    call check( nf90_put_att(ncid, id_varpop, "long_name", "Population_in_each_grid") )
+    call check( nf90_put_att(ncid, id_varpop,"description","Number of people in each grid in the domain"))
+    call check( nf90_put_att(ncid, id_varpop, "units", ""))
+    call check( nf90_put_att(ncid, id_varpop, "coordinates", "lon lat" ) )
+    call check( nf90_put_att(ncid, id_varpop, "standard_name","population") )
+    call check( nf90_put_att(ncid, id_varpop, "coverage_content_type","auxiliaryInformation") )
+    ! Para Mercator
+    call check( nf90_def_var(ncid, "UTMx", NF90_REAL,dimids,id_utmx ) )
+    ! Assign  attributes
+    call check( nf90_put_att(ncid, id_utmx, "FieldType", 104 ) )
+    call check( nf90_put_att(ncid, id_utmx, "long_name", "UTM_coordinate_west-east") )
+    call check( nf90_put_att(ncid, id_utmx, "standard_name","UTMx") )
+    call check( nf90_put_att(ncid, id_utmx, "units", "km"))
+    call check( nf90_put_att(ncid, id_utmx, "coordinates", "lon lat" ) )
+    call check( nf90_put_att(ncid, id_utmx, "axis", "X"))
+!
+    call check( nf90_def_var(ncid, "UTMy", NF90_REAL,dimids,id_utmy ) )
+    ! Assign  attributes
+    call check( nf90_put_att(ncid, id_utmy, "FieldType", 104 ) )
+    call check( nf90_put_att(ncid, id_utmy, "long_name", "UTM_coordinate_sotuth-north") )
+    call check( nf90_put_att(ncid, id_utmy, "standard_name","UTMy") )
+    call check( nf90_put_att(ncid, id_utmy, "units", "km"))
+    call check( nf90_put_att(ncid, id_utmy, "coordinates", "lon lat" ) )
+    call check( nf90_put_att(ncid, id_utmy, "axis", "Y"))
+!
+    call check( nf90_def_var(ncid, "UTMz", NF90_INT,dimids,id_utmz ) )
+    ! Assign  attributes
+    call check( nf90_put_att(ncid, id_utmz, "FieldType", 104 ) )
+    call check( nf90_put_att(ncid, id_utmz, "long_name", "UTM_Zone") )
+    call check( nf90_put_att(ncid, id_utmz, "standard_name","UTMz") )
+    call check( nf90_put_att(ncid, id_utmz, "units", ""))
+    call check( nf90_put_att(ncid, id_utmz, "coverage_content_type","coordinate") )
+    call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
+    !print *,"Termina definiciones"
+    !   Terminan definiciones
+    call check( nf90_enddef(ncid) )
+    !  Coordenadas Mercator UTM
+    call check( nf90_put_var(ncid, id_utmx,utmxd,start=(/1,1/)) )
+    call check( nf90_put_var(ncid, id_utmy,utmyd,start=(/1,1/)) )
+    call check( nf90_put_var(ncid, id_utmz,utmzd,start=(/1,1/)) )
+    ! Coordenadas lat lon
+    call check( nf90_put_var(ncid, id_varlat,xlat,start=(/1,1/)) )
+    call check( nf90_put_var(ncid, id_varlong,xlon,start=(/1,1/)) )
+    ! Poblacion
+    call check( nf90_put_var(ncid, id_varpop,pob,start=(/1,1/)) )
+    !Tiempo
+    call check( nf90_put_var(ncid, id_dim(1),"2016-01-01_06:00:00"))! one year output
+
+    aguardar=0
+    suma= 0
+    eft=0
+    do i=1,nx
+        do j=1,ny
+            m=i+nx*(j-1)
+            do l=1,ncams  ! CAMS ids
+            suma(l)=suma(l)+emis(i,j,l) !conversion: kg s-1 m-2
+            eft(i,j,capa(m,1),l)=eft(i,j,capa(m,1),l)+emis(i,j,l)*0.0315360*SUPF1
+            end do  !l
+        end do !j
+    end do !i
+    do l=1,ncams
+        if(suma(l).gt.0.) then
+        varname="        "
+        varname=trim(ename(k))//"_"//trim(idCAMS(l))
+        do i=1,nx
+            do j=1,ny
+                do m=1,8
+                    aguardar(i,j,m)=eft(i,j,m,l)
+                end do
+            end do
+        end do
+        call crea_attr(ncid,3,dimids3,varname,long_nm(k),cname(l),idIPCC(l),"kg m-2 s-1",id_var(l))
+        call check( nf90_put_var(ncid, id_var(l),aguardar,start=(/1,1,1/)) )
+    end if
+end do
+call check( nf90_close(ncid) )
+
 	end do
 !$omp end parallel do
-     print *,"****** DONE PUNTUAL *****"
-    deallocate(iscc,capa,lat,lon,e_mis)
-    deallocate(emis)
-    deallocate(ict,jct)
-    deallocate(idcg,mcst)
+write(6,120)
 
-#ifndef PGI
-210 format(I8,',',I3,',',23(ES,","),ES,",",I3)
-220 format(f10.6,',',f10.4,',',I3,',',23(ES,","),ES)
-300 format(A10,',',f10.6,',',f10.4,',',I3,',',23(ES,","),ES)
-310 format(A10,',',I8,',',I3,',',23(ES,","),ES,",",I3)
-#else
-210 format(I8,',',I3,',',23(E12.4,","),E12.4,",",I3)
-220 format(f10.6,',',f10.4,',',I3,',',23(E12.4,","),E12.4)
-300 format(A10,',',f10.6,',',f10.4,',',I3,',',23(E12.4,","),E12.4)
-310 format(A10,',',I8,',',I3,',',23(E12.4,","),E12.4,",",I3)
-#endif
+100 format(A10,3(f9.4,f8.4,","),f9.4,f8.4,A2)
+110 format(f5.0," meters")
+120 format(7x,"*****  DONE SAVING DATAFILES *****")
+
 end subroutine point_emissions_storage
 !  _                 _ _
 ! | | ___   ___ __ _| (_)______ _
@@ -306,22 +636,22 @@ end subroutine point_emissions_storage
 ! | | (_) | (_| (_| | | |/ / (_| |
 ! |_|\___/ \___\__,_|_|_/___\__,_|
 !
-!>  @brief Identifies the i,j index in the grid for the spatial
+!>   @brief Identifies the i,j index in the grid for the spatial
 !>   allocation of point source emissions
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  04/26/2021
 !>   @version  3.0
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
-!>  @param xlat two dimensional array with latitudes
-!>  @param xlon two dimensional array with longitudes
-!>  @param mi x dimension in arrays xlat and xlon
-!>  @param mj y dimension in arrays xlat and xlon
-!>  @param clat array of nst-inst+1 elemets of latitudes
-!>  @param clon array of nst-inst+1 elemets of longitudes
-!>  @param inst start value of clat and clon arrays
-!>  @param nst end  value of clat and clon arrays
-!>  @param ist column index value
-!>  @param jst row index value
+!>   @param xlat two dimensional array with latitudes
+!>   @param xlon two dimensional array with longitudes
+!>   @param mi x dimension in arrays xlat and xlon
+!>   @param mj y dimension in arrays xlat and xlon
+!>   @param clat array of nst-inst+1 elemets of latitudes
+!>   @param clon array of nst-inst+1 elemets of longitudes
+!>   @param inst start value of clat and clon arrays
+!>   @param nst end  value of clat and clon arrays
+!>   @param ist column index value
+!>   @param jst row index value
   Subroutine localiza(xlat,xlon,mi,mj,clat,clon,ist,jst,inst,nst)
   implicit none
   integer,intent(IN) :: mi,mj,nst,inst
@@ -347,4 +677,79 @@ end subroutine point_emissions_storage
    end do
    RETURN
    end subroutine localiza
+!                              _   _
+!   ___ _ __ ___  __ _     __ _| |_| |_ _ __
+!  / __| '__/ _ \/ _` |   / _` | __| __| '__|
+! | (__| | |  __/ (_| |  | (_| | |_| |_| |
+!  \___|_|  \___|\__,_|___\__,_|\__|\__|_|
+!                    |_____|
+!>  @brief Creates attributes for each variable in the netcdf file
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  04/23/2021
+!>   @version  3.5
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+!>   @param ncid netcdf file ID
+!>   @param idm number of items in dimids array
+!>   @param dimids ID dimensons array
+!>   @param svar variable name
+!>   @param cname description variable name
+!>   @param cunits units of the variable
+!>   @param id_var variable ID
+subroutine crea_attr(ncid,idm,dimids,svar,name,desc,tipcc,cunits,id_var)
+use netcdf
+implicit none
+integer , INTENT(IN) ::ncid,idm
+integer, INTENT(out) :: id_var
+integer, INTENT(IN),dimension(idm):: dimids
+character(len=*), INTENT(IN)::svar,name,desc,tipcc,cunits
+character(len=50) :: cvar
+cvar="mass_flux_of_"//trim(svar)
+
+call check( nf90_def_var(ncid, svar, NF90_REAL, dimids,id_var ) )
+! Assign  attributes
+call check( nf90_put_att(ncid, id_var, "coordinates", "lon lat" ) )
+call check( nf90_put_att(ncid, id_var, "description",desc) )
+call check( nf90_put_att(ncid, id_var, "coverage_content_type","modelResult") )
+call check( nf90_put_att(ncid, id_var, "long_name",name) )
+call check( nf90_put_att(ncid, id_var, "standard_name",name) )
+call check( nf90_put_att(ncid, id_var, "ipcc_id",trim(tipcc)) )
+call check( nf90_put_att(ncid, id_var, "units",cunits))
+return
+end subroutine crea_attr
+!    __
+!  / _|_ __ ___  ___     _ __ ___   ___ _ __ ___   ___  _ __ _   _
+! | |_| '__/ _ \/ _ \   | '_ ` _ \ / _ \ '_ ` _ \ / _ \| '__| | | |
+! |  _| | |  __/  __/   | | | | | |  __/ | | | | | (_) | |  | |_| |
+! |_| |_|  \___|\___|___|_| |_| |_|\___|_| |_| |_|\___/|_|   \__, |
+!                  |_____|                                   |___/
+!>  @brief Deallocates allocated arrays.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  05/29/2023
+!>   @version  1.0
+!>   @copyright Universidad Nacional Autonoma de Mexico 2020
+subroutine free_memory
+        if(allocated(iscc))   deallocate(iscc)
+        if(allocated(mcst))   deallocate(mcst)
+        if(allocated(capa))   deallocate(capa)
+        if(allocated(idcg))   deallocate(idcg)
+        if(allocated(pob))    deallocate(pob)
+        if(allocated(xlon))   deallocate(xlon)
+        if(allocated(xlat))   deallocate(xlat)
+        if(allocated(utmxd))  deallocate(utmxd)
+        if(allocated(utmyd))  deallocate(utmyd)
+        if(allocated(utmzd))  deallocate(utmzd)
+        if(allocated(aguardar))   deallocate(aguardar)
+        if(allocated(lat))    deallocate(lat)
+        if(allocated(lon))    deallocate(lon)
+        if(allocated(emis))   deallocate(emis)
+        if(allocated(ict))    deallocate(ict)
+        if(allocated(jct))    deallocate(jct)
+        if(allocated(eft))    deallocate(eft)
+        write(6,170)
+        write(6,180)
+
+170 format(7x,"XXXXXX  Released memory    XXXXXX")
+180 format(7x,"*****  DONE POINT ANNUAL *****")
+end subroutine free_memory
+
 end program point_temporal
