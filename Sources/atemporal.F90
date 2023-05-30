@@ -57,7 +57,7 @@ integer,dimension(3,nnscc,nf):: profile
 !> index per file
 integer,allocatable :: id5(:,:)
 !> SCC codes per file
-character(len=10),dimension(nnscc) ::iscc
+character(len=10),dimension(nnscc,nf) ::iscc
 !> Number of days in year
 character(len=3),dimension(yjuliano):: cdia
 !> Initial date of the emissions period
@@ -74,7 +74,7 @@ character(len=14),dimension(nf) :: casn
 &           'TACO__2016.csv','TAPM102016.csv','TACO2_2016.csv',&
 &           'TACN__2016.csv','TACH4_2016.csv','TAPM2_2016.csv',&
 &           'TAVOC_2016.csv'/
-common /vars/ fweek,nscc,nm,lh,daytype,mes,dia,current_date
+common /vars/ fweek,nscc,nm,lh,daytype,mes,dia,current_date,iscc
 end module area_temporal_mod
 !
 !  Progran  atemporal.F90
@@ -157,8 +157,8 @@ subroutine area_spatial_reading
 	do k=1,nf
 	open (newunit=iun,file="../"//efile(k),status='OLD',action='read')
 	read (iun,'(A)') cdum
-	read (iun,*) nscc(k),cdum,(iscc(i),i=1,nscc(k))
-	!print '(5(I10,x))',(iscc(i),i=1,nscc(k))
+	read (iun,*) nscc(k),cdum,(iscc(i,k),i=1,nscc(k))
+	!print '(5(I10,x))',(iscc(i,k),i=1,nscc(k))
 	!print *,cdum,nscc(k)
 	nm=0
 	do
@@ -201,7 +201,7 @@ subroutine area_spatial_reading
       do
 	  read(15,*,END=200)jscc,imon,iwk,ipdy
 	    do i=1,nscc(k)
-		  if(iscc(i).eq.jscc) then
+		  if(iscc(i,k).eq.jscc) then
 		    profile(1,i,k)=imon
 		    profile(2,i,k)=iwk
 		    profile(3,i,k)=ipdy
@@ -550,7 +550,7 @@ subroutine area_temporal_storing
      do l=1,nh
        suma=suma+epm2(i,j,l)
      end do
-     if(suma.gt.0)  write(iun,110)idcel2(i),iscc(j),(epm2(i,j,l),l=1,nh)
+     if(suma.gt.0)  write(iun,110)idcel2(i),iscc(j,k),(epm2(i,j,l),l=1,nh)
      end do
    end do
 	close(iun)
@@ -567,7 +567,7 @@ subroutine area_temporal_storing
      do l=1,nh
        suma=suma+evoc(i,j,l)
      end do
-     if(suma.gt.0) write(iun,110)idcel2(i),iscc(j),(evoc(i,j,l),l=1,nh)
+     if(suma.gt.0) write(iun,110)idcel2(i),iscc(j,k),(evoc(i,j,l),l=1,nh)
      end do
    end do
 !$omp end parallel sections

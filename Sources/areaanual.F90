@@ -18,8 +18,7 @@ module area_anual_mod
 integer :: daytype ;!> number of emission files
 integer,parameter :: nf=10    ;!> max number of scc descriptors in input files
 integer,parameter :: nnscc=59 ;!> CAMS categories number
-integer,parameter :: ncams=9  ;!> number of categories in ouputfile
-integer,parameter :: nh=ncams ;!> number of max lines in emiA
+integer,parameter :: ncams=9  ;!> number of max lines in emiA
 integer :: nmax
 !> Number of lines in emissions file
 integer :: nm    ;!> number of cell in the grid
@@ -58,7 +57,7 @@ real,allocatable :: utmyd(:,:)
 !> index per file
 integer,allocatable :: id5(:,:)
 !> SCC codes per file
-character(len=10),dimension(nnscc) ::iscc
+character(len=10),dimension(nnscc,nf) ::iscc
 !> Initial date of the emissions period
 character (len=19) :: current_date='2016-01-01_00:00:00'
  !> Input file name
@@ -107,7 +106,7 @@ data long_nm/&
 'surface_upward_mass_flux_of_nmvoc                                 '/
 
 common /vars/ fweek,nscc,nm,lh,daytype,dia
-common /texto/ idCAMS,idIPCC,ename,cname,long_nm
+common /texto/ idCAMS,idIPCC,ename,cname,long_nm,iscc
 common /domain/ ncel,nl,nx,ny,CDIM,SUPF1
 common /fileout/id_varlong,id_varlat,id_varpop,&
 id_unlimit,id_utmx,id_utmy,id_utmz,ncid
@@ -164,8 +163,9 @@ subroutine area_spatial_reading
 	do k=1,nf
 	open (newunit=iun,file="../"//efile(k),status='OLD',action='read')
 	read (iun,'(A)') cdum
-	read (iun,*) nscc(k),cdum,(iscc(i),i=1,nscc(k))
-	!print '(5(I10,x))',(iscc(i),i=1,nscc(k))
+	read (iun,*) nscc(k),cdum,(iscc(i,k),i=1,nscc(k))
+    !print *,nscc(8)
+    !print "(7(A10,x))",(iscc(i,8),i=1,nscc(8))
 	!print *,cdum,nscc(k)
 	nm=0
 	do
@@ -224,72 +224,71 @@ subroutine area_sorting
   print *,"   Annual emissions"
   emis=0
   do k=1,nf
-    print *,efile(k)
     do ii=1,size(idcel2)
         do i=1,size(id5,2)
         if(idcel2(ii).eq.id5(k,i))then
             do j=1,nscc(k)
-            if(iscc(j).eq.'2102007000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j).eq.'2102004000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j).eq.'2103006000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2103007000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2104011000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2104006000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2104008000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2104007000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2267005000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2270005000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2302002000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2610000000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2801500100') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2810030000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2810001000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(trim(iscc(j)).eq.'30500304') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2280000000') emis(ii,k,6)=emis(ii,k,6)+emiA(k,i,j)
-            if(iscc(j).eq.'2285000000') emis(ii,k,8)=emis(ii,k,8)+emiA(k,i,j)
-            if(iscc(j).eq.'2275000000') emis(ii,k,8)=emis(ii,k,8)+emiA(k,i,j)
-            if(iscc(j).eq.'2275050000') emis(ii,k,8)=emis(ii,k,8)+emiA(k,i,j)
-            if(iscc(j).eq.'2222222222') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
-            if(iscc(j).eq.'2620030000') emis(ii,k,7)=emis(ii,k,7)+emiA(k,i,j)
-            if(iscc(j).eq.'2230070310') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
-            if(iscc(j).eq.'2285002010') emis(ii,k,8)=emis(ii,k,8)+emiA(k,i,j)
-            if(iscc(j).eq.'2265005000') emis(ii,k,2)=emis(ii,k,2)+emiA(k,i,j)
-            if(iscc(j).eq.'2801700000') emis(ii,k,2)=emis(ii,k,2)+emiA(k,i,j)
-            if(iscc(j).eq.'2805020000') emis(ii,k,1)=emis(ii,k,1)+emiA(k,i,j)
-            if(iscc(j).eq.'5555555555') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2311010000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j).eq.'2801000002') emis(ii,k,2)=emis(ii,k,2)+emiA(k,i,j)
-            if(iscc(j).eq.'2801000005') emis(ii,k,2)=emis(ii,k,2)+emiA(k,i,j)
-            if(iscc(j).eq.'2294000000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
-            if(iscc(j).eq.'2296000000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
-            if(iscc(j).eq.'2425010000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j).eq.'2425030000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j).eq.'2425040000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j).eq.'2425000000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j).eq.'2461020000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j).eq.'2420000055') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j).eq.'2415000000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j).eq.'2401005000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j).eq.'2401008000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j).eq.'2415010000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j).eq.'2401990000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j).eq.'2401080000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j).eq.'2401065000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j).eq.'2401020000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j).eq.'2401001000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2465900000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2465200000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2465100000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2465400000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j).eq.'2465600000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j).eq.'2465800000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2465000000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'3333333333') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2501060000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
-            if(iscc(j).eq.'2302050000') emis(ii,k,1)=emis(ii,k,1)+emiA(k,i,j)
-            if(iscc(j).eq.'2461850000') emis(ii,k,2)=emis(ii,k,2)+emiA(k,i,j)
-            if(iscc(j).eq.'2630030000') emis(ii,k,7)=emis(ii,k,7)+emiA(k,i,j)
-            if(iscc(j).eq.'2850000010') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2102007000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2102004000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2103006000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2103007000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2104011000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2104006000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2104008000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2104007000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2267005000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2270005000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2302002000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2610000000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2801500100') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2810030000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2810001000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(trim(iscc(j,k)).eq.'30500304')emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2280000000') emis(ii,k,6)=emis(ii,k,6)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2285000000') emis(ii,k,8)=emis(ii,k,8)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2275000000') emis(ii,k,8)=emis(ii,k,8)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2275050000') emis(ii,k,8)=emis(ii,k,8)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2222222222') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2620030000') emis(ii,k,7)=emis(ii,k,7)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2230070310') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2285002010') emis(ii,k,8)=emis(ii,k,8)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2265005000') emis(ii,k,2)=emis(ii,k,2)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2801700000') emis(ii,k,2)=emis(ii,k,2)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2805020000') emis(ii,k,1)=emis(ii,k,1)+emiA(k,i,j)
+            if(iscc(j,k).eq.'5555555555') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2311010000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2801000002') emis(ii,k,2)=emis(ii,k,2)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2801000005') emis(ii,k,2)=emis(ii,k,2)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2294000000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2296000000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2425010000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2425030000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2425040000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2425000000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2461020000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2420000055') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2415000000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2401005000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2401008000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2415010000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2401990000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2401080000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2401065000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2401020000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2401001000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2465900000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2465200000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2465100000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2465400000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2465600000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2465800000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2465000000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'3333333333') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2501060000') emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2302050000') emis(ii,k,1)=emis(ii,k,1)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2461850000') emis(ii,k,2)=emis(ii,k,2)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2630030000') emis(ii,k,7)=emis(ii,k,7)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2850000010') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
             end do
         end if
         end do
@@ -507,23 +506,23 @@ call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
 !    if(m.eq.1) print *,i,j
      suma=0
       aguardar=0
-        do l=1,nh
+        do l=1,ncams
             suma(l)=suma(l)+emis(m,k,l)
             eft(i,j,l)=eft(i,j,l)+emis(m,k,l)*0.0315360*SUPF1!conversion: kg s-1 m-2
         end do  !l
     end do !m
-    do l=1,nh
-    if(suma(l).gt.0.) then
-    varname="        "
-    varname=trim(ename(k))//"_"//trim(idCAMS(l))
-    do i=1,nx
-      do j=1,ny
-      aguardar(i,j)=eft(i,j,l)
-      end do
-    end do
-    call crea_attr(ncid,2,dimids,varname,long_nm(k),cname(l),idIPCC(l),"kg m-2 s-1",id_var(l))
-    call check( nf90_put_var(ncid, id_var(l),aguardar,start=(/1,1/)) )
-    end if
+    do l=1,ncams
+        if(suma(l).gt.0.) then
+            varname="        "
+            varname=trim(ename(k))//"_"//trim(idCAMS(l))
+            do i=1,nx
+              do j=1,ny
+              aguardar(i,j)=eft(i,j,l)
+              end do
+            end do
+            call crea_attr(ncid,2,dimids,varname,long_nm(k),cname(l),idIPCC(l),"kg m-2 s-1",id_var(l))
+            call check( nf90_put_var(ncid, id_var(l),aguardar,start=(/1,1/)) )
+        end if
     end do
 call check( nf90_close(ncid) )
 
@@ -575,7 +574,7 @@ subroutine area_grids_count
   allocate(idcel2(j))
   idcel2=idcel3
   close(123)
-  allocate(emis(j,nf,nh))
+  allocate(emis(j,nf,ncams))
    emis=0
    evoc=0
   deallocate(idcel3)
@@ -690,7 +689,7 @@ subroutine lee_localiza
     write(6,'(F8.2,A30)') CDIM,trim(titulo)
     SUPF1=1./(CDIM*CDIM)  !computes  grid area in km^-1
     close(10)
-   allocate(eft(nx,ny,nh),aguardar(nx,ny))
+   allocate(eft(nx,ny,ncams),aguardar(nx,ny))
 end subroutine lee_localiza
 !
 !  _ __ ___   ___  ___
