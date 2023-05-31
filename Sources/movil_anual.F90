@@ -16,12 +16,13 @@ module movil_annual_mod
 integer :: daytype ! tipo de dia 1 lun a 7 dom
 !> Hourly temporal profile
 integer :: perfil  ;!> number of pollutant emission files
-integer,parameter :: nf=11    ;!> max number of scc descriptors in input files
+integer,parameter :: nf=11    ;!> max number of SCC IDs in input files
 integer,parameter :: nnscc=36 ;!> CAMS categories number
-integer,parameter :: ncams=9  ; !> Pollutant ID in temporl profile  CO,NO,VOC, VOC Diesel, SO2
+integer,parameter :: ncams=14  ; !> Pollutant ID in temporl profile  CO,NO,VOC, VOC Diesel, SO2
 integer,parameter :: ispc=5  ; !> Type number of vehicle  1 all, 2 automobile gas
 integer,parameter :: v_type=9 ;;!> stores gricode value from localiza.csv
-integer*8,allocatable :: idcg(:);!> longitudes in output file from localiza
+integer*8,allocatable :: idcg(:);!> Emission by cel,file (pollutant) and idCAMS
+real,allocatable :: emis(:,:,:);!> longitudes in output file from localiza
 real,allocatable :: xlon(:,:)  ;!> latitudes in output file from localiza
 real,allocatable :: xlat(:,:) ; !> population in output file from localiza
 real,allocatable :: pob(:,:) ;!> UTMx coordinates in output file from localiza
@@ -42,7 +43,7 @@ integer, allocatable :: mst(:)   ;!> fraction = weeks/month days
 real :: fweek                    ;!> Mobile emisions from files cel,ssc,file
 real,allocatable :: emiM(:,:,:)   ;!> Emission by cel,file and hour (inorganic)
 !> SCC codes per file
-character (len=10),dimension(nnscc) ::iscc ;!> SCC codes from Temporal Profiles files
+character (len=10),dimension(nnscc,nf) ::iscc ;!> SCC codes from Temporal Profiles files
 character(len=10),dimension(v_type,1)::cscc
 !> Initial date of the emissions period
 character (len=19) :: current_date='2016-01-01_00:00:00';!> output file name
@@ -67,20 +68,27 @@ data casn /'MEX_MOBILE_9km_2016_CO.nc  ','MEX_MOBILE_9km_2016_NH3.nc ',&
            'MEX_MOBILE_9km_2016_CO2.nc ','MEX_MOBILE_9km_2016_CH4.nc ',&
            'MEX_MOBILE_9km_2016_PM10.nc','MEX_MOBILE_9km_2016_PM2.nc ',&
            'MEX_MOBILE_9km_2016_COV.nc '/
-data idCAMS/'AGL','AGS','ENE','IND','RES','SHP','SWD','TNR','TRO'/
-data idIPCC/'  3A','  3C',' 1A2',' 1A2',' 1A4','1A3d','   4',' 1A3','1A3b'/
+data idCAMS/'AGL','AGS','AWB','COM','ENE','FEF','IND','REF','RES','SHP',&
+'SWD','TNR','TRO','WFR'/
+data idIPCC/'3A  ','  3C',' 3C1','1A4a',' 1A2','1B2a',' 1A2','1A1b',' 1A4',&
+'1A3d','   4',' 1A3','1A3b',' 1Wf'/
 data ename/'CO  ','NH3 ','NO2 ','NO  ','SO2 ','BC  ','CO2 ','CH4 ','PM10',&
            'PM25','VOC '/
 data cname / &
-'AGL: Agriculture_livestock                                                  ',&
-'AGS: Agricultural_soils (without fires)                                     ',&
-'ENE: Power_generation                                                       ',&
-'IND: Industrial_process (Energy consumption of manufacture industry+process)',&
-'RES: Residential_commercial_and_other_combustion                            ',&
-'SHP: Navigation                                                             ',&
-'SWD: Solid_waste_and_waste_water                                            ',&
-'TNR: Non-road_transportation                                                ',&
-'TRO: Road_transportation                                                    '/
+'AGL: Agriculture_livestock                                                   ',&
+'AGS: Agricultural_soils (without fires)                                      ',&
+'AWB: Agricultural waste burning                                              ',&
+'COM: Commercial buildings                                                    ',&
+'ENE: Power_generation                                                        ',&
+'FEF: Fugitive_emissions_from_fuels                                           ',&
+'IND: Industrial_process (Energy consumption of manufacture industry+ process)',&
+'REF: refineries                                                              ',&
+'RES: Residential_commercial_and_other_combustion                             ',&
+'SHP: Navigation                                                              ',&
+'SWD: Solid_waste_and_waste_water                                             ',&
+'TNR: Non-road_transportation                                                 ',&
+'TRO: Road_transportation                                                     ',&
+'WRF: wildfires                                                               '/
 data long_nm/&
 'surface_upward_mass_flux_of_carbon_monoxide                       ',&
 'surface_upward_mass_flux_of_ammonia                               ',&
@@ -125,6 +133,8 @@ program movil_annual
 
     call mobile_annual_reading
 
+    call mobile_sorting
+
     call movil_annual_storing
 
     call libera_memoria
@@ -153,8 +163,8 @@ subroutine mobile_annual_reading
     do k=1,nf  ! per pollutant
         open (unit=10,file="../"//efile(k),status='OLD',action='read')
         read (10,'(A)') cdum
-        read (10,*) nscc(k),(iscc(i),i=1,nscc(k))
-        !print '(5(I10,x))',(iscc(i),i=1,nscc(k))
+        read (10,*) nscc(k),(iscc(i,k),i=1,nscc(k))
+        !print '(5(I10,x))',(iscc(i,k),i=1,nscc(k))
         !print *,cdum,nscc(k)
         nm=0
         do
@@ -167,6 +177,7 @@ subroutine mobile_annual_reading
         if(k.eq.1) then
             allocate(idcel(nm),mst(nm))
             allocate(emiM(nm,nnscc,nf))
+            allocate(emis(nm,nnscc,ncams))
         end if
         read (10,'(A)') cdum
         read (10,'(A)') cdum
@@ -178,6 +189,60 @@ subroutine mobile_annual_reading
     end do !k
     print *,"Done reading: ",efile(k)
 end subroutine mobile_annual_reading
+!
+!                  _     _ _                         _   _
+!  _ __ ___   ___ | |__ (_) | ___     ___  ___  _ __| |_(_)_ __   __ _
+! | '_ ` _ \ / _ \| '_ \| | |/ _ \   / __|/ _ \| '__| __| | '_ \ / _` |
+! | | | | | | (_) | |_) | | |  __/   \__ \ (_) | |  | |_| | | | | (_| |
+! |_| |_| |_|\___/|_.__/|_|_|\___|___|___/\___/|_|   \__|_|_| |_|\__, |
+!                               |_____|                          |___/
+!>  @brief maps the SCC to the CAMS ids.
+!>   @author  Jose Agustin Garcia Reynoso
+!>   @date  06/01/2023
+!>   @version  1.0
+!>   @copyright Universidad Nacional Autonoma de Mexico 2023
+subroutine mobile_sorting
+implicit none
+integer j,k,m
+character(len=10):: tscc
+emis=0
+  do k=1,nf
+        do m=1,size(emiM,1)
+            do j=1,nscc(k)
+        if(iscc(j,k).eq.'2230001330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2230060330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2201020330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2230074330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2201070330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2201001330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2230075330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2201040330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2230073330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2201080330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'220100133V') emis(m,k,6)=emis(m,k,6)+emiM(m,j,k)
+        if(iscc(j,k).eq.'220108033V') emis(m,k,6)=emis(m,k,6)+emiM(m,j,k)
+        if(iscc(j,k).eq.'220102033V') emis(m,k,6)=emis(m,k,6)+emiM(m,j,k)
+        if(iscc(j,k).eq.'220104033V') emis(m,k,6)=emis(m,k,6)+emiM(m,j,k)
+        if(iscc(j,k).eq.'220107033V') emis(m,k,6)=emis(m,k,6)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2203210080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2204210080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2203310080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2204310080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2230060234') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2204320080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2230001000') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2203420080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2201070270') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2230070270') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2204430080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2203410080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2204420080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2204530080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+        if(iscc(j,k).eq.'2201070214') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+    end do !m
+  end do !k
+            emiM(m,l,k)
+end subroutine mobile_sorting
 !  _ _ _                                                            _
 ! | (_) |__   ___ _ __ __ _     _ __ ___   ___ _ __ ___   ___  _ __(_) __ _
 ! | | | '_ \ / _ \ '__/ _` |   | '_ ` _ \ / _ \ '_ ` _ \ / _ \| '__| |/ _` |
@@ -283,11 +348,11 @@ integer :: id_utmy ;!>netcdf UTMz coordinate variable ID in netcdf file
 integer :: id_utmz
 real,dimension(ncams) :: suma
 character (len=19),dimension(NDIMS) ::sdim
-character (len=83)::geospatial_bounds
-character(8)  :: fecha,varname
-character (13):: ccdim
-character(10) :: time
-character(24) :: hoy
+character (len=83) :: geospatial_bounds
+character (len=8)  :: fecha,varname
+character (len=13) :: ccdim
+character (len=10) :: time
+character (len=24) :: hoy
 
 data sdim /"Time               ","DateStrLen         ","west_east          ",&
 &            "south_north        ","bottom_top         ","emissions_zdim_stag"/
@@ -449,17 +514,17 @@ call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
     ren0=ren0-1
     col0=col0-1
     aguardar=0
-    do m=1,size(emiM,dim=1)
+    do m=1,size(emis,dim=1)
         call get_position(idcel(m),ncol, pren,pcol)
         j=pren-ren0
         i=pcol-col0
         if(m.eq.1) print *,i,j
     !  Actualiza la posicion en i,j a partir de m
         do l=1,nscc(k)
-        aguardar(i,j)=aguardar(i,j)+emiM(m,l,k)*0.0315360*SUPF1!conversion: kg s-1 m-2
+        aguardar(i,j)=aguardar(i,j)+emis(m,l,k)*0.0315360*SUPF1!conversion: kg s-1 m-2
         end do
     end do
-     l=9  !only for mobile sources TRO
+l=13
     varname="        "
     varname=trim(ename(k))//"_"//trim(idCAMS(l)) ! For TRO
     call crea_attr(ncid,2,dimids,varname,long_nm(k),cname(l),idIPCC(l),"kg m-2 s-1",id_var(l))
