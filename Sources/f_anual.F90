@@ -14,7 +14,7 @@ module point_vars_mod
 integer, parameter::nsp=10 !number of pollutants
 !> CAMS categories number
 integer,parameter :: ncams=9  ; !> layers where emissions are reach day and night
-integer,allocatable :: capa(:,:); !> **i** index in grid to allocate a point emission
+integer,allocatable :: capa(:,:);!> **i** index in grid to allocate a point emission
 integer,allocatable :: ict(:) ; !> **j** index in grid to allocate a point emission
 integer,allocatable :: jct(:) ;!> _GRIDCODE_ in grid domain
 integer*8,allocatable :: idcg(:,:);!> longitudes in output file from localiza
@@ -147,7 +147,7 @@ implicit none
   fweek= 7./daym(month)  !semanas en el mes
 
 !$omp section
-	open(newunit=iun,file="../emis/punt/"//'puntual.csv',status='old',action='read')
+	open(newunit=iun,file='../emis/punt/puntual.csv',status='old',action='read')
 	i=0
 	read (iun,*) cdum
 	do
@@ -167,7 +167,6 @@ implicit none
     do i=1,nl
       read(iun,*,err=110)lat(i),lon(i),iscc(i),(e_mis(i,j),j=1,nsp),capa(i,1),capa(i,2)
     end do
-
     close(iun)
     e_mis=e_mis*1000 !para kg desde (Mg) TON
     print *,'Done puntual.csv '!,cvar,maxval(e_mis)
@@ -190,26 +189,12 @@ implicit none
 	end do
 	!print *,ncel
     close(iun)
-CDIM=(utmxd(2,1)-utmxd(1,1))  ! in meters
-write(6,'(F8.2,A30)') CDIM
-SUPF1=1./(CDIM*CDIM)  !computes grid area in m^-2
-#ifdef _OPENMP
-!$omp parallel sections num_threads (3)
-!$omp section
-  print *,'   >>>>>  Finding emissions in grid'
-    call localiza(xlat,xlon,nx,ny,lat,lon,ict,jct,1,nl/3)   ! Point Sources
-!$omp section
-    print *,'   >>>>>  Finding emissions in grid 2'
-    call localiza(xlat,xlon,nx,ny,lat,lon,ict,jct,nl/3+1,2*nl/3)   ! Point Sources
-!$omp section
-  print *,'   >>>>>  Finding emissions in grid 3'
-  call localiza(xlat,xlon,nx,ny,lat,lon,ict,jct,2*nl/3+1,nl)   ! Point Sources
-!$omp end parallel sections
-#else
+    CDIM=(utmxd(2,1)-utmxd(1,1))  ! in meters
+    write(6,'(F8.2,A30)') CDIM
+    SUPF1=1./(CDIM*CDIM)  !computes grid area in m^-2
     print *,'   >>>>>  Finding emissions in grid'
     call localiza(xlat,xlon,nx,ny,lat,lon,ict,jct,1,nl)   ! Point Sources
-#endif
-    print *,'   Done '
+     print *,'   Done '
 	return
 110	print *,'Error en ',i
     STOP
@@ -422,13 +407,13 @@ integer,dimension(NDIMS):: dim,id_dim
 integer :: ncol,pren,ren0
 integer :: pcol,col0
 ;!> array of variables ID
-integer :: id_var(ncams)  ;!>netcdf longitude ID in netcdf file
-integer :: id_varlong  ;!>netcdf latitude ID in netcdf file
+integer :: id_var(ncams) ;!>netcdf longitude ID in netcdf file
+integer :: id_varlong ;!>netcdf latitude ID in netcdf file
 integer :: id_varlat  ;!>netcdf population ID in netcdf file
 integer :: id_varpop  ;!>netcdf unlimited variable ID in netcdf file
 integer :: id_unlimit ;!>netcdf UTMx coordinate variable ID in netcdf file
-integer :: id_utmx ;!>netcdf UTMy coordinate variable ID in netcdf file
-integer :: id_utmy ;!>netcdf UTMz coordinate variable ID in netcdf file
+integer :: id_utmx    ;!>netcdf UTMy coordinate variable ID in netcdf file
+integer :: id_utmy    ;!>netcdf UTMz coordinate variable ID in netcdf file
 integer :: id_utmz
 real    :: suma(ncams)
 character (len=19),dimension(NDIMS) ::sdim
@@ -595,14 +580,12 @@ print *,"Mobile Emissions Annual saving"
     aguardar=0
     suma= 0
     eft=0
-    do i=1,nx
-        do j=1,ny
-            m=i+nx*(j-1)
-            do l=1,ncams  ! CAMS ids
-            suma(l)=suma(l)+emis(i,j,l) !conversion: kg s-1 m-2
-            eft(i,j,capa(m,1),l)=eft(i,j,capa(m,1),l)+emis(i,j,l)*0.0315360*SUPF1
-            end do  !l
-        end do !j
+    do i=1,nl 
+        do l=1,ncams  ! CAMS ids
+            suma(l)=suma(l)+emis(ict(i),jct(i),l) !conversion: kg s-1 m-2
+            eft(ict(i),jct(i),capa(i,1),l)=eft(ict(i),jct(i),capa(i,1),l)&
+                +emis(ict(i),jct(i),l)*0.0315360*SUPF1
+        end do !l
     end do !i
     do l=1,ncams
         if(suma(l).gt.0.) then
