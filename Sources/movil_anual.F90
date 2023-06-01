@@ -52,7 +52,7 @@ character(len=27),dimension(nf) :: casn  ;!> Categories in CAMS
 character(len=3),dimension(ncams) :: idCAMS;!> IPCC classification
 character(len=4),dimension(ncams) :: idIPCC;!> Pollutant abreviation
 character(len=4),dimension(nf)    :: ename ;!> Long name description
-character(len=76),dimension(ncams):: cname ;!> Variable description
+character(len=77),dimension(ncams):: cname ;!> Variable description
 character(len=66),dimension(nf):: long_nm
 
 character (len=40) :: titulo
@@ -88,7 +88,7 @@ data cname / &
 'SWD: Solid_waste_and_waste_water                                             ',&
 'TNR: Non-road_transportation                                                 ',&
 'TRO: Road_transportation                                                     ',&
-'WRF: wildfires                                                               '/
+'WRF: Wildfires                                                               '/
 data long_nm/&
 'surface_upward_mass_flux_of_carbon_monoxide                       ',&
 'surface_upward_mass_flux_of_ammonia                               ',&
@@ -177,7 +177,7 @@ subroutine mobile_annual_reading
         if(k.eq.1) then
             allocate(idcel(nm),mst(nm))
             allocate(emiM(nm,nnscc,nf))
-            allocate(emis(nm,nnscc,ncams))
+            allocate(emis(nm,ncams,nf))
         end if
         read (10,'(A)') cdum
         read (10,'(A)') cdum
@@ -209,39 +209,40 @@ emis=0
   do k=1,nf
         do m=1,size(emiM,1)
             do j=1,nscc(k)
-        if(iscc(j,k).eq.'2230001330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2230060330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2201020330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2230074330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2201070330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2201001330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2230075330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2201040330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2230073330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2201080330') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'220100133V') emis(m,k,6)=emis(m,k,6)+emiM(m,j,k)
-        if(iscc(j,k).eq.'220108033V') emis(m,k,6)=emis(m,k,6)+emiM(m,j,k)
-        if(iscc(j,k).eq.'220102033V') emis(m,k,6)=emis(m,k,6)+emiM(m,j,k)
-        if(iscc(j,k).eq.'220104033V') emis(m,k,6)=emis(m,k,6)+emiM(m,j,k)
-        if(iscc(j,k).eq.'220107033V') emis(m,k,6)=emis(m,k,6)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2203210080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2204210080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2203310080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2204310080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2230060234') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2204320080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2230001000') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2203420080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2201070270') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2230070270') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2204430080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2203410080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2204420080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2204530080') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
-        if(iscc(j,k).eq.'2201070214') emis(m,k,13)=emis(m,k,13)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2230001330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2230060330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2201020330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2230074330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2201070330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2201001330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2230075330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2201040330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2230073330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2201080330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'220100133V') emis(m, 6,k)=emis(m, 6,k)+emiM(m,j,k)
+          if(iscc(j,k).eq.'220100133V')  print *,iscc(j,k),emis(m, 6,k)
+            if(iscc(j,k).eq.'220108033V') emis(m, 6,k)=emis(m, 6,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'220102033V') emis(m, 6,k)=emis(m, 6,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'220104033V') emis(m, 6,k)=emis(m, 6,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'220107033V') emis(m, 6,k)=emis(m, 6,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2203210080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2204210080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2203310080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2204310080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2230060234') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2204320080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2230001000') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2203420080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2201070270') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2230070270') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2204430080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2203410080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2204420080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2204530080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2201070214') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+      end do !j
     end do !m
   end do !k
-            emiM(m,l,k)
 end subroutine mobile_sorting
 !  _ _ _                                                            _
 ! | (_) |__   ___ _ __ __ _     _ __ ___   ___ _ __ ___   ___  _ __(_) __ _
@@ -258,17 +259,18 @@ subroutine libera_memoria
 
     if(allocated(idcel))  deallocate(idcel)
     if(allocated(mst))    deallocate(mst)
+    if(allocated(emis))   deallocate(emis)
     if(allocated(emiM))   deallocate(emiM)
     if(allocated(idcg))   deallocate(idcg)
-    if(allocated(pob))   deallocate(pob)
+    if(allocated(pob))    deallocate(pob)
     if(allocated(xlon))   deallocate(xlon)
     if(allocated(xlat))   deallocate(xlat)
-    if(allocated(utmxd))   deallocate(utmxd)
-    if(allocated(utmyd))   deallocate(utmyd)
-    if(allocated(utmzd))   deallocate(utmzd)
+    if(allocated(utmxd))  deallocate(utmxd)
+    if(allocated(utmyd))  deallocate(utmyd)
+    if(allocated(utmzd))  deallocate(utmzd)
     if(allocated(aguardar))   deallocate(aguardar)
-  write(6,170)
-  write(6,180)
+    write(6,170)
+    write(6,180)
 170 format(7x,"XXXXXX  Released memory    XXXXXX")
 180 format(7x,"*****  DONE MOBILE TEMPORAL *****")
 end subroutine libera_memoria
@@ -417,14 +419,14 @@ call check( nf90_put_att(ncid, NF90_GLOBAL, "contributor_name","Agustin Garcia")
 call check( nf90_put_att(ncid, NF90_GLOBAL, "acknowledgment","ICAyCC-UNAM"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "keywords_vocabulary","CF:NetCDF COARDS Climate and Forecast Standard Names"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "keywords","SO2,NOx,PM10,NH3,NOx,BC,CO,PM2.5"))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "summary","National emissions inventory for Mexico 2016&
+call check( nf90_put_att(ncid, NF90_GLOBAL, "summary","National emissions inventory for Mexico 2016 &
 produced by SEMARNAT it is converted by DiETE v2 to a model ready EI, this file only contains annual &
 emissions for mobile sources"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "program","PAPILA,ICAyCC"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "project","PAPILA"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "institution","SEMARNAT,UNAM"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "source","DiETE v2"))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "references","https://doi.org/10.20937/RICA.2018.34.04.07,&
+call check( nf90_put_att(ncid, NF90_GLOBAL, "references","https://doi.org/10.20937/RICA.2018.34.04.07, &
 https://www.gob.mx/semarnat/documentos/documentos-del-inventario-nacional-de-emisiones"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "cdm_data_type","Grid"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "date_issued",hoy))
@@ -432,7 +434,7 @@ call check( nf90_put_att(ncid, NF90_GLOBAL, "date_created",hoy))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "date_modified",hoy))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "product_version",1))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "date_modified",hoy))
-call check( nf90_put_att(ncid, NF90_GLOBAL, "comment","Created with areaanual.F90 v1.0"))
+call check( nf90_put_att(ncid, NF90_GLOBAL, "comment","Created with movil_anual.F90 v1.0"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "history","Creation "//fecha))
 !  Define las variables
 call check( nf90_def_var(ncid, "time", NF90_CHAR, dimids2,id_unlimit ) )
@@ -514,21 +516,22 @@ call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
     ren0=ren0-1
     col0=col0-1
     aguardar=0
-    do m=1,size(emis,dim=1)
-        call get_position(idcel(m),ncol, pren,pcol)
-        j=pren-ren0
-        i=pcol-col0
-        if(m.eq.1) print *,i,j
-    !  Actualiza la posicion en i,j a partir de m
-        do l=1,nscc(k)
-        aguardar(i,j)=aguardar(i,j)+emis(m,l,k)*0.0315360*SUPF1!conversion: kg s-1 m-2
+    do l=6,13,7
+      if(l.eq.13 .or. (l.eq.6 .and.k.eq.nf)) then
+        do m=1,size(emis,dim=1)
+            call get_position(idcel(m),ncol, pren,pcol)
+            j=pren-ren0
+            i=pcol-col0
+            if(m.eq.1) print *,i,j
+        !  Actualiza la posicion en i,j a partir de m
+            aguardar(i,j)=aguardar(i,j)+emis(m,l,k)*0.0315360*SUPF1!conversion: kg s-1 m-2
         end do
+        varname="        "
+        varname=trim(ename(k))//"_"//trim(idCAMS(l)) ! For TRO
+        call crea_attr(ncid,2,dimids,varname,long_nm(k),cname(l),idIPCC(l),"kg m-2 s-1",id_var(l))
+        call check( nf90_put_var(ncid, id_var(l),aguardar,start=(/1,1/)) )
+      end if
     end do
-l=13
-    varname="        "
-    varname=trim(ename(k))//"_"//trim(idCAMS(l)) ! For TRO
-    call crea_attr(ncid,2,dimids,varname,long_nm(k),cname(l),idIPCC(l),"kg m-2 s-1",id_var(l))
-    call check( nf90_put_var(ncid, id_var(l),aguardar,start=(/1,1/)) )
     call check( nf90_close(ncid) )
 end do !k
 write(6,180)
