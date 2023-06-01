@@ -18,7 +18,7 @@ module area_anual_mod
 integer :: daytype ;!> number of emission files
 integer,parameter :: nf=10    ;!> max number of scc descriptors in input files
 integer,parameter :: nnscc=59 ;!> CAMS categories number
-integer,parameter :: ncams=14  ;!> number of max lines in emiA
+integer,parameter :: ncams=16  ;!> number of max lines in emiA
 integer :: nmax
 !> Number of lines in emissions file
 integer :: nm    ;!> number of cell in the grid
@@ -80,10 +80,10 @@ character (len=40) :: titulo
 &           'MEX_AREA_9km_2016_PM10.nc','MEX_AREA_9km_2016_CO2.nc ',&
 &           'MEX_AREA_9km_2016_CN.nc  ','MEX_AREA_9km_2016_CH4.nc ',&
 &           'MEX_AREA_9km_2016_PM25.nc','MEX_AREA_9km_2016_VOC.nc '/
- data idCAMS/'AGL','AGS','AWB','COM','ENE','FEF','IND','REF','RES','SHP',&
-             'SWD','TNR','TRO','WFR'/
- data idIPCC/'3A  ','  3C',' 3C1','1A4a',' 1A2','1B2a',' 1A2','1A1b',' 1A4',&
-             '1A3d','   4',' 1A3','1A3b',' 1Wf'/
+ data idCAMS/'AGL','AGS','AWB','COM','ENE','FEF','IND','NAT','REF',&
+             'RES','SHP','SLV','SWD','TNR','TRO','WFR'/
+ data idIPCC/'3A ','3C  ','3C1 ','1A4a','1A1 ','1B2a','1A2 ','9999','1A2 ',&
+            '1A4 ','1A3d','2D3 ','4   ','1A4 ','1A3b','4A1b'/
  data ename/'SO2 ','NOx ','NH3 ','CO  ','PM10','CO2 ','BC  ','CH4 ','PM25','VOC '/
  data cname / &
 'AGL: Agriculture_livestock                                                   ',&
@@ -93,13 +93,15 @@ character (len=40) :: titulo
 'ENE: Power_generation                                                        ',&
 'FEF: Fugitive_emissions_from_fuels                                           ',&
 'IND: Industrial_process (Energy consumption of manufacture industry+ process)',&
+'NAT: Natural emissions                                                       ',&
 'REF: refineries                                                              ',&
 'RES: Residential_commercial_and_other_combustion                             ',&
 'SHP: Navigation                                                              ',&
+'SLV: Solvents                                                                ',&
 'SWD: Solid_waste_and_waste_water                                             ',&
 'TNR: Non-road_transportation                                                 ',&
 'TRO: Road_transportation                                                     ',&
-'WRF: wildfires                                                               '/
+'WRF: Wildfires                                                               '/
 data long_nm/&
 'surface_upward_mass_flux_of_sulfur_dioxide                        ',&
 'surface_upward_mass_flux_of_nox                                   ',&
@@ -237,37 +239,37 @@ subroutine area_sorting
             do j=1,nscc(k)
             if(iscc(j,k).eq.'2102007000') emis(ii,k,7)=emis(ii,k,7)+emiA(k,i,j)
             if(iscc(j,k).eq.'2102004000') emis(ii,k,7)=emis(ii,k,7)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2103006000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2103007000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2104011000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2104006000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2104008000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2104007000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2267005000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2270005000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2302002000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2610000000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2103006000') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2103007000') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2104011000') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2104006000') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2104008000') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2104007000') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2267005000') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2270005000') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2302002000') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2610000000') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
             if(iscc(j,k).eq.'2801500100') emis(ii,k,3)=emis(ii,k,3)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2810030000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2810001000') emis(ii,k,14)=emis(ii,k,14)+emiA(k,i,j)
-            if(trim(iscc(j,k)).eq.'30500304') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2280000000') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2285000000') emis(ii,k,12)=emis(ii,k,12)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2275000000') emis(ii,k,12)=emis(ii,k,12)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2275050000') emis(ii,k,12)=emis(ii,k,12)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2222222222') emis(ii,k,13)=emis(ii,k,13)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2620030000') emis(ii,k,11)=emis(ii,k,11)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2230070310') emis(ii,k,13)=emis(ii,k,13)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2285002010') emis(ii,k,12)=emis(ii,k,12)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2265005000') emis(ii,k,12)=emis(ii,k,12)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2810030000') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2810001000') emis(ii,k,16)=emis(ii,k,16)+emiA(k,i,j)
+            if(trim(iscc(j,k)).eq.'30500304') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2280000000') emis(ii,k,11)=emis(ii,k,11)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2285000000') emis(ii,k,14)=emis(ii,k,14)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2275000000') emis(ii,k,14)=emis(ii,k,14)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2275050000') emis(ii,k,14)=emis(ii,k,14)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2222222222') emis(ii,k,15)=emis(ii,k,15)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2620030000') emis(ii,k,13)=emis(ii,k,13)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2230070310') emis(ii,k,15)=emis(ii,k,15)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2285002010') emis(ii,k,14)=emis(ii,k,14)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2265005000') emis(ii,k,14)=emis(ii,k,14)+emiA(k,i,j)
             if(iscc(j,k).eq.'2801700000') emis(ii,k,2)=emis(ii,k,2)+emiA(k,i,j)
             if(iscc(j,k).eq.'2805020000') emis(ii,k,1)=emis(ii,k,1)+emiA(k,i,j)
-            if(iscc(j,k).eq.'5555555555') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
+            if(iscc(j,k).eq.'5555555555') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
             if(iscc(j,k).eq.'2311010000') emis(ii,k,7)=emis(ii,k,7)+emiA(k,i,j)
             if(iscc(j,k).eq.'2801000002') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
             if(iscc(j,k).eq.'2801000005') emis(ii,k,2)=emis(ii,k,2)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2294000000') emis(ii,k,13)=emis(ii,k,13)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2296000000') emis(ii,k,13)=emis(ii,k,13)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2294000000') emis(ii,k,15)=emis(ii,k,15)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2296000000') emis(ii,k,15)=emis(ii,k,15)+emiA(k,i,j)
             if(iscc(j,k).eq.'2425010000') emis(ii,k,7)=emis(ii,k,7)+emiA(k,i,j)
             if(iscc(j,k).eq.'2425030000') emis(ii,k,7)=emis(ii,k,7)+emiA(k,i,j)
             if(iscc(j,k).eq.'2425040000') emis(ii,k,7)=emis(ii,k,7)+emiA(k,i,j)
@@ -282,19 +284,19 @@ subroutine area_sorting
             if(iscc(j,k).eq.'2401080000') emis(ii,k,7)=emis(ii,k,7)+emiA(k,i,j)
             if(iscc(j,k).eq.'2401065000') emis(ii,k,7)=emis(ii,k,7)+emiA(k,i,j)
             if(iscc(j,k).eq.'2401020000') emis(ii,k,7)=emis(ii,k,7)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2401001000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2465900000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2465200000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2465100000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2401001000') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2465900000') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2465200000') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2465100000') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
             if(iscc(j,k).eq.'2465400000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
             if(iscc(j,k).eq.'2465600000') emis(ii,k,4)=emis(ii,k,4)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2465800000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2465000000') emis(ii,k,9)=emis(ii,k,9)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2465800000') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2465000000') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
             if(iscc(j,k).eq.'3333333333') emis(ii,k,6)=emis(ii,k,6)+emiA(k,i,j)
             if(iscc(j,k).eq.'2501060000') emis(ii,k,6)=emis(ii,k,6)+emiA(k,i,j)
             if(iscc(j,k).eq.'2302050000') emis(ii,k,1)=emis(ii,k,1)+emiA(k,i,j)
             if(iscc(j,k).eq.'2461850000') emis(ii,k,2)=emis(ii,k,2)+emiA(k,i,j)
-            if(iscc(j,k).eq.'2630030000') emis(ii,k,11)=emis(ii,k,11)+emiA(k,i,j)
+            if(iscc(j,k).eq.'2630030000') emis(ii,k,13)=emis(ii,k,13)+emiA(k,i,j)
             if(iscc(j,k).eq.'2850000010') emis(ii,k,7)=emis(ii,k,7)+emiA(k,i,j)
             end do
         end if
