@@ -18,7 +18,7 @@ integer :: daytype ! tipo de dia 1 lun a 7 dom
 integer :: perfil  ;!> number of pollutant emission files
 integer,parameter :: nf=11    ;!> max number of SCC IDs in input files
 integer,parameter :: nnscc=36 ;!> CAMS categories number
-integer,parameter :: ncams=14  ; !> Pollutant ID in temporl profile  CO,NO,VOC, VOC Diesel, SO2
+integer,parameter :: ncams=16  ; !> Pollutant ID in temporl profile  CO,NO,VOC, VOC Diesel, SO2
 integer,parameter :: ispc=5  ; !> Type number of vehicle  1 all, 2 automobile gas
 integer,parameter :: v_type=9 ;;!> stores gricode value from localiza.csv
 integer*8,allocatable :: idcg(:);!> Emission by cel,file (pollutant) and idCAMS
@@ -68,10 +68,10 @@ data casn /'MEX_MOBILE_9km_2016_CO.nc  ','MEX_MOBILE_9km_2016_NH3.nc ',&
            'MEX_MOBILE_9km_2016_CO2.nc ','MEX_MOBILE_9km_2016_CH4.nc ',&
            'MEX_MOBILE_9km_2016_PM10.nc','MEX_MOBILE_9km_2016_PM2.nc ',&
            'MEX_MOBILE_9km_2016_COV.nc '/
-data idCAMS/'AGL','AGS','AWB','COM','ENE','FEF','IND','REF','RES','SHP',&
-'SWD','TNR','TRO','WFR'/
-data idIPCC/'3A  ','  3C',' 3C1','1A4a',' 1A2','1B2a',' 1A2','1A1b',' 1A4',&
-'1A3d','   4',' 1A3','1A3b',' 1Wf'/
+data idCAMS/'AGL','AGS','AWB','COM','ENE','FEF','IND','NAT','REF',&
+'RES','SHP','SLV','SWD','TNR','TRO','WFR'/
+data idIPCC/'3A ','3C  ','3C1 ','1A4a','1A1 ','1B2a','1A2 ','9999','1A2 ',&
+'1A4 ','1A3d','2D3 ','4   ','1A4 ','1A3b','4A1b'/
 data ename/'CO  ','NH3 ','NO2 ','NO  ','SO2 ','BC  ','CO2 ','CH4 ','PM10',&
            'PM25','VOC '/
 data cname / &
@@ -82,9 +82,11 @@ data cname / &
 'ENE: Power_generation                                                        ',&
 'FEF: Fugitive_emissions_from_fuels                                           ',&
 'IND: Industrial_process (Energy consumption of manufacture industry+ process)',&
+'NAT: Natural emissions                                                       ',&
 'REF: refineries                                                              ',&
 'RES: Residential_commercial_and_other_combustion                             ',&
 'SHP: Navigation                                                              ',&
+'SLV: Solvents                                                                ',&
 'SWD: Solid_waste_and_waste_water                                             ',&
 'TNR: Non-road_transportation                                                 ',&
 'TRO: Road_transportation                                                     ',&
@@ -209,37 +211,36 @@ emis=0
   do k=1,nf
         do m=1,size(emiM,1)
             do j=1,nscc(k)
-            if(iscc(j,k).eq.'2230001330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2230060330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2201020330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2230074330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2201070330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2201001330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2230075330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2201040330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2230073330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2201080330') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2230001330') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2230060330') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2201020330') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2230074330') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2201070330') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2201001330') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2230075330') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2201040330') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2230073330') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2201080330') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
             if(iscc(j,k).eq.'220100133V') emis(m, 6,k)=emis(m, 6,k)+emiM(m,j,k)
-          if(iscc(j,k).eq.'220100133V')  print *,iscc(j,k),emis(m, 6,k)
             if(iscc(j,k).eq.'220108033V') emis(m, 6,k)=emis(m, 6,k)+emiM(m,j,k)
             if(iscc(j,k).eq.'220102033V') emis(m, 6,k)=emis(m, 6,k)+emiM(m,j,k)
             if(iscc(j,k).eq.'220104033V') emis(m, 6,k)=emis(m, 6,k)+emiM(m,j,k)
             if(iscc(j,k).eq.'220107033V') emis(m, 6,k)=emis(m, 6,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2203210080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2204210080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2203310080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2204310080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2230060234') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2204320080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2230001000') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2203420080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2201070270') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2230070270') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2204430080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2203410080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2204420080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2204530080') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
-            if(iscc(j,k).eq.'2201070214') emis(m,13,k)=emis(m,13,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2203210080') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2204210080') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2203310080') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2204310080') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2230060234') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2204320080') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2230001000') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2203420080') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2201070270') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2230070270') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2204430080') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2203410080') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2204420080') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2204530080') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
+            if(iscc(j,k).eq.'2201070214') emis(m,15,k)=emis(m,15,k)+emiM(m,j,k)
       end do !j
     end do !m
   end do !k
@@ -516,13 +517,13 @@ call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
     ren0=ren0-1
     col0=col0-1
     aguardar=0
-    do l=6,13,7
-      if(l.eq.13 .or. (l.eq.6 .and.k.eq.nf)) then
+    do l=6,15,9
+      if(l.eq.15 .or. (l.eq.6 .and.k.eq.nf)) then
         do m=1,size(emis,dim=1)
             call get_position(idcel(m),ncol, pren,pcol)
             j=pren-ren0
             i=pcol-col0
-            if(m.eq.1) print *,i,j
+            !if(m.eq.1) print *,i,j
         !  Actualiza la posicion en i,j a partir de m
             aguardar(i,j)=aguardar(i,j)+emis(m,l,k)*0.0315360*SUPF1!conversion: kg s-1 m-2
         end do
