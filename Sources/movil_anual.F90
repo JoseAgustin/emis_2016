@@ -30,7 +30,7 @@ real,allocatable :: utmxd(:,:) ;!> UTMy coordinates in output file from localiza
 real,allocatable :: utmyd(:,:) ;!> temporal array for storage
 real,allocatable:: aguardar(:,:) ;!> UTM Z zone
 integer, allocatable:: utmzd(:,:) ;!> cell dimension CDIM km
-real :: CDIM ;!> grid 1/area  (km^-2)
+real :: CDIM ;!> grid 1/area  (m^-2)
 real :: SUPF1 ;!> longitude values in grid
 integer :: nx    ;!> latitude values in grid
 integer :: ny    ;
@@ -525,7 +525,7 @@ call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
             i=pcol-col0
             !if(m.eq.1) print *,i,j
         !  Actualiza la posicion en i,j a partir de m
-            aguardar(i,j)=aguardar(i,j)+emis(m,l,k)*0.0317098*SUPF1!conversion: kg s-1 m-2
+            aguardar(i,j)=aguardar(i,j)+emis(m,l,k)*0.0000317098*SUPF1!conversion: kg s-1 m-2
         end do
         varname="        "
         varname=trim(ename(k))//"_"//trim(idCAMS(l)) ! For TRO

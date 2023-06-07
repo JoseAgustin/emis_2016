@@ -40,7 +40,7 @@ integer, allocatable :: idsm(:,:);!> GRIDCODE in emission input files
 integer*8 :: idcf;!> GRIDCODE in output grid obtaines from localiza
 integer*8,allocatable :: idcg(:) ;!> UTM Z zone
 integer, allocatable:: utmzd(:,:);!> cell dimension CDIM km
-real :: CDIM ;!> grid 1/area  (km^-2)
+real :: CDIM ;!> grid 1/area  (m^-2)
 real :: SUPF1
 !> Fraction of weeks per days in the month
 real ::fweek
@@ -517,7 +517,7 @@ call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
       aguardar=0
         do l=1,ncams
             suma(l)=suma(l)+emis(m,k,l)
-            eft(i,j,l)=eft(i,j,l)+emis(m,k,l)*0.0317098*SUPF1!conversion: kg s-1 m-2
+            eft(i,j,l)=eft(i,j,l)+emis(m,k,l)*0.0000317098*SUPF1!conversion: kg s-1 m-2
         end do  !l
     end do !m
     do l=1,ncams

@@ -26,7 +26,7 @@ real,allocatable :: utmyd(:,:) ;!> temporal array for storage
 real,allocatable:: eft(:,:,:,:) ;!> array to storing variblae in netcdf
 real,allocatable:: aguardar(:,:,:) !> UTM Z zone
 integer, allocatable:: utmzd(:,:) ;!> cell dimension CDIM km
-real :: CDIM ;!> grid 1/area  (km^-2)
+real :: CDIM ;!> grid 1/area  (m^-2)
 real :: SUPF1 ;!> Number of lines in input file
 integer :: nl ;!> Number of longitudes (columns) in localiza file
 integer :: nx ;!> Number of latitudes (rows( in localiza file
@@ -599,7 +599,7 @@ print *,"Mobile Emissions Annual saving"
       do i=1,nl
             suma(l)=suma(l)+emis(ict(i),jct(i),k,l) !conversion: kg s-1 m-2
             eft(ict(i),jct(i),capa(i,1),l)=eft(ict(i),jct(i),capa(i,1),l)&
-                +emis(ict(i),jct(i),k,l)*0.0317098*SUPF1
+                +emis(ict(i),jct(i),k,l)*0.0000317098*SUPF1
       end do !i
       if(suma(l).gt.0.) then
         varname="        "
