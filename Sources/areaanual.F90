@@ -517,7 +517,7 @@ call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
       aguardar=0
         do l=1,ncams
             suma(l)=suma(l)+emis(m,k,l)
-            eft(i,j,l)=eft(i,j,l)+emis(m,k,l)*0.0315360*SUPF1!conversion: kg s-1 m-2
+            eft(i,j,l)=eft(i,j,l)+emis(m,k,l)*0.0317098*SUPF1!conversion: kg s-1 m-2
         end do  !l
     end do !m
     do l=1,ncams
@@ -694,9 +694,9 @@ subroutine lee_localiza
       read(10,*) idcg(k),xlon(i,j),xlat(i,j),idum,pob(i,j),utmxd(i,j),utmyd(i,j),utmzd(i,j)
      end do
     end do
-    CDIM=(utmxd(2,1)-utmxd(1,1))/1000.  ! from meters to km
+    CDIM=(utmxd(2,1)-utmxd(1,1))  ! in meters
     write(6,'(F8.2,A30)') CDIM,trim(titulo)
-    SUPF1=1./(CDIM*CDIM)  !computes  grid area in km^-1
+    SUPF1=1./(CDIM*CDIM)  !computes  grid area in m^-1
     close(10)
    allocate(eft(nx,ny,ncams),aguardar(nx,ny))
 end subroutine lee_localiza

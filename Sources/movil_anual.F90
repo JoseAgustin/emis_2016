@@ -308,8 +308,8 @@ subroutine lee_localiza
         end do
     end do
     close(10)
-    CDIM=(utmxd(2,1)-utmxd(1,1))/1000.  ! from meters to km
-    SUPF1=1./(CDIM*CDIM)  !computes  grid area in km^-1
+    CDIM=(utmxd(2,1)-utmxd(1,1))  ! in meters
+    SUPF1=1./(CDIM*CDIM)  !computes  grid area in m^-1
     write(6,'(F8.2,F8.4," ",A30)') CDIM,SUPF1,trim(titulo)
 end subroutine lee_localiza
 
@@ -525,7 +525,7 @@ call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
             i=pcol-col0
             !if(m.eq.1) print *,i,j
         !  Actualiza la posicion en i,j a partir de m
-            aguardar(i,j)=aguardar(i,j)+emis(m,l,k)*0.0315360*SUPF1!conversion: kg s-1 m-2
+            aguardar(i,j)=aguardar(i,j)+emis(m,l,k)*0.0317098*SUPF1!conversion: kg s-1 m-2
         end do
         varname="        "
         varname=trim(ename(k))//"_"//trim(idCAMS(l)) ! For TRO

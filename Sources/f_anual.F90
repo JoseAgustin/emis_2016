@@ -458,7 +458,7 @@ print *,"Mobile Emissions Annual saving"
     write(geospatial_bounds,100)"POLYGON ((",minval(xlon),minval(xlat),&
     &minval(xlon),maxval(xlat),maxval(xlon), maxval(xlat),maxval(xlon),minval(xlat),"))"
     write(ccdim,110) CDIM
-    call check( nf90_put_att(ncid, NF90_GLOBAL, "id","ME_2016_"//trim(ename(k))))
+    call check( nf90_put_att(ncid, NF90_GLOBAL, "id","PE_2016_"//trim(ename(k))))
     call check( nf90_put_att(ncid, NF90_GLOBAL, "title","Emissions from criteria pollutants and GHG for 2016"))
     call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_bounds",geospatial_bounds))
     call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_bounds_crs","EPSG:4326"))
@@ -599,7 +599,7 @@ print *,"Mobile Emissions Annual saving"
       do i=1,nl
             suma(l)=suma(l)+emis(ict(i),jct(i),k,l) !conversion: kg s-1 m-2
             eft(ict(i),jct(i),capa(i,1),l)=eft(ict(i),jct(i),capa(i,1),l)&
-                +emis(ict(i),jct(i),k,l)*0.0315360*SUPF1
+                +emis(ict(i),jct(i),k,l)*0.0317098*SUPF1
       end do !i
       if(suma(l).gt.0.) then
         varname="        "
