@@ -39,7 +39,7 @@ integer, allocatable ::idcel3(:) ;!> state municipality IDs emiss and time zone
 integer, allocatable :: idsm(:,:);!> GRIDCODE in emission input files
 integer*8 :: idcf;!> GRIDCODE in output grid obtaines from localiza
 integer*8,allocatable :: idcg(:) ;!> UTM Z zone
-integer, allocatable:: utmzd(:,:);!> cell dimension CDIM km
+integer, allocatable:: utmzd(:,:);!> cell dimension CDIM m
 real :: CDIM ;!> grid 1/area  (m^-2)
 real :: SUPF1
 !> Fraction of weeks per days in the month
@@ -66,7 +66,7 @@ character(len=25),dimension(nf)   :: casn  ;!> Categories in CAMS
 character(len=3),dimension(ncams) :: idCAMS;!> IPCC classification
 character(len=4),dimension(ncams) :: idIPCC;!> Pollutant abreviation
 character(len=4),dimension(nf)    :: ename ;!> Long name description
-character(len=76),dimension(ncams):: cname ;!> Variable description
+character(len=77),dimension(ncams):: cname ;!> Variable description
 character(len=66),dimension(nf):: long_nm
 
 character (len=40) :: titulo
@@ -78,9 +78,9 @@ character (len=40) :: titulo
  data casn /'MEX_AREA_9km_2016_SO2.nc ','MEX_AREA_9km_2016_NOx.nc ',&
 &           'MEX_AREA_9km_2016_NH3.nc ','MEX_AREA_9km_2016_CO.nc  ',&
 &           'MEX_AREA_9km_2016_PM10.nc','MEX_AREA_9km_2016_CO2.nc ',&
-&           'MEX_AREA_9km_2016_CN.nc  ','MEX_AREA_9km_2016_CH4.nc ',&
+&           'MEX_AREA_9km_2016_BC.nc  ','MEX_AREA_9km_2016_CH4.nc ',&
 &           'MEX_AREA_9km_2016_PM25.nc','MEX_AREA_9km_2016_VOC.nc '/
- data idCAMS/'AGL','AGS','AWB','COM','ENE','FEF','IND','NAT','REF',&
+ data idCAMS/'AGL','AGS','AWB','COM','TOT','FEF','IND','NAT','REF',&
              'RES','SHP','SLV','SWD','TNR','TRO','WFR'/
  data idIPCC/'3A ','3C  ','3C1 ','1A4a','1A1 ','1B2a','1A2 ','9999','1A2 ',&
             '1A4 ','1A3d','2D3 ','4   ','1A4 ','1A3b','4A1b'/
@@ -90,11 +90,11 @@ character (len=40) :: titulo
 'AGS: Agricultural_soils (without fires)                                      ',&
 'AWB: Agricultural waste burning                                              ',&
 'COM: Commercial buildings                                                    ',&
-'ENE: Power_generation                                                        ',&
+'TOT: Total Emissions                                                         ',&
 'FEF: Fugitive_emissions_from_fuels                                           ',&
 'IND: Industrial_process (Energy consumption of manufacture industry+ process)',&
 'NAT: Natural emissions                                                       ',&
-'REF: refineries                                                              ',&
+'REF: Refineries                                                              ',&
 'RES: Residential_commercial_and_other_combustion                             ',&
 'SHP: Navigation                                                              ',&
 'SLV: Solvents                                                                ',&
@@ -124,7 +124,7 @@ end module area_anual_mod
 !
 !  Progran  atemporal.F90
 !
-!>  @brief Make the area emissions temporal distribution using profiles based on SCC.
+!>   @brief Make the area emissions temporal distribution using profiles based on SCC.
 !>   @author  Jose Agustin Garcia Reynoso
 !>   @date  04/26/2021
 !>   @version 3.0
@@ -237,6 +237,7 @@ subroutine area_sorting
         do i=1,size(id5,2)
         if(idcel2(ii).eq.id5(k,i))then
             do j=1,nscc(k)
+            emis(ii,k,5)=emis(ii,k,5)+emiA(k,i,j)
             if(iscc(j,k).eq.'2102007000') emis(ii,k,7)=emis(ii,k,7)+emiA(k,i,j)
             if(iscc(j,k).eq.'2102004000') emis(ii,k,7)=emis(ii,k,7)+emiA(k,i,j)
             if(iscc(j,k).eq.'2103006000') emis(ii,k,10)=emis(ii,k,10)+emiA(k,i,j)
@@ -371,7 +372,7 @@ use netcdf
 !print *,"Globales"
 write(geospatial_bounds,100)"POLYGON ((",minval(xlon),minval(xlat),&
 &minval(xlon),maxval(xlat),maxval(xlon), maxval(xlat),maxval(xlon),minval(xlat),"))"
-write(ccdim,110) CDIM*1000
+write(ccdim,110) CDIM
 call check( nf90_put_att(ncid, NF90_GLOBAL, "id","AE_2016_"//trim(ename(k))))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "title","Emissions from criteria pollutants and GHG for 2016"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_bounds",geospatial_bounds))
@@ -508,13 +509,13 @@ call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
   call get_position(idcg(1),ncol, ren0,col0)
   ren0=ren0-1
   col0=col0-1
+  eft=0.0
     do m=1,size(emis,dim=1)
     call get_position(idcel2(m),ncol, pren,pcol)
     j=pren-ren0
     i=pcol-col0
 !    if(m.eq.1) print *,i,j
-     suma=0
-      aguardar=0
+     suma=0.0
         do l=1,ncams
             suma(l)=suma(l)+emis(m,k,l)
             eft(i,j,l)=eft(i,j,l)+emis(m,k,l)*0.0000317098*SUPF1!conversion: kg s-1 m-2
@@ -524,6 +525,7 @@ call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
         if(suma(l).gt.0.) then
             varname="        "
             varname=trim(ename(k))//"_"//trim(idCAMS(l))
+            aguardar=0.
             do i=1,nx
               do j=1,ny
               aguardar(i,j)=eft(i,j,l)
@@ -696,7 +698,7 @@ subroutine lee_localiza
     end do
     CDIM=(utmxd(2,1)-utmxd(1,1))  ! in meters
     write(6,'(F8.2,A30)') CDIM,trim(titulo)
-    SUPF1=1./(CDIM*CDIM)  !computes  grid area in m^-1
+    SUPF1=1./(CDIM*CDIM)  !computes  grid area in m^-2
     close(10)
    allocate(eft(nx,ny,ncams),aguardar(nx,ny))
 end subroutine lee_localiza
