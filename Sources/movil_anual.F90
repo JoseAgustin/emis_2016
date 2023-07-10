@@ -29,7 +29,7 @@ real,allocatable :: pob(:,:) ;!> UTMx coordinates in output file from localiza
 real,allocatable :: utmxd(:,:) ;!> UTMy coordinates in output file from localiza
 real,allocatable :: utmyd(:,:) ;!> temporal array for storage
 real,allocatable:: aguardar(:,:) ;!> UTM Z zone
-integer, allocatable:: utmzd(:,:) ;!> cell dimension CDIM km
+integer, allocatable:: utmzd(:,:) ;!> cell dimension CDIM m
 real :: CDIM ;!> grid 1/area  (m^-2)
 real :: SUPF1 ;!> longitude values in grid
 integer :: nx    ;!> latitude values in grid
@@ -64,10 +64,10 @@ character (len=40) :: titulo
 
 data casn /'MEX_MOBILE_9km_2016_CO.nc  ','MEX_MOBILE_9km_2016_NH3.nc ',&
            'MEX_MOBILE_9km_2016_NO2.nc ','MEX_MOBILE_9km_2016_NO.nc  ',&
-           'MEX_MOBILE_9km_2016_SO2.nc ','MEX_MOBILE_9km_2016_CN.nc  ',&
+           'MEX_MOBILE_9km_2016_SO2.nc ','MEX_MOBILE_9km_2016_BC.nc  ',&
            'MEX_MOBILE_9km_2016_CO2.nc ','MEX_MOBILE_9km_2016_CH4.nc ',&
-           'MEX_MOBILE_9km_2016_PM10.nc','MEX_MOBILE_9km_2016_PM2.nc ',&
-           'MEX_MOBILE_9km_2016_COV.nc '/
+           'MEX_MOBILE_9km_2016_PM10.nc','MEX_MOBILE_9km_2016_PM25.nc',&
+           'MEX_MOBILE_9km_2016_VOC.nc '/
 data idCAMS/'AGL','AGS','AWB','COM','ENE','FEF','IND','NAT','REF',&
 'RES','SHP','SLV','SWD','TNR','TRO','WFR'/
 data idIPCC/'3A ','3C  ','3C1 ','1A4a','1A1 ','1B2a','1A2 ','9999','1A2 ',&
@@ -379,7 +379,7 @@ do k=1,nf
 !print *,"Globales"
 write(geospatial_bounds,100)"POLYGON ((",minval(xlon),minval(xlat),&
 &minval(xlon),maxval(xlat),maxval(xlon), maxval(xlat),maxval(xlon),minval(xlat),"))"
-write(ccdim,110) CDIM*1000
+write(ccdim,110) CDIM
 call check( nf90_put_att(ncid, NF90_GLOBAL, "id","ME_2016_"//trim(ename(k))))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "title","Emissions from criteria pollutants and GHG for 2016"))
 call check( nf90_put_att(ncid, NF90_GLOBAL, "geospatial_bounds",geospatial_bounds))
@@ -516,8 +516,8 @@ call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
     call get_position(idcg(1),ncol, ren0,col0)
     ren0=ren0-1
     col0=col0-1
-    aguardar=0
     do l=6,15,9
+      aguardar=0.
       if(l.eq.15 .or. (l.eq.6 .and.k.eq.nf)) then
         do m=1,size(emis,dim=1)
             call get_position(idcel(m),ncol, pren,pcol)
