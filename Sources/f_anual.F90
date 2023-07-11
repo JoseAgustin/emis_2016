@@ -13,7 +13,8 @@ module point_vars_mod
 !>   number of pollutants
 integer, parameter::nsp=10 !number of pollutants
 !> CAMS categories number
-integer,parameter :: ncams=16  ; !> layers where emissions are reach day and night
+integer,parameter :: ncams=16 ; !> Vertical layers in emissions
+integer,parameter :: nlevels=8 ; !> Layers where emissions are each day and night
 integer,allocatable :: capa(:,:);!> **i** index in grid to allocate a point emission
 integer,allocatable :: ict(:) ; !> **j** index in grid to allocate a point emission
 integer,allocatable :: jct(:) ;!> _GRIDCODE_ in grid domain
@@ -23,9 +24,9 @@ real,allocatable :: xlat(:,:) ; !> population in output file from localiza
 real,allocatable :: pob(:,:) ;!> UTMx coordinates in output file from localiza
 real,allocatable :: utmxd(:,:) ;!> UTMy coordinates in output file from localiza
 real,allocatable :: utmyd(:,:) ;!> temporal array for storage
-real,allocatable:: eft(:,:,:,:) ;!> array to storing variblae in netcdf
+real,allocatable:: eft(:,:,:,:) ;!> array to storing variable in netcdf
 real,allocatable:: aguardar(:,:,:) !> UTM Z zone
-integer, allocatable:: utmzd(:,:) ;!> cell dimension CDIM km
+integer, allocatable:: utmzd(:,:) ;!> cell dimension CDIM m
 real :: CDIM ;!> grid 1/area  (m^-2)
 real :: SUPF1 ;!> Number of lines in input file
 integer :: nl ;!> Number of longitudes (columns) in localiza file
@@ -34,15 +35,14 @@ integer :: ny ;;!> Time zone integer
 integer,allocatable :: mcst(:,:)
 !> Latitude point source
 real,allocatable :: lat(:) ;!> Longitude point source
-real,allocatable :: lon(:)
-real,allocatable :: pf(:,:) ;!> point source emission input
+real,allocatable :: lon(:) ;!> point source emission input
 real,allocatable :: e_mis(:,:) ;!> point source emission for each pollutant
-real,allocatable :: emis(:,:,:,:);!> output file name
+real,allocatable :: emis(:,:,:,:,:);!> output file name
 character(len=27),dimension(nsp)  :: casn  ;!> Categories in CAMS
 character(len=3),dimension(ncams) :: idCAMS;!> IPCC classification
 character(len=4),dimension(ncams) :: idIPCC;!> Pollutant abreviation
 character(len=4),dimension(nsp)   :: ename ;!> Long name description
-character(len=76),dimension(ncams):: cname ;!> Variable description
+character(len=77),dimension(ncams):: cname ;!> Variable description
 character(len=66),dimension(nsp)  :: long_nm
 
 !> Source clasification code array
@@ -55,11 +55,11 @@ data casn /'MEX_POINT_9km_2016_PM10.nc','MEX_POINT_9km_2016_PM25.nc',&
 'MEX_POINT_9km_2016_SO2.nc ','MEX_POINT_9km_2016_CO.nc  ',&
 'MEX_POINT_9km_2016_NOx.nc ','MEX_POINT_9km_2016_VOC.nc ',&
 'MEX_POINT_9km_2016_CO2.nc ','MEX_POINT_9km_2016_CH4.nc ',&
-'MEX_POINT_9km_2016_NH3.nc ','MEX_POINT_9km_2016_CN.nc  '/
+'MEX_POINT_9km_2016_NH3.nc ','MEX_POINT_9km_2016_BC.nc  '/
 data idCAMS/'AGL','AGS','AWB','COM','ENE','FEF','IND','NAT','REF',&
-'RES','SHP','SLV','SWD','TNR','TRO','WFR'/
+'TOT','SHP','SLV','SWD','TNR','TRO','WFR'/
 data idIPCC/'3A ','3C  ','3C1 ','1A4a','1A1 ','1B2a','1A2 ','9999','1A2 ',&
-'1A4 ','1A3d','2D3 ','4   ','1A4 ','1A3b','4A1b'/
+'tot ','1A3d','2D3 ','4   ','1A4 ','1A3b','4A1b'/
 data ename/ 'PM10','PM25','SO2 ','CO  ','NOx ',&
             'VOC ','CO2 ','CH4 ','NH3 ','BC  '/
 data cname / &
@@ -72,7 +72,7 @@ data cname / &
 'IND: Industrial_process (Energy consumption of manufacture industry+ process)',&
 'NAT: Natural emissions                                                       ',&
 'REF: refineries                                                              ',&
-'RES: Residential_commercial_and_other_combustion                             ',&
+'TOT: Total_emissions                                                         ',&
 'SHP: Navigation                                                              ',&
 'SLV: Solvents                                                                ',&
 'SWD: Solid_waste_and_waste_water                                             ',&
@@ -90,7 +90,7 @@ data long_nm/&
 'surface_upward_mass_flux_of_methane                               ',&
 'surface_upward_mass_flux_of_ammonia                               ',&
 'surface_upward_mass_flux_of_black_carbon                          '/
-common /dat/ nl,nx,ny,daytype,fweek,cvar,current_date
+common /dat/ nl,nx,ny,daytype,cvar,current_date
 
 end module point_vars_mod
 !              _       _      _                                       _
@@ -153,8 +153,6 @@ implicit none
 	character(len=18):: nfile,nfilep
 
    write(current_date,'(I4,"-",I2.2,"-",I2.2,A9)')anio,month,idia,'_00:00:00'
-  fweek= 7./daym(month)  !semanas en el mes
-
 !$omp section
 	open(newunit=iun,file='../emis/punt/puntual.csv',status='old',action='read')
 	i=0
@@ -188,10 +186,10 @@ implicit none
 	read (iun,*) cdum  !Header
 	read (iun,*) nx,ny  !Header
 	allocate(idcg(nx,ny),xlon(nx,ny),xlat(nx,ny),mcst(nx,ny))
-    allocate(emis(nx,ny,nsp,ncams))
-    allocate(aguardar(nx,ny,8))
-    allocate(eft(nx,ny,8,ncams))
-    allocate(utmxd(nx,ny),utmyd(nx,ny),utmzd(nx,ny),pob(nx,ny))
+   allocate(emis(nx,ny,nlevels,nsp,ncams))
+   allocate(aguardar(nx,ny,nlevels))
+   allocate(eft(nx,ny,nlevels,ncams))
+   allocate(utmxd(nx,ny),utmyd(nx,ny),utmzd(nx,ny),pob(nx,ny))
 
 	do j=1,ny
 		do i=1,nx
@@ -229,167 +227,172 @@ end subroutine point_emis_reading
 subroutine point_cams_distribution
 	implicit none
 	integer i,j,kk,l,ival,ii
-!
+   real,dimension(nsp) :: bmasa=0
+   real,dimension(nsp):: suma=0
 	print *,'CAMS distribution'
   emis=0.
   do i=1,nl
-    if(ict(i).ne.0 .or.jct(i).ne.0) then
+    if(ict(i).gt.0 .and.jct(i).gt.0) then
       do j=1,nsp
-if(trim(iscc(i)).eq.'0') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10100401') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10100601') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10100901') emis(ict(i),jct(i),j,5)= e_mis(i,j)+emis(ict(i),jct(i),j,5)
-if(trim(iscc(i)).eq.'10101208') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10200221') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10200229') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10200401') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10200404') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10200501') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10200503') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10200504') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10200601') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10200707') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10200802') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10200903') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10201001') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10201002') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10201101') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10201201') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10201302') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10201701') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'10500105') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'20100101') emis(ict(i),jct(i),j,5)= e_mis(i,j)+emis(ict(i),jct(i),j,5)
-if(trim(iscc(i)).eq.'20100107') emis(ict(i),jct(i),j,5)= e_mis(i,j)+emis(ict(i),jct(i),j,5)
-if(trim(iscc(i)).eq.'20200101') emis(ict(i),jct(i),j,5)= e_mis(i,j)+emis(ict(i),jct(i),j,5)
-if(trim(iscc(i)).eq.'20200102') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'20200107') emis(ict(i),jct(i),j,5)= e_mis(i,j)+emis(ict(i),jct(i),j,5)
-if(trim(iscc(i)).eq.'20200109') emis(ict(i),jct(i),j,5)= e_mis(i,j)+emis(ict(i),jct(i),j,5)
-if(trim(iscc(i)).eq.'20200201') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30101453') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30101822') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30101847') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30101872') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30102201') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30102826') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30106013') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30112007') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30125805') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30125815') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30187007') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30200705') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30200746') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30200778') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30200911') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30201421') emis(ict(i),jct(i),j,6)= e_mis(i,j)+emis(ict(i),jct(i),j,6)
-if(trim(iscc(i)).eq.'30201520') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30201903') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30203201') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30203204') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30300317') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30300931') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30300935') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30400723') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30400736') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30400737') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30400812') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30402201') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30500504') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30500619') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30500718') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30501114') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30502599') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30504030') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30504034') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30800126') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30800901') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30801006') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30901078') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'30903901') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'31613001') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'33000102') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'33000202') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'36000101') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'39090007') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'39990024') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'40100101') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40100301') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40100307') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40100308') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40200101') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40200110') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40200301') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40200701') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40200801') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40200820') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40200861') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40200870') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40201403') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40201601') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40202520') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40204240') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40204435') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'40301008') emis(ict(i),jct(i),j,6)= e_mis(i,j)+emis(ict(i),jct(i),j,6)
-if(trim(iscc(i)).eq.'40301153') emis(ict(i),jct(i),j,6)= e_mis(i,j)+emis(ict(i),jct(i),j,6)
-if(trim(iscc(i)).eq.'40400121') emis(ict(i),jct(i),j,6)= e_mis(i,j)+emis(ict(i),jct(i),j,6)
-if(trim(iscc(i)).eq.'40400403') emis(ict(i),jct(i),j,6)= e_mis(i,j)+emis(ict(i),jct(i),j,6)
-if(trim(iscc(i)).eq.'40500506') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40600651') emis(ict(i),jct(i),j,6)= e_mis(i,j)+emis(ict(i),jct(i),j,6)
-if(trim(iscc(i)).eq.'40688801') emis(ict(i),jct(i),j,6)= e_mis(i,j)+emis(ict(i),jct(i),j,6)
-if(trim(iscc(i)).eq.'40700801') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40700809') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40700811') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40700813') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40703601') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40703615') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40703623') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40704001') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40704403') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40704405') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40704411') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40704419') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40706801') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40706803') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40707603') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40717601') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40717602') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40717603') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40722009') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'40722803') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'50200507') emis(ict(i),jct(i),j,13)= e_mis(i,j)+emis(ict(i),jct(i),j,13)
-if(trim(iscc(i)).eq.'2101006000') emis(ict(i),jct(i),j,5)= e_mis(i,j)+emis(ict(i),jct(i),j,5)
-if(trim(iscc(i)).eq.'2102007000') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'2102008000') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'2102010000') emis(ict(i),jct(i),j,5)= e_mis(i,j)+emis(ict(i),jct(i),j,5)
-if(trim(iscc(i)).eq.'2280002020') emis(ict(i),jct(i),j,11)= e_mis(i,j)+emis(ict(i),jct(i),j,11)
-if(trim(iscc(i)).eq.'2301050001') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'2303020000') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'2308000000') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'2309100000') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'2310010000') emis(ict(i),jct(i),j,9)= e_mis(i,j)+emis(ict(i),jct(i),j,9)
-if(trim(iscc(i)).eq.'2401005600') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'2401100001') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'2415000000') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'2415000350') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'2415300000') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'2440000250') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'2440000260') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'2440020000') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'2465000250') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'2495000000') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'2495000035') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'2495000165') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'2495000255') emis(ict(i),jct(i),j,12)= e_mis(i,j)+emis(ict(i),jct(i),j,12)
-if(trim(iscc(i)).eq.'2501000120') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'2510000165') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'2510000195') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'2510000250') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'2530000080') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'2730001000') emis(ict(i),jct(i),j,8)= e_mis(i,j)+emis(ict(i),jct(i),j,8)
-if(trim(iscc(i)).eq.'2841010000') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-if(trim(iscc(i)).eq.'2850000010') emis(ict(i),jct(i),j,7)= e_mis(i,j)+emis(ict(i),jct(i),j,7)
-    end do
+         bmasa(j)=bmasa(j)+ e_mis(i,j)
+         emis(ict(i),jct(i),capa(i,1),j,10) = e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,10)
+if(trim(iscc(i)).eq.'0') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10100401') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10100601') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10100901') emis(ict(i),jct(i),capa(i,1),j,5)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,5)
+if(trim(iscc(i)).eq.'10101208') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10200221') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10200229') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10200401') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10200404') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10200501') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10200503') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10200504') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10200601') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10200707') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10200802') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10200903') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10201001') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10201002') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10201101') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10201201') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10201302') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10201701') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'10500105') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'20100101') emis(ict(i),jct(i),capa(i,1),j,5)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,5)
+if(trim(iscc(i)).eq.'20100107') emis(ict(i),jct(i),capa(i,1),j,5)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,5)
+if(trim(iscc(i)).eq.'20200101') emis(ict(i),jct(i),capa(i,1),j,5)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,5)
+if(trim(iscc(i)).eq.'20200102') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'20200107') emis(ict(i),jct(i),capa(i,1),j,5)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,5)
+if(trim(iscc(i)).eq.'20200109') emis(ict(i),jct(i),capa(i,1),j,5)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,5)
+if(trim(iscc(i)).eq.'20200201') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30101453') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30101822') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30101847') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30101872') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30102201') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30102826') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30106013') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30112007') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30125805') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30125815') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30187007') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30200705') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30200746') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30200778') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30200911') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30201421') emis(ict(i),jct(i),capa(i,1),j,6)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,6)
+if(trim(iscc(i)).eq.'30201520') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30201903') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30203201') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30203204') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30300317') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30300931') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30300935') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30400723') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30400736') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30400737') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30400812') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30402201') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30500504') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30500619') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30500718') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30501114') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30502599') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30504030') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30504034') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30800126') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30800901') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30801006') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30901078') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'30903901') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'31613001') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'33000102') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'33000202') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'36000101') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'39090007') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'39990024') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'40100101') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40100301') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40100307') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40100308') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40200101') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40200110') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40200301') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40200701') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40200801') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40200820') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40200861') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40200870') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40201403') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40201601') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40202520') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40204240') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40204435') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'40301008') emis(ict(i),jct(i),capa(i,1),j,6)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,6)
+if(trim(iscc(i)).eq.'40301153') emis(ict(i),jct(i),capa(i,1),j,6)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,6)
+if(trim(iscc(i)).eq.'40400121') emis(ict(i),jct(i),capa(i,1),j,6)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,6)
+if(trim(iscc(i)).eq.'40400403') emis(ict(i),jct(i),capa(i,1),j,6)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,6)
+if(trim(iscc(i)).eq.'40500506') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40600651') emis(ict(i),jct(i),capa(i,1),j,6)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,6)
+if(trim(iscc(i)).eq.'40688801') emis(ict(i),jct(i),capa(i,1),j,6)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,6)
+if(trim(iscc(i)).eq.'40700801') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40700809') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40700811') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40700813') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40703601') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40703615') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40703623') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40704001') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40704403') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40704405') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40704411') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40704419') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40706801') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40706803') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40707603') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40717601') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40717602') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40717603') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40722009') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'40722803') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'50200507') emis(ict(i),jct(i),capa(i,1),j,13)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,13)
+if(trim(iscc(i)).eq.'2101006000') emis(ict(i),jct(i),capa(i,1),j,5)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,5)
+if(trim(iscc(i)).eq.'2102007000') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'2102008000') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'2102010000') emis(ict(i),jct(i),capa(i,1),j,5)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,5)
+if(trim(iscc(i)).eq.'2280002020') emis(ict(i),jct(i),capa(i,1),j,11)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,11)
+if(trim(iscc(i)).eq.'2301050001') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'2303020000') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'2308000000') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'2309100000') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'2310010000') emis(ict(i),jct(i),capa(i,1),j,9)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,9)
+if(trim(iscc(i)).eq.'2401005600') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'2401100001') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'2415000000') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'2415000350') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'2415300000') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'2440000250') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'2440000260') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'2440020000') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'2465000250') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'2495000000') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'2495000035') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'2495000165') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'2495000255') emis(ict(i),jct(i),capa(i,1),j,12)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,12)
+if(trim(iscc(i)).eq.'2501000120') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'2510000165') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'2510000195') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'2510000250') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'2530000080') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'2730001000') emis(ict(i),jct(i),capa(i,1),j,8)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,8)
+if(trim(iscc(i)).eq.'2841010000') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+if(trim(iscc(i)).eq.'2850000010') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+emis(ict(i),jct(i),capa(i,1),j,7)
+    end do !j
     end if
-  end do
+  end do  ! i
+    print *,bmasa/1000.
+    print *,suma/1000
     if(allocated(e_mis))  deallocate(e_mis)
 end subroutine point_cams_distribution
 !               _       _                     _         _
@@ -426,7 +429,7 @@ integer :: id_unlimit ;!>netcdf UTMx coordinate variable ID in netcdf file
 integer :: id_utmx    ;!>netcdf UTMy coordinate variable ID in netcdf file
 integer :: id_utmy    ;!>netcdf UTMz coordinate variable ID in netcdf file
 integer :: id_utmz
-real    :: suma(ncams)
+real    :: suma,suma2
 character (len=19),dimension(NDIMS) ::sdim
 character (len=83)::geospatial_bounds
 character (13):: ccdim
@@ -441,12 +444,12 @@ call date_and_time(fecha,time)
 hoy=fecha(7:8)//'-'//fecha(5:6)//'-'//fecha(1:4)//'T'//time(1:2)//':'//time(3:4)&
 //':'//time(5:10)//'Z'
 
-print *,"Mobile Emissions Annual saving"
+print *,"Point Emissions Annual saving"
 
     do k=1,nsp
         print *,"Output File Initialization ",casn(k)
     call check( nf90_create(path =casn(k),cmode = NF90_NETCDF4,ncid = ncid) )
-    dim=(/1,19,nx,ny,8,1/)
+    dim=(/1,19,nx,ny,nlevels,1/)
     call check( nf90_def_dim(ncid,sdim(1), NF90_UNLIMITED, id_dim(1)) )
     do i=2,NDIMS
     call check( nf90_def_dim(ncid, sdim(i), dim(i), id_dim(i)) )
@@ -590,23 +593,25 @@ print *,"Mobile Emissions Annual saving"
     call check( nf90_put_var(ncid, id_varpop,pob,start=(/1,1/)) )
     !Tiempo
     call check( nf90_put_var(ncid, id_dim(1),"2016-01-01_06:00:00"))! one year output
-
-
-   do l=1,ncams  ! CAMS ids
-    aguardar=0
-    suma= 0
+   do l=5,13 !ncams  ! CAMS ids
     eft=0
+    suma= 0
+    suma2=0
       do i=1,nl
-            suma(l)=suma(l)+emis(ict(i),jct(i),k,l) !conversion: kg s-1 m-2
-            eft(ict(i),jct(i),capa(i,1),l)=eft(ict(i),jct(i),capa(i,1),l)&
-                +emis(ict(i),jct(i),k,l)*0.0000317098*SUPF1
+        if (ict(i).gt.0 .and.jct(i).gt.0) then
+          suma =suma +emis(ict(i),jct(i),capa(i,1) ,k,l) !conversion: kg s-1 m-2
+          eft(ict(i),jct(i),capa(i,1),l)= emis(ict(i),jct(i),capa(i,1),k,l)!*0.0000317098*SUPF1
+          suma2=eft(ict(i),jct(i),capa(i,1),l)+suma2
+        end if
       end do !i
-      if(suma(l).gt.0.) then
+      if(suma.gt.0.) then
+!        print *,l,idCAMS(l),suma/1000.,suma2/1000.
         varname="        "
         varname=trim(ename(k))//"_"//trim(idCAMS(l))
+        aguardar=0.0
         do i=1,nx
             do j=1,ny
-                do m=1,8
+                do m=1,nlevels
                     aguardar(i,j,m)=eft(i,j,m,l)
                 end do
             end do
@@ -655,20 +660,39 @@ end subroutine point_emissions_storage
   integer,dimension(:),intent(out):: ist,jst
   real,dimension(:,:),intent(IN):: xlat,xlon
   real,dimension(:),intent(IN):: clat,clon
+  real:: tlon,tlat,minlon,minlat
+     minlon=minval(xlon)
+     minlat=minval(xlat)
+    tlon=maxval(xlon)-minlon
+    tlat=maxval(xlat)-minlat
    do l=inst,nst
 		! Out of the region
    ist(l)=0
    jst(l)=0
 	  do i = 1,mi-1
 	    do j= 1,mj-1
-        if(clon(l) .ge. xlon(i,j)  .and. clon(l) .le. xlon(i+1,j).and.&
-		  &clat(l) .ge. xlat(i,j)  .and. clat(l) .le. xlat(i,j+1))then
+        if(clon(l) .ge. xlon(i,j) .and. clon(l) .le. xlon(i+1,j).and.&
+		  &  clat(l) .ge. xlat(i,j) .and. clat(l) .le. xlat(i,j+1))then
 		   ist(l)= i
 		   jst(l)= j
           goto 987
 		end if
 		end do
 	  end do
+     if ((ist(l).eq.0 .or.jst(l).eq.0).and.(clat(l).gt. minlat.and. clat(l).le.&
+       &maxval(xlat)).and.(clon(l).gt.minlon.and.clon(l).le.maxval(xlon))) then
+           i=(clon(l)-minlon)/tlon*mi
+           j=(clat(l)-minlat)/tlat*mj
+        if(j.le.0 .or.i.le.0 ) goto 987
+        !print *,l,i,j
+           i=(clon(l)-xlon(1,j))/(xlon(mi,j)-xlon(1,j))*mi
+           j=(clat(l)-xlat(i,1))/(xlat(i,mj)-xlat(i,1))*mj
+        if(j.le.0 .or.i.le.0 ) goto 987
+        !print *,i,j,xlon(mi,j),xlon(1,j),xlat(i,mj),xlat(i,1)
+          ist(l)=(clon(l)-xlon(1,j))/(xlon(mi,j)-xlon(1,j))*mi
+          jst(l)=(clat(l)-xlat(i,1))/(xlat(i,mj)-xlat(i,1))*mj
+         !print *,i,j,ist(l),jst(l)
+      end if
 987 continue
    end do
    RETURN
@@ -735,7 +759,7 @@ subroutine free_memory
         if(allocated(utmxd))  deallocate(utmxd)
         if(allocated(utmyd))  deallocate(utmyd)
         if(allocated(utmzd))  deallocate(utmzd)
-        if(allocated(aguardar))   deallocate(aguardar)
+        if(allocated(aguardar))deallocate(aguardar)
         if(allocated(lat))    deallocate(lat)
         if(allocated(lon))    deallocate(lon)
         if(allocated(emis))   deallocate(emis)
