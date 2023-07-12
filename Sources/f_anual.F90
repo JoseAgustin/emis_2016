@@ -175,7 +175,7 @@ implicit none
       read(iun,*,err=110)lat(i),lon(i),iscc(i),(e_mis(i,j),j=1,nsp),capa(i,1),capa(i,2)
     end do
     close(iun)
-    e_mis=e_mis*1000 !para kg desde (Mg) TON
+    e_mis=e_mis  !en (Mg) Tonne
     print *,'Done puntual.csv '!,cvar,maxval(e_mis)
 !
 !	localiza.csv
@@ -391,8 +391,8 @@ if(trim(iscc(i)).eq.'2850000010') emis(ict(i),jct(i),capa(i,1),j,7)= e_mis(i,j)+
     end do !j
     end if
   end do  ! i
-    print *,bmasa/1000.
-    print *,suma/1000
+    print *,bmasa
+    print *,suma
     if(allocated(e_mis))  deallocate(e_mis)
 end subroutine point_cams_distribution
 !               _       _                     _         _
@@ -600,12 +600,12 @@ print *,"Point Emissions Annual saving"
       do i=1,nl
         if (ict(i).gt.0 .and.jct(i).gt.0) then
           suma =suma +emis(ict(i),jct(i),capa(i,1) ,k,l) !conversion: kg s-1 m-2
-          eft(ict(i),jct(i),capa(i,1),l)= emis(ict(i),jct(i),capa(i,1),k,l)*0.0000317098*SUPF1
+          eft(ict(i),jct(i),capa(i,1),l)= emis(ict(i),jct(i),capa(i,1),k,l)*3.17098E-05*SUPF1
           suma2=eft(ict(i),jct(i),capa(i,1),l)+suma2
         end if
       end do !i
       if(suma.gt.0.) then
-!        print *,l,idCAMS(l),suma/1000.,suma2/1000.
+!        print *,l,idCAMS(l),suma,suma2
         varname="        "
         varname=trim(ename(k))//"_"//trim(idCAMS(l))
         aguardar=0.0

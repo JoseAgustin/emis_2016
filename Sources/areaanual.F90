@@ -518,7 +518,7 @@ call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
      suma=0.0
         do l=1,ncams
             suma(l)=suma(l)+emis(m,k,l)
-            eft(i,j,l)=eft(i,j,l)+emis(m,k,l)*0.0000317098*SUPF1!conversion: kg s-1 m-2
+            eft(i,j,l)=eft(i,j,l)+emis(m,k,l)*3.17098E-05*SUPF1!conversion: kg s-1 m-2
         end do  !l
     end do !m
     do l=1,ncams

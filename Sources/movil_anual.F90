@@ -525,7 +525,7 @@ call check( nf90_put_att(ncid, id_utmz, "coordinates", "lon lat" ) )
             i=pcol-col0
             !if(m.eq.1) print *,i,j
         !  Actualiza la posicion en i,j a partir de m
-            aguardar(i,j)=aguardar(i,j)+emis(m,l,k)*0.0000317098*SUPF1!conversion: kg s-1 m-2
+            aguardar(i,j)=aguardar(i,j)+emis(m,l,k)*3.17098E-05*SUPF1!conversion: kg s-1 m-2
         end do
         varname="        "
         varname=trim(ename(k))//"_"//trim(idCAMS(l)) ! For TRO
