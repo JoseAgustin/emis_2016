@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['emissions_5fsave_5fnc_427',['emissions_save_nc',['../g__emis2_8_f90.html#a09a3158d01fa46b3bef88d97eee646b8',1,'g_emis2.F90']]],
-  ['escribe_5fvar_428',['escribe_var',['../g__emis2_8_f90.html#a15448b5456c980549475d5962650fa71',1,'g_emis2.F90']]]
+  ['emissions_5fsave_5fnc_0',['emissions_save_nc',['../g__emis2_8_f90.html#a09a3158d01fa46b3bef88d97eee646b8',1,'g_emis2.F90']]]
 ];
