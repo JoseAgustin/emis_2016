@@ -600,7 +600,7 @@ print *,"Point Emissions Annual saving"
       do i=1,nl
         if (ict(i).gt.0 .and.jct(i).gt.0) then
           suma =suma +emis(ict(i),jct(i),capa(i,1) ,k,l) !conversion: kg s-1 m-2
-          eft(ict(i),jct(i),capa(i,1),l)= emis(ict(i),jct(i),capa(i,1),k,l)!*0.0000317098*SUPF1
+          eft(ict(i),jct(i),capa(i,1),l)= emis(ict(i),jct(i),capa(i,1),k,l)*0.0000317098*SUPF1
           suma2=eft(ict(i),jct(i),capa(i,1),l)+suma2
         end if
       end do !i
