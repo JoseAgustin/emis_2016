@@ -7,11 +7,11 @@
 #: Options     : None
 
 # avalable:
-# cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07 ghg
-MECHA=RADM
+# CBM04 cbm05 mozart racm2 radm2 saprc99 saprc07 ghg
+MECHA=MOZA
 spec=(${MECHA}*_M.txt)
 num=${#spec[@]}
-for (( i=1; i<$num ;i++))
+for (( i=0; i<$num ;i++))
 do
  printf "%s"  "${spec[$i]:7:4}, "
  awk -F"," -f ../../util/suma_spc.awk ${spec[$i]}
