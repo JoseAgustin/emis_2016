@@ -7,7 +7,7 @@
 #: Options     : None
 
 # avalable:
-# CBM04 cbm05 mozart racm2 radm2 saprc99 saprc07 ghg
+# CBM04 cbm05 MOZA racm2 radm2 saprc99 saprc07 ghg
 MECHA=MOZA
 spec=(${MECHA}*_M.txt)
 num=${#spec[@]}
