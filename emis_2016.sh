@@ -20,13 +20,13 @@ dominio=tijuana
 # To set spatial distribution = 1 else =0
 HacerArea=1
 #
-# Mechanism selcetion
+# Mechanism selection
 # avalable:
 # cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07 ghg
 #
 MECHA=radm2
 # Si saprc07 AQM_SELECT = 0 WRF 1 CHIMERE
-AQM_SELECT=1
+AQM_SELECT=0
 #  Build the namelist_emis.nml file
 # Cambiar aqui la fecha
 mes=5

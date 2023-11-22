@@ -16,7 +16,7 @@
 #   guadalajara  jalisco    mexicali  mexico  mexico9
 #   monterrey    monterrey3 queretaro tijuana
 #
-dominio=mexico9
+dominio=mexico
 # To set spatial distribution = 1 else =0
 HacerArea=1
 #
@@ -24,18 +24,18 @@ HacerArea=1
 # avalable:
 # cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07 ghg
 #
-MECHA=ghg
+MECHA=radm2
 # Si saprc07 AQM_SELECT = 0 WRF 1 CHIMERE
 AQM_SELECT=1
 #  Build the namelist_emis.nml file
 # Cambiar aqui la fecha
-mes=5
-dia=11
-dia2=12
+mes=11
+dia=10
+dia2=10
 #
 #    Aqui cambiar el año a modelar
 #
-nyear=2019
+nyear=2023
 #
 #   Si se desea un archivo de 24 hrs  nfile=1
 #              dos archivos de 12 hrs nfile=2
