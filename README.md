@@ -11,7 +11,8 @@ It can process all the country or a preselected area from:
 | mexico9 | mexico   | | All the country|
 |         | jalisco  |guadalajara| State and city|
 |         |monterrey3|monterrey|Saltillo-MTY, MTY|
-|         |ecaim3    | ecaim | Central Mexico |
+|         |ecaim3    | ecaim |CAMe region |
+|         | centro    |           | Central Mexico |
 |         | bajio3   | bajio | Guanajuato State|
 |   |queretaro |  |Queretaro State|
 |   | |cdjuarez | Juarez City, Chi|
