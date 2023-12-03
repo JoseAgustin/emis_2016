@@ -371,7 +371,8 @@ La siguiente tabla muestra el tamaño de las salidas para cada área considerand
 | Bajío | 1.6 GB |
 | Cd Juárez | 51 MB |
 | Colima | 333 MB |
-| Centro de México (Ecaim) | 2.4 GB |
+| CAMe region (Ecaim) | 2.4 GB |
+| Centro de México  | 6.8 GB |
 | Guadalajara | 59 MB |
 | Mexicali | 141 MB |
 | Monterrey | 176 MB |
