@@ -637,7 +637,7 @@ end subroutine area_grids_count
 !>   @copyright Universidad Nacional Autonoma de Mexico 2020
 subroutine huso_horario
     integer ::i,k,iedo
-    print *,'Start uso horario'
+    print *,'Start huso horario'
     do k=1,nf
        do i=1,nm
         iedo=int(idsm(k,i)/1000)
@@ -655,7 +655,7 @@ subroutine huso_horario
         print *,'Error item:', MINLOC(idsm),'value:',minval(idsm)
         STOP 'Value must be larger or equal to 5'
     end if
-print *,'** END uso horario'
+print *,'** END huso horario'
 end subroutine huso_horario
 !  _                          _
 ! | |__  _ __  ___  ___  _ __| |_
