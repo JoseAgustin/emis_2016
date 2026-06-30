@@ -1,247 +1,374 @@
 #!/bin/bash
+# -----------------------------------------------------------------------------
+# ARCHIVO:      functions.sh (Revisado con nuevas funciones)
 #
-#: Title       : functions.sh
-#: Date        : 02/01/2024
-#: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
-#: Version     : 1.0  26/04/2021 Actualizacion para IE del 2016
-#: Description : Functios to run emissions
-#: Options     : None
-
-#: Title       : crea_anio_csv()
-#: Date        : 2/01/2024
-#: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
-#: Version     : 1.0   2/01/2024
-#: Description : Crea el archivo de anio con base en la fecha
-#: Options     : recibe fecha y la convierte  anio, mes dia
+# DESCRIPCIÓN:  Biblioteca de funciones de shell para procesar emisiones.
+#               Incluye una función para verificar la salida de cada programa
+#               y detener la ejecución en caso de error.
 #
-crea_anio_csv()
-{
-if [ $# -eq 0 ];
-then
-   export anio1=`date +%Y`
-   linea=$(date +%m,%d,%w,%a)
-   echo "**** sin argumentos  *****"
-   echo Se realizara para hoy $anio1 $linea 
-else
-   echo Con argumentos
-   if [[ $1 -gt 1000 && $1 -le 2050 ]];
-   then 
-      anio1=$1
-   else 
-      echo "Anio no corresponde "$1
-      exit 1
-   fi
-   if [[ $2 -ge 1 && $2 -le 12 ]];
-   then 
-      mes1=$2
-   else 
-      echo "Mes no corresponde "$2
-   exit 2
-   fi
-   fecha=$1/$mes1/$3
-   echo $fecha
-   if [[ $(date -d$fecha +%w) -eq 0  ]];
-   then
-     linea=$(date -d$fecha +%m,%d,7,%a)
-   else
-     linea=$(date  -d$fecha +%m,%d,%w,%a)
-   #para mac  linea=$(date  -v$fecha +%m,%d,%w,%a)
-   fi
-fi
-
-echo "mes,dia,n_dia_semana,nomdia_semana" > anio${anio1}.csv
-echo $linea >>anio${anio1}.csv
-mv anio${anio1}.csv ../time
-}
-#: Title       : make_tmpdir
-#: Date        : 25/04/2021
-#: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
-#: Version     : 1.0  26/04/2021 Actualizacion para IE del 2016
-#: Description : Creates the working directory for emissions
-#: Options     : name of directory
-make_tmpdir ()
-{
-if [ ! -d $1 ]
-then
-   echo "  *** Creating directory "$1"   *****"
-   mkdir $1
-else
-   if [ $HacerArea -eq 1 ]; then
-     echo "     Erasing and creating Directory"
-     rm -rf $1
-     mkdir $1
-   else
-          echo "  hacearea="$HacerArea
-     if [ ! -f $1/AVOC_2016.csv ];then
-       echo -e "     \033[1;45m There is no Spatial Distribution \033[0m"
-       exit 2
-     fi
-   fi
-fi
-   echo "  *** In directory "$1"   *****"
-   cd $1
-
- ln -fs ../01_datos/$dominio .
- ln -fs ../01_datos/chem .
- ln -fs ../01_datos/time .
- ln -fs ../01_datos/emis .
- ln -fs ../bin .
-}
-#: Title       : hace_area
-#: Date        : 25/04/2021
-#: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
-#: Version     : 1.0  26/04/2021 Actualizacion para IE del 2016
-#: Description : Apatial distribution area emissions
-#: Options     : none
-
-hace_area(){
-if [ $HacerArea -eq 1 ]; then
-echo -e "    \033[1;48m Making Spatial distribution in Area sources \033[0m"
-bin/ASpatial.exe >./area.log
-fi
-
-}
-#: Title       : hace_movil
-#: Date        : 25/04/2021
-#: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
-#: Version     : 1.0  26/04/2021 Actualizacion para IE del 2016
-#: Description : Spatial distribution mobile emissions
-#: Options     : none
-hace_movil(){
-if [ $HacerArea -eq 1 ]; then
-echo "     Making Spatial distribution in Mobile sources"
-bin/vial.exe > ./movil.log &
-bin/carr.exe >> ./movil.log&
-wait
-bin/agrega.exe > ./movil.log
-bin/MSpatial.exe > ./movil.log &
-fi
-}
-#: Title       : emis_area
-#: Date        : 25/04/2021
-#: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
-#: Version     : 1.0  26/04/2021 Actualizacion para IE del 2016
-#: Description : Area emissions processing
-#: Options     : none
-emis_area(){
-echo 'Area Temporal distribution'
-../bin/Atemporal.exe  > ../area.log
-echo 'Area Speciation distribution PM2.5'
-../bin/spm25a.exe >> ../area.log &
-echo 'Area Speciation distribution VOCs'
-echo '** Area '$MECHA' *****'
- ln -fs ../chem/profile_${MECHA}.csv .
-../bin/spa.exe >> ../area.log
-}
-#: Title       : emis_fijas
-#: Date        : 25/04/2021
-#: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
-#: Version     : 1.0  26/04/2021 Actualizacion para IE del 2016
-#: Description : Point emissions processing
-#: Options     : none
-emis_fijas(){
-echo 'Point Temporal distribution'
-../bin/Puntual.exe > ../puntual.log
-echo 'Point Speciation distribution PM2.5'
-../bin/spm25p.exe >> ../puntual.log &
-echo 'Point Speciation distribution VOCs'
+# COMPATIBILIDAD MULTIPLATAFORMA (Linux / macOS):
+#               El comando `date` de GNU/Linux (coreutils) y el `date` nativo
+#               de macOS (BSD) NO comparten la misma sintaxis para fechas
+#               relativas ni para parsear fechas arbitrarias:
 #
-echo '** Point '$MECHA' *****'
-../bin/spp.exe >> ../puntual.log
+#                 GNU/Linux:  date -d "2024-03-05" "+%a"
+#                             date -d "+1 days"    "+%Y"
+#                             date -d "-1 days"    "+%m"
+#
+#                 macOS/BSD:  date -j -f "%Y-%m-%d" "2024-03-05" "+%a"
+#                             date -v+1d            "+%Y"
+#                             date -v-1d            "+%m"
+#
+#               Para evitar duplicar lógica en cada función, este archivo
+#               define `date_compat()`, un wrapper que detecta el sistema
+#               operativo (`uname`) y traduce la llamada al dialecto correcto.
+#               Todas las funciones de este archivo usan `date_compat` en
+#               lugar de invocar `date -d` directamente.
+#
+#               Alternativa recomendada en macOS: instalar GNU coreutils
+#               vía Homebrew (`brew install coreutils`), lo que provee
+#               `gdate` con sintaxis GNU idéntica a Linux. Si `gdate` está
+#               disponible en el PATH, `date_compat` lo usará automáticamente
+#               y evita la traducción de sintaxis (más robusto).
+# -----------------------------------------------------------------------------
+
+# --- Definición de Códigos de Color ---
+COLOR_INFO='\033[0;36m'
+COLOR_SUCCESS='\033[0;32m'
+COLOR_WARNING='\033[1;33m'
+COLOR_ERROR='\033[1;41m'
+COLOR_RESET='\033[0m'
+
+# =============================================================================
+# FUNCIÓN: date_compat (NUEVA)
+#
+# Propósito:   Wrapper multiplataforma sobre `date` que oculta las diferencias
+#              de sintaxis entre GNU/Linux (coreutils) y macOS (BSD).
+#
+# Modos de uso:
+#   date_compat offset <±N> <formato>
+#       Calcula una fecha relativa a HOY en días y la formatea.
+#       Equivale a: date -d "+N days" "+formato"   (GNU)
+#                   date -v+Nd        "+formato"   (BSD)
+#       Ejemplos:
+#         date_compat offset 1  "+%Y"   # mañana, año en formato YYYY
+#         date_compat offset -1 "+%d"   # ayer, día del mes
+#
+#   date_compat parse <AAAA/MM/DD o AAAA-MM-DD> <formato>
+#       Parsea una fecha arbitraria (no relativa a hoy) y la formatea.
+#       Equivale a: date -d "$fecha" "+formato"               (GNU)
+#                   date -j -f "%Y-%m-%d" "$fecha" "+formato" (BSD)
+#       Ejemplo:
+#         date_compat parse "2024/03/05" "+%a"   # día de la semana abreviado
+#
+#   date_compat valid <AAAA/MM/DD o AAAA-MM-DD>
+#       Solo valida que la fecha exista (sin imprimir nada).
+#       Devuelve código de salida 0 si es válida, distinto de 0 si no.
+#
+# Detección de plataforma:
+#   - Si existe `gdate` en el PATH (GNU coreutils instalado vía Homebrew en
+#     macOS), se usa directamente con sintaxis GNU: es la opción más fiable.
+#   - Si `uname` reporta "Darwin" y no hay `gdate`, se traduce a sintaxis BSD.
+#   - En cualquier otro caso (Linux y similares), se usa `date -d` (GNU).
+# =============================================================================
+date_compat() {
+    local modo="$1"; shift
+
+    # Preferir gdate (GNU coreutils) si está disponible, sin importar el OS.
+    local DATE_BIN="date"
+    if command -v gdate &>/dev/null; then
+        DATE_BIN="gdate"
+    fi
+
+    local es_macos_bsd=0
+    if [ "$DATE_BIN" = "date" ] && [ "$(uname)" = "Darwin" ]; then
+        es_macos_bsd=1
+    fi
+
+    case "$modo" in
+        offset)
+            local valor="$1" formato="$2"
+            if [ "$es_macos_bsd" -eq 1 ]; then
+                # BSD: date -v+Nd / date -v-Nd (sin espacio entre signo y número)
+                if [[ "$valor" == -* ]]; then
+                    date -v"${valor}d" "$formato"
+                else
+                    date -v+"${valor}d" "$formato"
+                fi
+            else
+                # GNU (Linux o gdate en macOS): date -d "+N days" / "-N days"
+                if [[ "$valor" == -* ]]; then
+                    "$DATE_BIN" -d "${valor} days" "$formato"
+                else
+                    "$DATE_BIN" -d "+${valor} days" "$formato"
+                fi
+            fi
+            ;;
+        parse)
+            local fecha="$1" formato="$2"
+            # Normaliza separadores '/' a '-' para máxima compatibilidad.
+            local fecha_normalizada="${fecha//\//-}"
+            if [ "$es_macos_bsd" -eq 1 ]; then
+                # BSD requiere el formato de entrada explícito con -f.
+                date -j -f "%Y-%m-%d" "$fecha_normalizada" "$formato"
+            else
+                "$DATE_BIN" -d "$fecha_normalizada" "$formato"
+            fi
+            ;;
+        valid)
+            local fecha="$1"
+            local fecha_normalizada="${fecha//\//-}"
+            if [ "$es_macos_bsd" -eq 1 ]; then
+                date -j -f "%Y-%m-%d" "$fecha_normalizada" &>/dev/null
+            else
+                "$DATE_BIN" -d "$fecha_normalizada" &>/dev/null
+            fi
+            ;;
+        *)
+            echo -e "${COLOR_ERROR} ERROR (date_compat): modo '$modo' no reconocido. Usa: offset | parse | valid ${COLOR_RESET}"
+            return 1
+            ;;
+    esac
 }
-#: Title       : emis_movil
-#: Date        : 25/04/2021
-#: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
-#: Version     : 1.0  26/04/2021 Actualizacion para IE del 2016
-#: Description : Movile emissions processing
-#: Options     : none
-emis_movil(){
-pwd
-echo 'Movil Temporal distribution'
-../bin/Mtemporal.exe > ../movil.log
-echo 'Movil Speciation distribution PM2.5'
-../bin/spm25m.exe >> ../movil.log&
-echo '** Movil '$MECHA' *****'
-../bin/spm.exe >> ../movil.log
+
+# =============================================================================
+# FUNCIÓN: run_and_check (NUEVA)
+#
+# Propósito:   Ejecuta un comando y verifica su código de salida. Si el código
+#              no es 0 (error), imprime un mensaje y aborta el script.
+# Parámetros:
+#   $@:        El comando completo a ejecutar (ej. bin/ASpatial.exe).
+# =============================================================================
+run_and_check() {
+    # Ejecuta todos los argumentos pasados como un solo comando.
+    "$@"
+    local exit_code=$? # Captura el código de salida del comando anterior.
+    
+    if [ $exit_code -ne 0 ]; then
+        echo -e "${COLOR_ERROR}ERROR: El comando '$*' falló con el código de salida $exit_code. Abortando.${COLOR_RESET}"
+        # Salir del script con el mismo código de error del programa que falló.
+        exit $exit_code
+    fi
 }
-#: Title       : check_domain
-#: Date        : 25/04/2021
-#: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
-#: Version     : 1.0  26/04/2021 Actualizacion para IE del 2016
-#: Description : Identifies if the domain are for emissions exists
-#: Options     : domain
-check_domain ()
-{
-echo -e "      \033[3;46m   ___  _ ___ _____ ___   \033[0m"
-echo -e "      \033[3;46m  |   \(_) __|_   _| __|  \033[0m"
-echo -e "      \033[3;46m  | |) | | _|  | | | _|   \033[0m"
-echo -e "      \033[3;46m  |___/|_|___| |_| |___|  \033[0m"
-echo -e "      \033[3;46m                          \033[0m"
-cd 01_datos
-existe=0
-if [ -d $1 ]
-then
-   echo "  *** Realizando para "$dominio"   *****"
-else
-   echo -e "\033[1;45m  Dominio "$dominio" no existe en el directorio \033[0m"
-   exit 1
-fi
-cd ..
+
+# =============================================================================
+# BLOQUE DE FUNCIONES DE PROCESAMIENTO (ACTUALIZADO)
+#
+# Propósito:   Funciones que ejecutan los binarios. Ahora usan 'run_and_check'
+#              para garantizar que el script se detenga si un paso falla.
+#              La ejecución ahora es secuencial para permitir esta verificación.
+# =============================================================================
+hace_area() {
+    echo "Ejecutando distribución espacial para fuentes de área..."
+    run_and_check bin/ASpatial.exe > ./area.log
 }
-#: Title       : hace_namelist
-#: Date        : 25/04/2021
-#: Author      : "Jose Agustin Garcia Reynoso" <agustin@atmosfera.unam.mx>
-#: Version     : 1.0  26/04/2021 Actualizacion para IE del 2016
-#: Description : generates the namelist.nml
-#: Options     : $dia $dia2
-hace_namelist()
-{
- if [ $1 -eq $2 ]
- then
-  echo  "  *** Creating namelist.nml for "$dominio"   *****"
- else
-  echo  "  *** Creating namelist.nml for day "$1"   *****"
- fi
-cat > namelist_emis.nml << End_Of_File 
-!
-!   Definicion de variables para calculo del Inventario
-!
-&region_nml
-zona ="$dominio"
-!
-! bajio bajio3 cdjuarez   colima    ecacor  ecaim ecaim3
-! guadalajara  jalisco    mexicali  mexico  mexico9
-! monterrey    monterrey3 queretaro tijuana
-/
-&fecha_nml
-! Se indica el dia y el mes a calcular
-! se proporciona el anio
-! month jan =1 to dec=12
-! day in the month (from 1 to 28,30 or 31)
-! anio a modelar validos: 2014 a 2022
-! Si se quiere un archvio de 24 hr periodo=1
-!    o dos archivos de 12 hr peridodo=2
-idia=$dia
-month=$mes
-anio=$nyear
-periodo=$nfile
-/
-!Horario de verano
-&verano_nml
-! .true. o .false. para considerar o no el cambio cuando se
-!  esta en horario de verano
-!
-lsummer = .false.
-/
-! Quimica a utilizar
-! Los mecanismos a usar:
-!  cbm04 cbm05 mozart racm2 radm2 saprc99 saprc07
-!  if saprc07  model= 0 WRF 1 CHIMERE
-&chem_nml
-mecha='$MECHA'
-model=$AQM_SELECT
-/
+
+hace_movil() {
+    echo "Ejecutando distribución espacial para fuentes móviles..."
+    run_and_check bin/vial.exe > ./movil.log
+    run_and_check bin/carr.exe >> ./movil.log
+    run_and_check bin/agrega.exe >> ./movil.log
+    run_and_check bin/MSpatial.exe >> ./movil.log
+}
+
+emis_area() {
+    echo "Procesando emisiones de ÁREA (Temporal y Especiación)..."
+    ln -fs ../chem/profile_${MECHA}.csv .
+    run_and_check ../bin/Atemporal.exe > ../area.log
+    run_and_check ../bin/spm25a.exe >> ../area.log
+    run_and_check ../bin/spa.exe >> ../area.log
+}
+
+emis_fijas() {
+    echo "Procesando emisiones de FUENTES FIJAS (Temporal y Especiación)..."
+    run_and_check ../bin/Puntual.exe > ../puntual.log
+    run_and_check ../bin/spm25p.exe >> ../puntual.log
+    run_and_check ../bin/spp.exe >> ../puntual.log
+}
+
+emis_movil() {
+    echo "Procesando emisiones MÓVILES (Temporal y Especiación)..."
+    run_and_check ../bin/Mtemporal.exe > ../movil.log
+    run_and_check ../bin/spm25m.exe >> ../movil.log
+    run_and_check ../bin/spm.exe >> ../movil.log
+}
+
+# =============================================================================
+# FUNCIÓN: procesar_dia_pronostico
+#
+# Propósito:   Encapsula la lógica para procesar un día. Ahora las llamadas
+#              a emis_* son secuenciales y seguras.
+# =============================================================================
+procesar_dia_pronostico() {
+    local offset="$1"
+    local etiqueta_dia
+    case $offset in
+        0) etiqueta_dia="Hoy";;
+        1) etiqueta_dia="Mañana";;
+        2) etiqueta_dia="Pasado Mañana";;
+        *) echo "Offset inválido"; return;;
+    esac
+
+    # Compatibilidad: usa `date_compat offset` en lugar de `date -d "+N days"`,
+    # que es sintaxis GNU/Linux y falla en macOS (BSD). Ver definición de
+    # date_compat al inicio de este archivo.
+    export dia=$(date_compat offset "$offset" +%d)
+    export mes=$(date_compat offset "$offset" +%m)
+    export nyear=$(date_compat offset "$offset" +%Y)
+    
+    local fecha_str="${nyear}-${mes}-${dia}"
+    echo -e "\n${COLOR_INFO}--- Procesando día: $etiqueta_dia ($fecha_str) ---${COLOR_RESET}"
+
+    local archivo_salida="${DOMAINS}/interpolaD01/wrfchemi_d01_${MECHA}_${dominio:0:8}_${fecha_str}_00:00:00"
+    if [ -f "$archivo_salida" ]; then
+        echo -e "${COLOR_WARNING}---> Archivo de salida ya existe. Saltando día.${COLOR_RESET}"
+        return
+    fi
+    
+    local dir_dia="dia${dia}"
+    mkdir -p "$dir_dia"
+    cd "$dir_dia"
+    
+    echo "Directorio de trabajo: $(pwd)"
+    echo "Creando archivos de configuración para el ${dia}/${mes}/${nyear}..."
+    hace_namelist
+    crea_anio_csv "$nyear" "$mes" "$dia"
+    
+    echo "Ejecutando procesamiento de emisiones (secuencialmente)..."
+    # Estas funciones ahora se detendrán si hay un error interno.
+    emis_area
+    emis_fijas
+    emis_movil
+    
+    echo "Combinando emisiones y generando archivo final..."
+    ln -fs ../chem/namelist.* .
+    run_and_check ../bin/emiss.exe > ../${MECHA}_${dia}.log
+    
+    local inv_dir="../../inventario/${dominio}"
+    mkdir -p "$inv_dir"
+    mv ./*00:00 "$inv_dir/"
+    
+    echo -e "${COLOR_SUCCESS}---> Día $etiqueta_dia procesado exitosamente.${COLOR_RESET}"
+    cd ..
+}
+
+
+# =============================================================================
+# OTRAS FUNCIONES (sin cambios)
+# =============================================================================
+check_domain() {
+    echo -e "${COLOR_INFO}      ___  _ ___ _____ ___   ${COLOR_RESET}"
+    echo -e "${COLOR_INFO}     |   \\(_) __|_   _| __|  ${COLOR_RESET}"
+    echo -e "${COLOR_INFO}     | |) | | _|  | | | _|   ${COLOR_RESET}"
+    echo -e "${COLOR_INFO}     |___/|_|___| |_| |___|  ${COLOR_RESET}"
+    echo
+    local domain_path="01_datos/$dominio"
+    if [ -d "$domain_path" ]; then
+        echo -e "${COLOR_SUCCESS}---> Dominio '$dominio' encontrado. Continuando...${COLOR_RESET}"
+    else
+        echo -e "${COLOR_ERROR} ERROR: El dominio '$dominio' no existe en '01_datos/'. ${COLOR_RESET}"
+        exit 1
+    fi
+}
+
+make_tmpdir() {
+    local dir_name="$1"
+    if [ -z "$dir_name" ]; then
+        echo -e "${COLOR_ERROR} ERROR (make_tmpdir): No se proporcionó un nombre de directorio. ${COLOR_RESET}"
+        exit 1
+    fi
+    if [ -d "$dir_name" ]; then
+        if [ "$HacerArea" -eq 1 ]; then
+            echo -e "${COLOR_WARNING}Directorio '$dir_name' existe. Eliminando y recreando...${COLOR_RESET}"
+            rm -rf "$dir_name"
+            mkdir -p "$dir_name"
+        fi
+    else
+        echo "Creando directorio '$dir_name'..."
+        mkdir -p "$dir_name"
+    fi
+    cd "$dir_name"
+    echo "Cambiado al directorio de trabajo: $(pwd)"
+    ln -fs ../01_datos/"$dominio" .
+    ln -fs ../01_datos/chem .
+    ln -fs ../01_datos/time .
+    ln -fs ../01_datos/emis .
+    ln -fs ../bin .
+}
+
+crea_anio_csv() {
+    local anio mes dia fecha
+    if [ $# -eq 3 ]; then
+        anio="$1"; mes="$2"; dia="$3"
+        fecha="$anio/$mes/$dia"
+        # Validar si la fecha es correcta.
+        # Compatibilidad: date_compat encapsula la diferencia entre
+        # `date -d` (GNU) y `date -j -f` (BSD/macOS) en una sola llamada.
+        if ! date_compat valid "$fecha"; then
+            echo -e "${COLOR_ERROR} ERROR: La fecha '$fecha' no es válida. ${COLOR_RESET}"; exit 1
+        fi
+        
+        # Obtener el día de la semana (0=Domingo, 1=Lunes, ..., 6=Sábado)
+        local dow=$(date_compat parse "$fecha" "+%w")
+        
+        # Si es Domingo (0), cambiar su valor a 7 como se requiere.
+        if [ "$dow" -eq 0 ]; then
+            dow=6
+        fi
+        
+        # Obtener el resto de los componentes de la fecha
+        local mes_csv=$(date_compat parse "$fecha" "+%m")
+        local dia_csv=$(date_compat parse "$fecha" "+%d")
+        local nomdia_csv=$(date_compat parse "$fecha" "+%a")
+
+        # Reconstruir la línea con el día de la semana corregido (formato: mes,dia,n_dia_semana,nomdia_semana)
+        local linea="${mes_csv},${dia_csv},${dow},${nomdia_csv}"
+        
+        local csv_file="anio${anio}.csv"
+        echo "mes,dia,n_dia_semana,nomdia_semana" > "$csv_file"
+        echo "$linea" >> "$csv_file"
+        mv "$csv_file" ../time/
+    else
+        echo -e "${COLOR_ERROR} USO INCORRECTO: crea_anio_csv AAAA MM DD ${COLOR_RESET}"; exit 1
+    fi
+}
+
+hace_namelist() {
+    cat > namelist_emis.nml <<- End_Of_File
+	!
+	!   Definicion de variables para calculo del Inventario
+	!
+	&region_nml
+	zona ="$dominio"
+	/
+	&fecha_nml
+	idia=$dia
+	month=$mes
+	anio=$nyear
+	periodo=$nfile
+	/
+	&verano_nml
+	lsummer = .false.
+	/
+	&chem_nml
+	mecha='$MECHA'
+	model=$AQM_SELECT
+	/
 End_Of_File
 }
 
-
+limpiar_archivos_viejos() {
+    # Compatibilidad: se calcula la fecha de "ayer" con date_compat en vez
+    # de `date -d "-1 days" ...`, por lo que funciona igual en Linux y macOS.
+    local ayer=$(date_compat offset -1 +%d)
+    local ames=$(date_compat offset -1 +%m)
+    local ayear=$(date_compat offset -1 +%Y)
+    local fayer1="${DOMAINS}/interpolaD01/wrfchemi_d01_${MECHA}_${dominio:0:8}_${ayear}-${ames}-${ayer}_00:00:00"
+    local fayer2="${DOMAINS}/interpolaD01/wrfchemi_d01_${MECHA}_${dominio:0:8}_${ayear}-${ames}-${ayer}_12:00:00"
+    if [ -f "$fayer1" ] || [ -f "$fayer2" ]; then
+        echo "Borrando archivos de ayer: ${ayear}-${ames}-${ayer}"
+        rm -f "$fayer1" "$fayer2"
+    else
+       echo "No se encontraron archivos en ${DOMAINS}/interpolaD01"
+    fi
+}
